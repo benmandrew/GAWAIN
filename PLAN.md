@@ -108,11 +108,12 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [x] Port the LTL formula core to Rust (AST, parser, SPIN and nuXmv printers, simplification, syntactic similarity).
 - [x] Oracle interface: `Verdict`, `Lasso`, `Backend` (`src/oracle/mod.rs`).
 - [x] Oracle tier 1: evaluate a candidate on stored lassos (`Lasso::satisfies`, `LassoCache`). Agrees with Spot on 300 random cases.
-- [ ] Oracle tier 2, in-process half: lasso-word fingerprints and the known-truths antichain.
+- [x] Oracle tier 2, in-process half: lasso-word fingerprints and the known-truths antichain. The fingerprint refuted 208 of 212 Spot-refuted pairs and none of 188 proved ones.
+- [ ] Spot implication (batched) and the tiered oracle: memo, lassos, known truths, then a back end, with per-tier counters.
 - [x] Process runner with resource limits, and the nuXmv back end (batch mode, lasso from the trace). Every nuXmv lasso replays as a violation under the lasso evaluator.
 - [ ] SPIN back end: single and batched checks (at most 200 claims per build), lasso from the trail.
 - [ ] RERS Promela front end exploring an explicit Kripke structure (model side of tier 3a).
-- [ ] Next wave: tier 3a product with the ¬φ' automaton, tier 2 implication from known truths, tier 0 memo, and the tiered oracle composing them.
+- [ ] Next wave: tier 3a product of the explicit Kripke structure with the ¬φ' automaton, as a `Backend`.
 - [ ] Port operators, model-counting similarity and NSGA-II selection.
 - [ ] Add the degeneracy filter (check ¬φ on M) to benchmark loading.
 - [ ] RERS parallel track: load the Promela files and solution CSVs, then measure how many false properties survive the filter.
