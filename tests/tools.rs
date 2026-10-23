@@ -275,6 +275,28 @@ fn nuxmv_backend_returns_the_run_that_fails() {
     assert_eq!(unroll(&lasso, 12), expected, "{lasso:?}");
 }
 
+/// Every counterexample nuXmv returns must violate its formula when the
+/// lasso evaluator replays it, or tier 1 would cache a run that refutes
+/// nothing.
+#[test]
+fn nuxmv_lassos_violate_their_formula() {
+    if !have(&["nuXmv"], "nuxmv_lassos_violate_their_formula") {
+        return;
+    }
+    let mut backend = nuxmv("replay.smv", MODEL, &["x", "y"], LIMITS);
+    for (text, expected) in VERDICTS {
+        let formula = parse(text);
+        match backend.check(&formula) {
+            Verdict::Holds => assert!(expected, "nuXmv proved {text}"),
+            Verdict::Fails(lasso) => {
+                assert!(!expected, "nuXmv refuted {text}");
+                assert!(!lasso.satisfies(&formula), "{text} holds on {lasso:?}");
+            }
+            Verdict::Unknown(reason) => panic!("{text}: {reason}"),
+        }
+    }
+}
+
 #[test]
 fn nuxmv_backend_keeps_the_prefix() {
     if !have(&["nuXmv"], "nuxmv_backend_keeps_the_prefix") {
