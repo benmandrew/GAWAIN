@@ -1,0 +1,941 @@
+year,problem,prop,solution_verdict,spin_phi,spin_negphi,survives,seconds
+2016,101,1,true,holds,violated,no,0.2
+2016,101,2,false,violated,violated,yes,0.2
+2016,101,3,true,holds,violated,no,0.3
+2016,101,4,false,violated,holds,no,0.2
+2016,101,5,true,holds,violated,no,0.2
+2016,101,6,true,holds,violated,no,0.3
+2016,101,7,true,holds,violated,no,0.3
+2016,101,8,false,violated,holds,no,0.3
+2016,101,9,true,holds,violated,no,0.3
+2016,101,10,true,holds,violated,no,0.2
+2016,101,11,true,holds,violated,no,0.2
+2016,101,12,true,holds,violated,no,0.2
+2016,101,13,false,violated,violated,yes,0.2
+2016,101,14,false,violated,holds,no,0.2
+2016,101,15,true,holds,violated,no,0.2
+2016,101,16,true,holds,violated,no,0.2
+2016,101,17,false,violated,violated,yes,0.2
+2016,101,18,false,violated,holds,no,0.2
+2016,101,19,true,holds,violated,no,0.2
+2016,101,20,false,violated,holds,no,0.2
+2016,102,1,true,holds,violated,no,0.3
+2016,102,2,false,violated,violated,yes,0.2
+2016,102,3,true,holds,violated,no,0.3
+2016,102,4,false,violated,violated,yes,0.2
+2016,102,5,true,holds,violated,no,0.2
+2016,102,6,true,holds,violated,no,0.2
+2016,102,7,true,holds,violated,no,0.2
+2016,102,8,false,violated,violated,yes,0.3
+2016,102,9,true,holds,violated,no,0.2
+2016,102,10,true,holds,violated,no,0.2
+2016,102,11,true,holds,violated,no,0.2
+2016,102,12,true,holds,violated,no,0.2
+2016,102,13,false,violated,violated,yes,0.2
+2016,102,14,false,violated,violated,yes,0.2
+2016,102,15,true,holds,violated,no,0.2
+2016,102,16,true,holds,violated,no,0.2
+2016,102,17,true,holds,violated,no,0.2
+2016,102,18,true,holds,violated,no,0.2
+2016,102,19,false,violated,violated,yes,0.3
+2016,102,20,true,holds,violated,no,0.3
+2016,103,1,true,holds,violated,no,0.3
+2016,103,2,false,violated,violated,yes,0.3
+2016,103,3,true,holds,violated,no,0.3
+2016,103,4,false,violated,violated,yes,0.3
+2016,103,5,false,violated,violated,yes,0.3
+2016,103,6,false,violated,violated,yes,0.3
+2016,103,7,false,violated,violated,yes,0.3
+2016,103,8,false,violated,violated,yes,0.3
+2016,103,9,false,violated,violated,yes,0.3
+2016,103,10,true,holds,violated,no,0.3
+2016,103,11,false,violated,violated,yes,0.3
+2016,103,12,true,holds,violated,no,0.3
+2016,103,13,true,holds,violated,no,0.3
+2016,103,14,false,violated,violated,yes,0.2
+2016,103,15,false,violated,violated,yes,0.3
+2016,103,16,false,violated,violated,yes,0.3
+2016,103,17,true,holds,violated,no,0.2
+2016,103,18,true,holds,violated,no,0.3
+2016,103,19,true,holds,violated,no,0.3
+2016,103,20,false,violated,violated,yes,0.3
+2016,104,1,false,violated,violated,yes,0.3
+2016,104,2,false,violated,violated,yes,0.3
+2016,104,3,true,holds,violated,no,0.6
+2016,104,4,true,holds,violated,no,0.9
+2016,104,5,true,holds,violated,no,0.7
+2016,104,6,false,violated,violated,yes,0.3
+2016,104,7,false,violated,violated,yes,0.3
+2016,104,8,true,holds,violated,no,0.8
+2016,104,9,true,holds,violated,no,0.8
+2016,104,10,true,holds,violated,no,0.9
+2016,104,11,true,holds,violated,no,0.9
+2016,104,12,false,violated,violated,yes,0.2
+2016,104,13,false,violated,violated,yes,0.2
+2016,104,14,false,violated,violated,yes,0.2
+2016,104,15,false,violated,violated,yes,0.3
+2016,104,16,false,violated,violated,yes,0.2
+2016,104,17,true,holds,violated,no,0.6
+2016,104,18,true,holds,violated,no,0.6
+2016,104,19,true,holds,violated,no,1.5
+2016,104,20,true,holds,violated,no,0.8
+2016,105,1,true,unknown (timeout),violated,no,120.2
+2016,105,2,false,violated,violated,yes,35.9
+2016,105,3,true,unknown (timeout),violated,no,120.3
+2016,105,4,true,unknown (timeout),violated,no,120.3
+2016,105,5,false,unknown (timeout),violated,yes,120.2
+2016,105,6,true,unknown (timeout),violated,no,120.2
+2016,105,7,false,violated,violated,yes,30.6
+2016,105,8,true,unknown (timeout),violated,no,120.2
+2016,105,9,true,unknown (timeout),violated,no,120.3
+2016,105,10,false,unknown (timeout),violated,yes,120.2
+2016,105,11,false,unknown (timeout),violated,yes,120.3
+2016,105,12,false,violated,violated,yes,42.6
+2016,105,13,false,unknown (timeout),violated,yes,120.2
+2016,105,14,true,unknown (timeout),violated,no,120.2
+2016,105,15,true,holds,violated,no,68.1
+2016,105,16,false,unknown (timeout),violated,yes,120.2
+2016,105,17,false,violated,violated,yes,31.7
+2016,105,18,true,unknown (timeout),violated,no,120.2
+2016,105,19,false,violated,violated,yes,55.9
+2016,105,20,false,violated,violated,yes,33.8
+2016,106,1,true,unknown (timeout),violated,no,120.2
+2016,106,2,false,violated,violated,yes,80.7
+2016,106,3,false,unknown (timeout),violated,yes,120.2
+2016,106,4,true,unknown (timeout),violated,no,120.2
+2016,106,5,false,unknown (timeout),violated,yes,120.2
+2016,106,6,true,unknown (timeout),violated,no,120.2
+2016,106,7,false,violated,violated,yes,30.2
+2016,106,8,false,violated,violated,yes,110.0
+2016,106,9,true,unknown (timeout),violated,no,120.2
+2016,106,10,true,unknown (timeout),violated,no,120.2
+2016,106,11,false,violated,violated,yes,103.1
+2016,106,12,false,unknown (timeout),violated,yes,120.2
+2016,106,13,false,violated,violated,yes,88.4
+2016,106,14,true,unknown (timeout),violated,no,120.2
+2016,106,15,true,unknown (timeout),violated,no,120.2
+2016,106,16,false,violated,violated,yes,114.2
+2016,106,17,true,unknown (timeout),violated,no,120.2
+2016,106,18,false,unknown (timeout),violated,yes,120.2
+2016,106,19,false,violated,violated,yes,108.5
+2016,106,20,true,unknown (timeout),violated,no,120.2
+2016,107,1,true,unknown (timeout),violated,no,120.2
+2016,107,2,false,unknown (timeout),violated,yes,120.2
+2016,107,3,true,unknown (timeout),violated,no,120.2
+2016,107,4,true,unknown (timeout),violated,no,120.2
+2016,107,5,false,violated,violated,yes,41.1
+2016,107,6,true,unknown (timeout),violated,no,120.2
+2016,107,7,false,violated,violated,yes,76.4
+2016,107,8,true,unknown (timeout),violated,no,120.2
+2016,107,9,true,unknown (timeout),violated,no,120.2
+2016,107,10,false,unknown (timeout),unknown (timeout),unknown,240.1
+2016,107,11,false,unknown (timeout),violated,yes,120.2
+2016,107,12,false,unknown (timeout),violated,yes,120.2
+2016,107,13,false,violated,violated,yes,47.9
+2016,107,14,true,unknown (timeout),violated,no,121.8
+2016,107,15,true,unknown (timeout),violated,no,120.2
+2016,107,16,false,violated,violated,yes,52.7
+2016,107,17,false,unknown (timeout),violated,yes,120.2
+2016,107,18,false,unknown (timeout),violated,yes,120.2
+2016,107,19,false,unknown (timeout),violated,yes,120.2
+2016,107,20,false,unknown (timeout),violated,yes,120.2
+2016,108,1,true,unknown (timeout),violated,no,120.2
+2016,108,2,true,unknown (timeout),violated,no,120.2
+2016,108,3,true,unknown (timeout),violated,no,120.2
+2016,108,4,true,unknown (timeout),violated,no,120.2
+2016,108,5,true,unknown (timeout),violated,no,120.2
+2016,108,6,true,unknown (timeout),violated,no,120.2
+2016,108,7,true,unknown (timeout),violated,no,120.3
+2016,108,8,true,unknown (timeout),violated,no,120.2
+2016,108,9,false,unknown (timeout),violated,yes,120.2
+2016,108,10,true,unknown (timeout),violated,no,120.2
+2016,108,11,false,unknown (timeout),violated,yes,120.3
+2016,108,12,true,unknown (timeout),violated,no,120.3
+2016,108,13,false,unknown (timeout),violated,yes,120.3
+2016,108,14,false,unknown (timeout),violated,yes,120.3
+2016,108,15,false,unknown (timeout),violated,yes,120.2
+2016,108,16,true,unknown (timeout),violated,no,120.2
+2016,108,17,true,unknown (timeout),violated,no,120.2
+2016,108,18,true,unknown (timeout),violated,no,120.3
+2016,108,19,false,unknown (timeout),violated,yes,120.3
+2016,108,20,false,unknown (timeout),violated,yes,120.3
+2016,109,1,true,unknown (timeout),violated,no,120.2
+2016,109,2,false,unknown (timeout),violated,yes,120.3
+2016,109,3,true,unknown (timeout),violated,no,120.3
+2016,109,4,true,unknown (timeout),violated,no,120.2
+2016,109,5,false,unknown (timeout),violated,yes,120.3
+2016,109,6,true,unknown (timeout),violated,no,120.2
+2016,109,7,false,unknown (timeout),violated,yes,120.2
+2016,109,8,true,unknown (timeout),violated,no,120.2
+2016,109,9,false,unknown (timeout),violated,yes,120.2
+2016,109,10,true,unknown (timeout),violated,no,120.3
+2016,109,11,true,unknown (timeout),violated,no,120.3
+2016,109,12,false,unknown (timeout),violated,yes,120.2
+2016,109,13,false,unknown (timeout),violated,yes,120.3
+2016,109,14,true,unknown (timeout),violated,no,120.3
+2016,109,15,true,unknown (timeout),violated,no,120.3
+2016,109,16,false,unknown (timeout),violated,yes,120.4
+2016,109,17,false,unknown (timeout),violated,yes,120.4
+2016,109,18,true,unknown (timeout),violated,no,120.3
+2016,109,19,false,unknown (timeout),violated,yes,120.3
+2016,109,20,false,unknown (timeout),violated,yes,120.4
+2016,110,1,true,unknown (timeout),violated,no,120.4
+2016,110,2,true,unknown (timeout),violated,no,120.3
+2016,110,3,true,unknown (timeout),violated,no,120.4
+2016,110,4,true,unknown (timeout),violated,no,120.4
+2016,110,5,true,unknown (timeout),violated,no,120.4
+2016,110,6,true,unknown (timeout),violated,no,120.3
+2016,110,7,true,unknown (timeout),violated,no,120.4
+2016,110,8,true,unknown (timeout),violated,no,120.3
+2016,110,9,false,unknown (timeout),violated,yes,120.4
+2016,110,10,true,unknown (timeout),violated,no,120.4
+2016,110,11,false,unknown (timeout),violated,yes,120.3
+2016,110,12,false,unknown (timeout),violated,yes,120.2
+2016,110,13,true,unknown (timeout),violated,no,120.3
+2016,110,14,true,unknown (timeout),violated,no,120.3
+2016,110,15,true,unknown (timeout),violated,no,120.4
+2016,110,16,false,unknown (timeout),violated,yes,120.4
+2016,110,17,false,unknown (timeout),violated,yes,120.4
+2016,110,18,true,unknown (timeout),violated,no,120.3
+2016,110,19,true,unknown (timeout),violated,no,120.2
+2016,110,20,false,unknown (timeout),violated,yes,120.4
+2016,111,1,false,violated,violated,yes,49.8
+2016,111,2,false,unknown (timeout),violated,yes,120.3
+2016,111,3,true,unknown (timeout),violated,no,120.4
+2016,111,4,false,unknown (timeout),violated,yes,120.4
+2016,111,5,false,unknown (timeout),violated,yes,120.4
+2016,111,6,false,unknown (timeout),violated,yes,120.3
+2016,111,7,false,unknown (timeout),violated,yes,120.3
+2016,111,8,true,unknown (timeout),violated,no,120.4
+2016,111,9,true,unknown (timeout),violated,no,120.2
+2016,111,10,true,unknown (timeout),violated,no,120.5
+2016,111,11,true,unknown (timeout),violated,no,120.3
+2016,111,12,true,unknown (timeout),violated,no,120.4
+2016,111,13,false,unknown (timeout),violated,yes,120.3
+2016,111,14,true,unknown (timeout),violated,no,120.4
+2016,111,15,true,unknown (timeout),violated,no,120.4
+2016,111,16,true,unknown (timeout),violated,no,120.3
+2016,111,17,true,unknown (timeout),violated,no,120.6
+2016,111,18,false,unknown (timeout),violated,yes,120.4
+2016,111,19,false,unknown (timeout),violated,yes,120.3
+2016,111,20,true,unknown (timeout),violated,no,120.3
+2016,112,1,true,unknown (timeout),violated,no,120.3
+2016,112,2,false,unknown (timeout),violated,yes,120.2
+2016,112,3,true,unknown (timeout),violated,no,120.3
+2016,112,4,true,unknown (timeout),violated,no,120.4
+2016,112,5,false,unknown (timeout),violated,yes,120.3
+2016,112,6,false,unknown (timeout),violated,yes,120.4
+2016,112,7,false,unknown (timeout),violated,yes,120.3
+2016,112,8,true,unknown (timeout),violated,no,120.4
+2016,112,9,false,unknown (timeout),violated,yes,120.4
+2016,112,10,false,unknown (timeout),violated,yes,120.2
+2016,112,11,false,unknown (timeout),violated,yes,120.4
+2016,112,12,false,unknown (timeout),violated,yes,120.3
+2016,112,13,false,unknown (timeout),violated,yes,120.4
+2016,112,14,true,unknown (timeout),violated,no,120.3
+2016,112,15,true,unknown (timeout),violated,no,120.3
+2016,112,16,false,unknown (timeout),violated,yes,120.4
+2016,112,17,false,unknown (timeout),violated,yes,120.2
+2016,112,18,true,unknown (timeout),violated,no,120.3
+2016,112,19,false,unknown (timeout),violated,yes,120.3
+2016,112,20,false,unknown (timeout),violated,yes,120.3
+2016,113,1,true,unknown (timeout),violated,no,120.3
+2016,113,2,false,unknown (timeout),violated,yes,120.2
+2016,113,3,true,unknown (timeout),unknown (timeout),no,240.1
+2016,113,4,true,unknown (timeout),violated,no,120.3
+2016,113,5,true,unknown (timeout),violated,no,120.3
+2016,113,6,true,unknown (timeout),violated,no,120.2
+2016,113,7,false,unknown (timeout),violated,yes,120.2
+2016,113,8,true,unknown (timeout),violated,no,120.3
+2016,113,9,true,unknown (timeout),violated,no,120.3
+2016,113,10,true,unknown (timeout),violated,no,120.3
+2016,113,11,true,unknown (timeout),violated,no,120.2
+2016,113,12,true,unknown (timeout),violated,no,120.2
+2016,113,13,false,unknown (timeout),violated,yes,120.2
+2016,113,14,true,unknown (timeout),violated,no,120.2
+2016,113,15,true,unknown (timeout),violated,no,120.3
+2016,113,16,false,unknown (timeout),violated,yes,120.4
+2016,113,17,false,unknown (timeout),violated,yes,120.4
+2016,113,18,true,unknown (timeout),violated,no,120.4
+2016,113,19,false,unknown (timeout),violated,yes,120.2
+2016,113,20,true,unknown (timeout),violated,no,120.4
+2016,114,1,true,unknown (timeout),violated,no,120.2
+2016,114,2,true,unknown (timeout),violated,no,120.2
+2016,114,3,true,unknown (timeout),violated,no,120.3
+2016,114,4,false,unknown (timeout),violated,yes,120.4
+2016,114,5,true,unknown (timeout),violated,no,120.2
+2016,114,6,false,unknown (timeout),violated,yes,120.3
+2016,114,7,false,unknown (timeout),violated,yes,120.2
+2016,114,8,true,unknown (timeout),violated,no,120.2
+2016,114,9,true,unknown (timeout),violated,no,120.3
+2016,114,10,true,unknown (timeout),violated,no,120.3
+2016,114,11,true,unknown (timeout),violated,no,120.2
+2016,114,12,false,unknown (timeout),violated,yes,120.3
+2016,114,13,false,unknown (timeout),violated,yes,120.2
+2016,114,14,true,unknown (timeout),violated,no,120.4
+2016,114,15,false,unknown (timeout),violated,yes,120.2
+2016,114,16,false,unknown (timeout),violated,yes,120.3
+2016,114,17,true,unknown (timeout),violated,no,120.3
+2016,114,18,true,unknown (timeout),violated,no,120.2
+2016,114,19,false,unknown (timeout),violated,yes,120.3
+2016,114,20,false,unknown (timeout),violated,yes,120.3
+2016,115,1,false,unknown (timeout),violated,yes,120.2
+2016,115,2,false,unknown (timeout),violated,yes,120.4
+2016,115,3,false,unknown (timeout),violated,yes,120.2
+2016,115,4,true,unknown (timeout),violated,no,120.3
+2016,115,5,false,unknown (timeout),violated,yes,120.3
+2016,115,6,true,unknown (timeout),violated,no,120.3
+2016,115,7,false,unknown (timeout),violated,yes,120.3
+2016,115,8,false,unknown (timeout),violated,yes,120.3
+2016,115,9,true,unknown (timeout),violated,no,120.3
+2016,115,10,false,unknown (timeout),violated,yes,120.3
+2016,115,11,true,unknown (timeout),violated,no,120.2
+2016,115,12,false,unknown (timeout),unknown (timeout),unknown,240.1
+2016,115,13,false,unknown (timeout),violated,yes,120.2
+2016,115,14,false,unknown (timeout),violated,yes,120.2
+2016,115,15,true,unknown (timeout),violated,no,120.2
+2016,115,16,false,unknown (timeout),violated,yes,120.3
+2016,115,17,true,unknown (timeout),violated,no,120.3
+2016,115,18,true,unknown (timeout),violated,no,120.4
+2016,115,19,false,unknown (timeout),violated,yes,120.3
+2016,115,20,false,unknown (timeout),violated,yes,120.2
+2016,116,1,true,unknown (timeout),violated,no,120.2
+2016,116,2,true,unknown (timeout),violated,no,120.2
+2016,116,3,true,unknown (timeout),violated,no,120.3
+2016,116,4,false,unknown (timeout),violated,yes,120.2
+2016,116,5,true,unknown (timeout),unknown (timeout),no,240.1
+2016,116,6,false,unknown (timeout),violated,yes,120.2
+2016,116,7,true,unknown (timeout),violated,no,120.2
+2016,116,8,false,unknown (timeout),violated,yes,120.2
+2016,116,9,true,unknown (timeout),violated,no,120.3
+2016,116,10,false,unknown (timeout),violated,yes,120.2
+2016,116,11,true,unknown (timeout),unknown (timeout),no,240.1
+2016,116,12,true,unknown (timeout),violated,no,120.3
+2016,116,13,false,unknown (timeout),violated,yes,120.3
+2016,116,14,true,unknown (timeout),violated,no,120.2
+2016,116,15,true,unknown (timeout),violated,no,120.4
+2016,116,16,true,unknown (timeout),violated,no,120.2
+2016,116,17,true,unknown (timeout),violated,no,120.2
+2016,116,18,true,unknown (timeout),violated,no,120.2
+2016,116,19,true,unknown (timeout),violated,no,120.2
+2016,116,20,false,unknown (timeout),violated,yes,120.3
+2016,117,1,true,unknown (timeout),violated,no,120.3
+2016,117,2,false,unknown (timeout),violated,yes,120.3
+2016,117,3,true,unknown (timeout),violated,no,120.3
+2016,117,4,true,unknown (timeout),violated,no,120.3
+2016,117,5,true,unknown (timeout),violated,no,120.2
+2016,117,6,false,unknown (timeout),violated,yes,120.2
+2016,117,7,false,unknown (timeout),violated,yes,120.2
+2016,117,8,true,unknown (timeout),violated,no,120.2
+2016,117,9,false,unknown (timeout),violated,yes,120.3
+2016,117,10,true,unknown (timeout),violated,no,120.2
+2016,117,11,true,unknown (timeout),violated,no,120.2
+2016,117,12,true,unknown (timeout),violated,no,120.2
+2016,117,13,true,unknown (timeout),violated,no,120.2
+2016,117,14,false,unknown (timeout),violated,yes,120.2
+2016,117,15,true,unknown (timeout),violated,no,120.3
+2016,117,16,true,unknown (timeout),violated,no,120.2
+2016,117,17,true,unknown (timeout),violated,no,120.2
+2016,117,18,true,unknown (timeout),violated,no,120.3
+2016,117,19,false,unknown (timeout),violated,yes,120.4
+2016,117,20,true,unknown (timeout),violated,no,120.4
+2016,118,1,true,unknown (timeout),violated,no,120.3
+2016,118,2,true,unknown (timeout),violated,no,120.2
+2016,118,3,true,unknown (timeout),violated,no,120.3
+2016,118,4,true,unknown (timeout),violated,no,120.3
+2016,118,5,true,unknown (timeout),violated,no,120.3
+2016,118,6,true,unknown (timeout),violated,no,120.3
+2016,118,7,false,unknown (timeout),violated,yes,120.2
+2016,118,8,true,unknown (timeout),violated,no,120.3
+2016,118,9,true,unknown (timeout),violated,no,120.2
+2016,118,10,false,unknown (timeout),violated,yes,120.2
+2016,118,11,false,unknown (timeout),violated,yes,120.2
+2016,118,12,false,unknown (timeout),violated,yes,120.3
+2016,118,13,false,unknown (timeout),violated,yes,120.2
+2016,118,14,true,unknown (timeout),violated,no,120.2
+2016,118,15,true,unknown (timeout),violated,no,120.3
+2016,118,16,false,unknown (timeout),violated,yes,120.2
+2016,118,17,true,unknown (timeout),violated,no,120.2
+2016,118,18,true,unknown (timeout),violated,no,120.2
+2016,118,19,false,unknown (timeout),violated,yes,120.2
+2016,118,20,false,unknown (timeout),violated,yes,120.2
+2016,119,1,true,unknown (timeout),violated,no,120.2
+2016,119,2,true,unknown (timeout),violated,no,120.2
+2016,119,3,false,unknown (timeout),violated,yes,120.2
+2016,119,4,true,unknown (timeout),violated,no,120.2
+2016,119,5,true,unknown (timeout),violated,no,120.2
+2016,119,6,true,unknown (timeout),violated,no,120.2
+2016,119,7,true,unknown (timeout),violated,no,120.2
+2016,119,8,true,unknown (timeout),violated,no,120.2
+2016,119,9,false,unknown (timeout),violated,yes,120.2
+2016,119,10,false,unknown (timeout),violated,yes,120.2
+2016,119,11,false,unknown (timeout),violated,yes,120.2
+2016,119,12,true,unknown (timeout),violated,no,120.2
+2016,119,13,true,unknown (timeout),violated,no,120.2
+2016,119,14,true,unknown (timeout),violated,no,120.2
+2016,119,15,false,unknown (timeout),violated,yes,120.2
+2016,119,16,true,unknown (timeout),violated,no,120.2
+2016,119,17,true,unknown (timeout),violated,no,120.2
+2016,119,18,true,unknown (timeout),violated,no,120.2
+2016,119,19,true,unknown (timeout),violated,no,120.2
+2016,119,20,false,unknown (timeout),violated,yes,120.2
+2016,120,1,false,unknown (timeout),violated,yes,120.2
+2016,120,2,true,unknown (timeout),violated,no,120.2
+2016,120,3,false,unknown (timeout),violated,yes,120.2
+2016,120,4,true,unknown (timeout),violated,no,120.2
+2016,120,5,true,unknown (timeout),violated,no,120.2
+2016,120,6,true,unknown (timeout),violated,no,120.2
+2016,120,7,false,unknown (timeout),violated,yes,120.2
+2016,120,8,false,unknown (timeout),violated,yes,120.2
+2016,120,9,true,unknown (timeout),violated,no,120.2
+2016,120,10,true,unknown (timeout),violated,no,120.2
+2016,120,11,true,unknown (timeout),violated,no,120.2
+2016,120,12,true,unknown (timeout),violated,no,120.2
+2016,120,13,true,unknown (timeout),violated,no,120.2
+2016,120,14,true,unknown (timeout),violated,no,120.2
+2016,120,15,false,violated,violated,yes,8.2
+2016,120,16,true,unknown (timeout),violated,no,120.2
+2016,120,17,false,unknown (timeout),violated,yes,120.2
+2016,120,18,true,unknown (timeout),violated,no,120.2
+2016,120,19,false,unknown (timeout),violated,yes,120.2
+2016,120,20,true,unknown (timeout),violated,no,120.2
+2017,101,1,false,violated,violated,yes,0.3
+2017,101,2,true,holds,violated,no,0.8
+2017,101,3,false,violated,violated,yes,0.3
+2017,101,4,true,holds,violated,no,0.7
+2017,101,5,false,violated,violated,yes,0.4
+2017,101,6,false,violated,violated,yes,0.3
+2017,101,7,true,holds,violated,no,0.6
+2017,101,8,false,violated,violated,yes,0.3
+2017,101,9,false,violated,violated,yes,0.2
+2017,101,10,false,violated,violated,yes,0.4
+2017,101,11,false,violated,violated,yes,0.3
+2017,101,12,false,violated,violated,yes,0.4
+2017,101,13,true,holds,violated,no,0.3
+2017,101,14,false,violated,violated,yes,0.2
+2017,101,15,false,violated,violated,yes,0.3
+2017,101,16,true,holds,violated,no,0.2
+2017,101,17,false,violated,violated,yes,0.3
+2017,101,18,true,holds,violated,no,0.5
+2017,101,19,false,violated,violated,yes,0.3
+2017,101,20,true,holds,violated,no,0.6
+2017,102,1,true,holds,violated,no,16.0
+2017,102,2,false,violated,violated,yes,0.3
+2017,102,3,true,unknown (timeout),violated,no,120.2
+2017,102,4,false,violated,violated,yes,0.3
+2017,102,5,false,violated,violated,yes,0.2
+2017,102,6,true,unknown (timeout),violated,no,120.3
+2017,102,7,false,unknown (timeout),violated,yes,120.2
+2017,102,8,false,violated,violated,yes,0.3
+2017,102,9,true,unknown (timeout),violated,no,120.2
+2017,102,10,false,violated,violated,yes,7.7
+2017,102,11,false,violated,violated,yes,0.3
+2017,102,12,false,violated,violated,yes,0.3
+2017,102,13,true,unknown (timeout),violated,no,120.3
+2017,102,14,true,unknown (timeout),violated,no,120.2
+2017,102,15,true,unknown (timeout),violated,no,120.2
+2017,102,16,true,unknown (timeout),violated,no,120.2
+2017,102,17,true,unknown (timeout),violated,no,120.2
+2017,102,18,false,violated,violated,yes,48.9
+2017,102,19,true,unknown (timeout),violated,no,120.2
+2017,102,20,true,unknown (timeout),violated,no,120.2
+2017,103,1,false,unknown (timeout),violated,yes,120.2
+2017,103,2,false,unknown (timeout),violated,yes,120.2
+2017,103,3,true,unknown (timeout),violated,no,120.2
+2017,103,4,false,violated,violated,yes,1.2
+2017,103,5,false,violated,violated,yes,0.3
+2017,103,6,true,unknown (timeout),violated,no,120.2
+2017,103,7,false,unknown (timeout),violated,yes,120.2
+2017,103,8,false,unknown (timeout),violated,yes,120.2
+2017,103,9,false,unknown (timeout),violated,yes,120.2
+2017,103,10,false,unknown (timeout),violated,yes,120.2
+2017,103,11,false,unknown (timeout),violated,yes,120.2
+2017,103,12,true,unknown (timeout),violated,no,120.2
+2017,103,13,false,unknown (timeout),violated,yes,120.2
+2017,103,14,false,unknown (timeout),violated,yes,120.3
+2017,103,15,true,unknown (timeout),violated,no,120.2
+2017,103,16,false,violated,violated,yes,0.3
+2017,103,17,true,unknown (timeout),violated,no,120.2
+2017,103,18,true,unknown (timeout),violated,no,120.2
+2017,103,19,false,violated,violated,yes,43.9
+2017,103,20,false,violated,violated,yes,0.3
+2017,104,1,true,unknown (timeout),violated,no,120.2
+2017,104,2,true,unknown (timeout),violated,no,120.2
+2017,104,3,false,unknown (timeout),violated,yes,120.2
+2017,104,4,false,unknown (timeout),violated,yes,120.2
+2017,104,5,false,unknown (timeout),violated,yes,120.2
+2017,104,6,true,unknown (timeout),violated,no,120.3
+2017,104,7,false,unknown (timeout),violated,yes,120.2
+2017,104,8,true,unknown (timeout),violated,no,120.2
+2017,104,9,true,unknown (timeout),violated,no,120.2
+2017,104,10,false,unknown (timeout),violated,yes,120.2
+2017,104,11,true,unknown (timeout),violated,no,120.2
+2017,104,12,true,unknown (timeout),violated,no,120.2
+2017,104,13,false,violated,violated,yes,105.5
+2017,104,14,false,unknown (timeout),violated,yes,120.2
+2017,104,15,false,unknown (timeout),violated,yes,120.2
+2017,104,16,false,unknown (timeout),violated,yes,120.2
+2017,104,17,true,unknown (timeout),violated,no,120.2
+2017,104,18,true,unknown (timeout),violated,no,120.2
+2017,104,19,true,unknown (timeout),violated,no,120.2
+2017,104,20,true,unknown (timeout),violated,no,120.2
+2017,105,1,false,unknown (timeout),violated,yes,120.2
+2017,105,2,true,unknown (timeout),violated,no,120.2
+2017,105,3,false,unknown (timeout),violated,yes,120.2
+2017,105,4,false,unknown (timeout),violated,yes,120.2
+2017,105,5,false,unknown (timeout),violated,yes,120.2
+2017,105,6,false,unknown (timeout),violated,yes,120.2
+2017,105,7,false,unknown (timeout),violated,yes,120.2
+2017,105,8,true,unknown (timeout),violated,no,120.2
+2017,105,9,true,unknown (timeout),violated,no,120.2
+2017,105,10,false,unknown (timeout),violated,yes,120.2
+2017,105,11,false,unknown (timeout),violated,yes,120.2
+2017,105,12,false,unknown (timeout),violated,yes,120.2
+2017,105,13,false,unknown (timeout),violated,yes,120.2
+2017,105,14,true,unknown (timeout),violated,no,120.2
+2017,105,15,false,unknown (timeout),violated,yes,120.2
+2017,105,16,true,unknown (timeout),violated,no,120.2
+2017,105,17,false,unknown (timeout),violated,yes,120.2
+2017,105,18,true,unknown (timeout),violated,no,120.2
+2017,105,19,false,unknown (timeout),violated,yes,120.2
+2017,105,20,false,unknown (timeout),violated,yes,120.2
+2017,106,1,false,unknown (timeout),violated,yes,120.2
+2017,106,2,false,unknown (timeout),violated,yes,120.2
+2017,106,3,true,unknown (timeout),violated,no,120.2
+2017,106,4,false,unknown (timeout),violated,yes,120.2
+2017,106,5,true,unknown (timeout),violated,no,120.2
+2017,106,6,false,unknown (timeout),violated,yes,120.2
+2017,106,7,true,unknown (timeout),violated,no,120.2
+2017,106,8,false,unknown (timeout),violated,yes,120.2
+2017,106,9,true,unknown (timeout),violated,no,120.2
+2017,106,10,true,unknown (timeout),violated,no,120.2
+2017,106,11,true,unknown (timeout),violated,no,120.2
+2017,106,12,false,unknown (timeout),violated,yes,120.2
+2017,106,13,false,unknown (timeout),violated,yes,120.2
+2017,106,14,true,unknown (timeout),violated,no,120.2
+2017,106,15,false,unknown (timeout),violated,yes,120.2
+2017,106,16,true,unknown (timeout),violated,no,120.2
+2017,106,17,true,unknown (timeout),violated,no,120.2
+2017,106,18,false,unknown (timeout),violated,yes,120.2
+2017,106,19,true,unknown (timeout),violated,no,120.2
+2017,106,20,true,unknown (timeout),violated,no,120.2
+2017,107,1,false,unknown (timeout),violated,yes,120.2
+2017,107,2,true,unknown (timeout),violated,no,120.2
+2017,107,3,false,unknown (timeout),violated,yes,120.2
+2017,107,4,false,unknown (timeout),violated,yes,120.2
+2017,107,5,false,unknown (timeout),violated,yes,120.2
+2017,107,6,false,unknown (timeout),violated,yes,120.2
+2017,107,7,false,unknown (timeout),violated,yes,120.2
+2017,107,8,false,unknown (timeout),violated,yes,120.2
+2017,107,9,false,unknown (timeout),violated,yes,120.2
+2017,107,10,false,unknown (timeout),violated,yes,120.2
+2017,107,11,true,unknown (timeout),violated,no,120.2
+2017,107,12,true,unknown (timeout),violated,no,120.2
+2017,107,13,false,unknown (timeout),violated,yes,120.2
+2017,107,14,true,unknown (timeout),violated,no,120.2
+2017,107,15,true,unknown (timeout),violated,no,120.2
+2017,107,16,true,unknown (timeout),violated,no,120.2
+2017,107,17,true,unknown (timeout),violated,no,120.2
+2017,107,18,false,violated,violated,yes,108.9
+2017,107,19,false,unknown (timeout),violated,yes,120.2
+2017,107,20,true,unknown (timeout),violated,no,120.2
+2017,108,1,false,unknown (timeout),violated,yes,120.2
+2017,108,2,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,108,3,false,unknown (timeout),violated,yes,120.2
+2017,108,4,false,unknown (timeout),violated,yes,120.2
+2017,108,5,false,unknown (timeout),violated,yes,120.2
+2017,108,6,false,unknown (timeout),violated,yes,120.2
+2017,108,7,false,unknown (timeout),violated,yes,120.2
+2017,108,8,true,unknown (timeout),violated,no,120.2
+2017,108,9,true,unknown (timeout),violated,no,120.2
+2017,108,10,false,unknown (timeout),violated,yes,120.2
+2017,108,11,true,unknown (timeout),violated,no,120.2
+2017,108,12,false,unknown (timeout),violated,yes,120.2
+2017,108,13,false,unknown (timeout),violated,yes,120.2
+2017,108,14,true,unknown (timeout),violated,no,120.2
+2017,108,15,false,unknown (timeout),violated,yes,120.2
+2017,108,16,true,unknown (timeout),violated,no,120.2
+2017,108,17,false,unknown (timeout),violated,yes,120.2
+2017,108,18,false,unknown (timeout),violated,yes,120.2
+2017,108,19,false,unknown (timeout),violated,yes,120.2
+2017,108,20,true,unknown (timeout),violated,no,120.2
+2017,109,1,true,unknown (timeout),violated,no,120.2
+2017,109,2,false,unknown (timeout),violated,yes,120.2
+2017,109,3,false,unknown (timeout),violated,yes,120.2
+2017,109,4,false,unknown (timeout),violated,yes,120.2
+2017,109,5,false,unknown (timeout),violated,yes,120.2
+2017,109,6,false,unknown (timeout),violated,yes,120.2
+2017,109,7,false,unknown (timeout),violated,yes,120.2
+2017,109,8,true,unknown (timeout),violated,no,120.2
+2017,109,9,true,unknown (timeout),violated,no,120.2
+2017,109,10,false,unknown (timeout),violated,yes,120.2
+2017,109,11,true,unknown (timeout),violated,no,120.2
+2017,109,12,false,unknown (timeout),violated,yes,120.2
+2017,109,13,false,unknown (timeout),violated,yes,120.2
+2017,109,14,false,unknown (timeout),violated,yes,120.2
+2017,109,15,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,109,16,true,unknown (timeout),violated,no,120.2
+2017,109,17,false,unknown (timeout),violated,yes,120.2
+2017,109,18,false,unknown (timeout),violated,yes,120.2
+2017,109,19,false,unknown (timeout),violated,yes,120.2
+2017,109,20,true,unknown (timeout),violated,no,120.2
+2017,110,1,false,violated,violated,yes,0.3
+2017,110,2,true,holds,violated,no,0.3
+2017,110,3,false,violated,violated,yes,0.3
+2017,110,4,false,violated,violated,yes,0.3
+2017,110,5,false,unknown (timeout),unknown (timeout),unknown,240.4
+2017,110,6,false,violated,violated,yes,0.3
+2017,110,7,false,violated,violated,yes,0.2
+2017,110,8,true,unknown (timeout),violated,no,120.3
+2017,110,9,false,violated,violated,yes,0.3
+2017,110,10,true,unknown (timeout),violated,no,120.2
+2017,110,11,false,violated,violated,yes,0.3
+2017,110,12,true,unknown (timeout),violated,no,120.3
+2017,110,13,false,violated,violated,yes,0.3
+2017,110,14,false,unknown (timeout),unknown (timeout),unknown,240.3
+2017,110,15,true,holds,violated,no,0.3
+2017,110,16,false,violated,violated,yes,0.3
+2017,110,17,false,violated,violated,yes,0.3
+2017,110,18,false,violated,violated,yes,0.3
+2017,110,19,false,violated,violated,yes,0.2
+2017,110,20,false,unknown (timeout),unknown (timeout),unknown,240.3
+2017,111,1,false,unknown (timeout),violated,yes,120.2
+2017,111,2,true,unknown (timeout),violated,no,120.3
+2017,111,3,true,holds,unknown (timeout),no,120.3
+2017,111,4,true,unknown (timeout),violated,no,120.2
+2017,111,5,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,111,6,true,unknown (timeout),unknown (timeout),no,240.4
+2017,111,7,false,violated,holds,no,0.5
+2017,111,8,true,unknown (timeout),violated,no,120.3
+2017,111,9,true,unknown (timeout),violated,no,120.3
+2017,111,10,true,unknown (timeout),unknown (timeout),no,240.2
+2017,111,11,true,unknown (timeout),violated,no,120.3
+2017,111,12,true,holds,violated,no,0.4
+2017,111,13,true,unknown (timeout),violated,no,120.3
+2017,111,14,true,unknown (timeout),violated,no,120.3
+2017,111,15,true,unknown (timeout),unknown (timeout),no,240.4
+2017,111,16,false,violated,unknown (timeout),unknown,120.3
+2017,111,17,false,unknown (timeout),unknown (timeout),unknown,240.3
+2017,111,18,false,violated,unknown (timeout),unknown,120.2
+2017,111,19,false,unknown (timeout),unknown (timeout),unknown,240.3
+2017,111,20,false,violated,unknown (timeout),unknown,120.3
+2017,112,1,true,unknown (timeout),unknown (timeout),no,240.2
+2017,112,2,true,unknown (timeout),violated,no,120.3
+2017,112,3,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,112,4,true,unknown (timeout),unknown (timeout),no,240.2
+2017,112,5,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,112,6,true,unknown (timeout),unknown (timeout),no,240.1
+2017,112,7,true,unknown (timeout),violated,no,120.3
+2017,112,8,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,112,9,true,holds,violated,no,16.3
+2017,112,10,true,unknown (timeout),violated,no,120.3
+2017,112,11,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,112,12,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,112,13,true,unknown (timeout),unknown (timeout),no,240.2
+2017,112,14,true,unknown (timeout),unknown (timeout),no,240.2
+2017,112,15,false,violated,unknown (timeout),unknown,120.3
+2017,112,16,false,violated,unknown (timeout),unknown,120.3
+2017,112,17,true,unknown (timeout),violated,no,120.3
+2017,112,18,false,violated,unknown (timeout),unknown,120.3
+2017,112,19,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,112,20,false,violated,unknown (timeout),unknown,120.3
+2017,113,1,true,holds,violated,no,0.6
+2017,113,2,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,113,3,false,violated,unknown (timeout),unknown,120.4
+2017,113,4,true,unknown (timeout),unknown (timeout),no,240.2
+2017,113,5,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,113,6,true,unknown (timeout),unknown (timeout),no,240.2
+2017,113,7,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,113,8,true,unknown (timeout),unknown (timeout),no,240.2
+2017,113,9,true,unknown (timeout),violated,no,120.2
+2017,113,10,true,unknown (timeout),violated,no,120.3
+2017,113,11,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,113,12,true,unknown (timeout),unknown (timeout),no,240.2
+2017,113,13,true,holds,violated,no,0.3
+2017,113,14,true,unknown (timeout),unknown (timeout),no,240.3
+2017,113,15,true,unknown (timeout),unknown (timeout),no,240.3
+2017,113,16,true,unknown (timeout),unknown (timeout),no,240.2
+2017,113,17,true,unknown (timeout),violated,no,120.3
+2017,113,18,true,unknown (timeout),unknown (timeout),no,240.2
+2017,113,19,false,unknown (timeout),violated,yes,120.3
+2017,113,20,false,violated,unknown (timeout),unknown,120.2
+2017,114,1,true,unknown (timeout),violated,no,120.6
+2017,114,2,true,holds,violated,no,117.7
+2017,114,3,true,unknown (timeout),unknown (timeout),no,240.2
+2017,114,4,false,violated,violated,yes,0.7
+2017,114,5,true,unknown (timeout),unknown (timeout),no,240.2
+2017,114,6,true,unknown (timeout),unknown (timeout),no,240.2
+2017,114,7,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,114,8,false,violated,violated,yes,0.7
+2017,114,9,true,unknown (timeout),violated,no,120.4
+2017,114,10,false,violated,violated,yes,1.0
+2017,114,11,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,114,12,false,violated,violated,yes,0.9
+2017,114,13,true,unknown (timeout),violated,no,120.5
+2017,114,14,true,unknown (timeout),unknown (timeout),no,240.1
+2017,114,15,true,unknown (timeout),violated,no,120.5
+2017,114,16,false,violated,violated,yes,0.7
+2017,114,17,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,114,18,false,violated,violated,yes,0.9
+2017,114,19,false,unknown (timeout),unknown (timeout),unknown,240.2
+2017,114,20,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,115,1,true,unknown (timeout),violated,no,120.4
+2017,115,2,true,unknown (timeout),unknown (timeout),no,240.2
+2017,115,3,true,unknown (timeout),unknown (timeout),no,240.2
+2017,115,4,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,115,5,true,unknown (timeout),violated,no,120.8
+2017,115,6,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,115,7,false,violated,unknown (timeout),unknown,120.5
+2017,115,8,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,115,9,false,violated,unknown (timeout),unknown,120.5
+2017,115,10,true,unknown (timeout),violated,no,120.8
+2017,115,11,true,unknown (timeout),unknown (timeout),no,240.1
+2017,115,12,true,unknown (timeout),violated,no,120.8
+2017,115,13,true,holds,violated,no,0.8
+2017,115,14,false,unknown (timeout),unknown (timeout),unknown,240.1
+2017,115,15,false,violated,unknown (timeout),unknown,120.7
+2017,115,16,false,violated,unknown (timeout),unknown,120.8
+2017,115,17,true,unknown (timeout),violated,no,120.5
+2017,115,18,true,unknown (timeout),unknown (exit -15 (killed or out of memory?)),no,220.4
+2017,115,19,true,unknown (timeout),unknown (exit -15 (killed or out of memory?)),no,231.4
+2017,115,20,false,unknown (exit -15 (killed or out of memory?)),unknown (exit -15 (killed or out of memory?)),unknown,98.0
+2018,101,1,false,unknown (timeout),unknown (timeout),unknown,240.2
+2018,101,2,false,unknown (timeout),unknown (exit -15 (killed or out of memory?)),unknown,210.2
+2018,101,3,true,unknown (exit -15 (killed or out of memory?)),unknown (exit -15 (killed or out of memory?)),no,104.3
+2018,101,4,false,unknown (timeout),violated,yes,120.2
+2018,101,5,false,unknown (exit -15 (killed or out of memory?)),unknown (exit -15 (killed or out of memory?)),unknown,66.9
+2018,101,6,false,violated,violated,yes,46.6
+2018,101,7,false,violated,violated,yes,0.3
+2018,101,8,false,violated,violated,yes,0.3
+2018,101,9,true,unknown (timeout),violated,no,120.2
+2018,101,10,true,unknown (exit -15 (killed or out of memory?)),unknown (timeout),no,147.7
+2018,101,11,true,unknown (timeout),violated,no,120.2
+2018,101,12,true,unknown (timeout),unknown (timeout),no,240.2
+2018,101,13,false,unknown (timeout),violated,yes,120.2
+2018,101,14,false,unknown (timeout),unknown (timeout),unknown,240.2
+2018,101,15,true,unknown (timeout),violated,no,120.2
+2018,101,16,false,violated,violated,yes,0.3
+2018,101,17,false,violated,violated,yes,0.3
+2018,101,18,false,violated,violated,yes,0.3
+2018,101,19,false,violated,violated,yes,0.3
+2018,101,20,false,violated,violated,yes,5.5
+2018,102,1,true,unknown (timeout),unknown (timeout),no,240.2
+2018,102,2,false,unknown (timeout),violated,yes,137.2
+2018,102,3,true,unknown (timeout),unknown (timeout),no,240.2
+2018,102,4,false,unknown (timeout),unknown (timeout),unknown,240.2
+2018,102,5,true,unknown (timeout),unknown (timeout),no,240.2
+2018,102,6,false,violated,unknown (timeout),unknown,120.2
+2018,102,7,false,violated,unknown (timeout),unknown,120.2
+2018,102,8,false,violated,unknown (timeout),unknown,120.2
+2018,102,9,true,unknown (timeout),violated,no,120.2
+2018,102,10,false,unknown (timeout),violated,yes,120.2
+2018,102,11,true,unknown (timeout),unknown (timeout),no,240.2
+2018,102,12,false,violated,violated,yes,0.3
+2018,102,13,false,unknown (timeout),unknown (timeout),unknown,240.2
+2018,102,14,false,unknown (timeout),unknown (timeout),unknown,240.2
+2018,102,15,false,unknown (timeout),unknown (timeout),unknown,240.1
+2018,102,16,false,unknown (timeout),violated,yes,120.2
+2018,102,17,false,violated,violated,yes,97.8
+2018,102,18,false,violated,violated,yes,0.3
+2018,102,19,true,unknown (timeout),unknown (timeout),no,240.2
+2018,102,20,true,unknown (timeout),violated,no,120.2
+2018,103,1,true,unknown (timeout),unknown (timeout),no,240.1
+2018,103,2,true,unknown (timeout),violated,no,120.2
+2018,103,3,false,unknown (timeout),unknown (timeout),unknown,240.1
+2018,103,4,true,unknown (timeout),unknown (timeout),no,240.1
+2018,103,5,false,unknown (timeout),unknown (timeout),unknown,240.1
+2018,103,6,false,unknown (timeout),unknown (timeout),unknown,240.1
+2018,103,7,false,violated,violated,yes,0.3
+2018,103,8,false,violated,violated,yes,0.4
+2018,103,9,false,unknown (timeout),unknown (timeout),unknown,240.1
+2018,103,10,false,violated,violated,yes,0.3
+2018,103,11,true,unknown (timeout),violated,no,120.2
+2018,103,12,false,violated,unknown (timeout),unknown,120.2
+2018,103,13,true,unknown (timeout),violated,no,120.2
+2018,103,14,true,unknown (timeout),violated,no,120.2
+2018,103,15,false,unknown (timeout),violated,yes,120.2
+2018,103,16,false,unknown (timeout),violated,yes,120.1
+2018,103,17,true,unknown (timeout),violated,no,120.2
+2018,103,18,false,violated,violated,yes,0.3
+2018,103,19,true,unknown (timeout),unknown (spin -a timeout),no,60.0
+2018,103,20,false,violated,violated,yes,20.6
+2019,101,1,true,unknown (timeout),violated,no,121.2
+2019,101,2,true,unknown (timeout),violated,no,120.4
+2019,101,3,true,holds,violated,no,96.1
+2019,101,4,false,violated,violated,yes,0.6
+2019,101,5,false,violated,violated,yes,0.7
+2019,101,6,true,unknown (timeout),violated,no,120.4
+2019,101,7,true,unknown (timeout),violated,no,120.4
+2019,101,8,true,unknown (timeout),violated,no,120.4
+2019,101,9,false,violated,violated,yes,0.5
+2019,101,10,true,unknown (timeout),violated,no,120.4
+2019,101,11,true,unknown (timeout),violated,no,120.5
+2019,101,12,true,unknown (timeout),violated,no,122.8
+2019,101,13,true,unknown (timeout),violated,no,123.5
+2019,101,14,false,violated,violated,yes,1.7
+2019,101,15,true,unknown (timeout),violated,no,120.5
+2019,101,16,true,unknown (timeout),violated,no,120.5
+2019,101,17,true,unknown (timeout),violated,no,120.5
+2019,101,18,false,violated,violated,yes,0.7
+2019,101,19,false,violated,violated,yes,0.7
+2019,101,20,true,unknown (timeout),violated,no,121.4
+2019,102,1,true,unknown (timeout),violated,no,120.5
+2019,102,2,false,unknown (timeout),violated,yes,120.5
+2019,102,3,true,unknown (timeout),violated,no,120.5
+2019,102,4,true,unknown (timeout),violated,no,120.5
+2019,102,5,false,unknown (timeout),violated,yes,120.6
+2019,102,6,false,violated,violated,yes,71.4
+2019,102,7,false,unknown (timeout),violated,yes,120.4
+2019,102,8,false,unknown (timeout),violated,yes,120.5
+2019,102,9,true,unknown (timeout),violated,no,120.5
+2019,102,10,false,violated,violated,yes,77.2
+2019,102,11,false,unknown (timeout),violated,yes,120.5
+2019,102,12,false,unknown (timeout),violated,yes,120.4
+2019,102,13,false,unknown (timeout),violated,yes,120.5
+2019,102,14,true,unknown (timeout),violated,no,120.5
+2019,102,15,true,unknown (timeout),violated,no,120.5
+2019,102,16,false,violated,violated,yes,60.6
+2019,102,17,false,violated,violated,yes,60.7
+2019,102,18,true,unknown (timeout),violated,no,120.5
+2019,102,19,false,violated,violated,yes,120.1
+2019,102,20,false,unknown (timeout),unknown (timeout),unknown,240.2
+2019,103,1,true,unknown (timeout),violated,no,120.5
+2019,103,2,false,unknown (timeout),violated,yes,120.5
+2019,103,3,true,unknown (timeout),violated,no,120.5
+2019,103,4,true,unknown (timeout),violated,no,120.5
+2019,103,5,false,violated,violated,yes,55.4
+2019,103,6,true,unknown (timeout),violated,no,120.5
+2019,103,7,false,unknown (timeout),violated,yes,120.4
+2019,103,8,true,unknown (timeout),violated,no,120.5
+2019,103,9,true,unknown (timeout),violated,no,120.4
+2019,103,10,true,unknown (timeout),violated,no,120.5
+2019,103,11,true,unknown (timeout),violated,no,120.5
+2019,103,12,false,violated,violated,yes,106.9
+2019,103,13,false,violated,violated,yes,81.6
+2019,103,14,true,unknown (timeout),violated,no,120.4
+2019,103,15,true,unknown (timeout),violated,no,120.5
+2019,103,16,false,unknown (timeout),violated,yes,120.5
+2019,103,17,true,unknown (timeout),violated,no,120.4
+2019,103,18,true,unknown (timeout),violated,no,120.5
+2019,103,19,false,unknown (timeout),violated,yes,120.5
+2019,103,20,false,violated,violated,yes,93.0
+2019,104,1,true,unknown (timeout),violated,no,120.4
+2019,104,2,false,unknown (timeout),violated,yes,120.4
+2019,104,3,false,unknown (timeout),unknown (timeout),unknown,240.2
+2019,104,4,true,unknown (timeout),violated,no,120.5
+2019,104,5,false,unknown (timeout),violated,yes,124.6
+2019,104,6,true,unknown (timeout),violated,no,120.5
+2019,104,7,false,unknown (timeout),violated,yes,120.5
+2019,104,8,true,unknown (timeout),violated,no,120.5
+2019,104,9,true,unknown (timeout),violated,no,120.5
+2019,104,10,true,unknown (timeout),violated,no,120.5
+2019,104,11,true,unknown (timeout),violated,no,120.5
+2019,104,12,false,unknown (timeout),violated,yes,120.5
+2019,104,13,false,unknown (timeout),violated,yes,120.4
+2019,104,14,true,unknown (timeout),violated,no,120.5
+2019,104,15,false,unknown (timeout),violated,yes,120.5
+2019,104,16,false,unknown (timeout),violated,yes,120.4
+2019,104,17,false,unknown (timeout),violated,yes,120.4
+2019,104,18,true,unknown (timeout),violated,no,120.5
+2019,104,19,false,unknown (timeout),violated,yes,120.5
+2019,104,20,false,unknown (timeout),unknown (timeout),unknown,240.2
+2019,105,1,true,unknown (timeout),violated,no,120.5
+2019,105,2,true,unknown (timeout),violated,no,120.5
+2019,105,3,true,unknown (timeout),violated,no,120.5
+2019,105,4,true,unknown (timeout),violated,no,120.5
+2019,105,5,false,unknown (timeout),violated,yes,120.5
+2019,105,6,true,unknown (timeout),violated,no,120.5
+2019,105,7,false,unknown (timeout),violated,yes,120.5
+2019,105,8,true,unknown (timeout),violated,no,120.5
+2019,105,9,true,unknown (timeout),violated,no,120.4
+2019,105,10,true,unknown (timeout),violated,no,120.5
+2019,105,11,true,unknown (timeout),violated,no,120.4
+2019,105,12,false,unknown (timeout),violated,yes,120.5
+2019,105,13,false,unknown (timeout),violated,yes,120.5
+2019,105,14,true,unknown (timeout),violated,no,120.5
+2019,105,15,true,unknown (timeout),violated,no,120.5
+2019,105,16,false,unknown (timeout),violated,yes,120.4
+2019,105,17,true,unknown (timeout),violated,no,120.5
+2019,105,18,true,unknown (timeout),violated,no,120.4
+2019,105,19,false,unknown (timeout),violated,yes,120.5
+2019,105,20,false,unknown (timeout),violated,yes,120.5
+2019,106,1,true,unknown (timeout),violated,no,120.4
+2019,106,2,false,unknown (timeout),violated,yes,120.5
+2019,106,3,true,unknown (timeout),violated,no,120.5
+2019,106,4,true,unknown (timeout),violated,no,120.5
+2019,106,5,false,unknown (timeout),violated,yes,120.5
+2019,106,6,true,unknown (timeout),violated,no,120.4
+2019,106,7,false,unknown (timeout),violated,yes,120.5
+2019,106,8,false,unknown (timeout),violated,yes,120.5
+2019,106,9,true,unknown (timeout),violated,no,120.5
+2019,106,10,false,unknown (timeout),violated,yes,120.5
+2019,106,11,false,unknown (timeout),violated,yes,120.4
+2019,106,12,false,unknown (timeout),violated,yes,120.4
+2019,106,13,false,unknown (timeout),violated,yes,120.4
+2019,106,14,true,unknown (timeout),violated,no,120.5
+2019,106,15,true,unknown (timeout),violated,no,120.5
+2019,106,16,false,unknown (timeout),violated,yes,120.4
+2019,106,17,false,unknown (timeout),violated,yes,120.5
+2019,106,18,true,unknown (timeout),violated,no,120.5
+2019,106,19,false,unknown (timeout),violated,yes,120.5
+2019,106,20,false,unknown (timeout),violated,yes,120.5
+2019,107,1,false,violated,violated,yes,43.2
+2019,107,2,true,unknown (timeout),violated,no,120.4
+2019,107,3,true,unknown (timeout),violated,no,120.5
+2019,107,4,true,unknown (timeout),violated,no,120.5
+2019,107,5,true,unknown (timeout),violated,no,120.5
+2019,107,6,true,unknown (timeout),violated,no,120.5
+2019,107,7,false,violated,violated,yes,66.5
+2019,107,8,false,unknown (timeout),violated,yes,120.5
+2019,107,9,true,unknown (timeout),violated,no,120.5
+2019,107,10,false,violated,violated,yes,63.7
+2019,107,11,false,unknown (timeout),violated,yes,120.5
+2019,107,12,false,violated,violated,yes,62.2
+2019,107,13,false,unknown (timeout),violated,yes,120.5
+2019,107,14,true,unknown (timeout),violated,no,120.5
+2019,107,15,true,unknown (timeout),violated,no,120.5
+2019,107,16,false,unknown (timeout),violated,yes,120.5
+2019,107,17,true,unknown (timeout),violated,no,120.5
+2019,107,18,true,unknown (timeout),violated,no,120.5
+2019,107,19,false,unknown (timeout),violated,yes,120.6
+2019,107,20,true,unknown (timeout),violated,no,120.5
+2019,108,1,false,unknown (timeout),violated,yes,120.8
+2019,108,2,false,violated,violated,yes,75.2
+2019,108,3,true,unknown (timeout),violated,no,120.9
+2019,108,4,true,unknown (timeout),violated,no,120.9
+2019,108,5,true,unknown (timeout),violated,no,120.5
+2019,108,6,false,unknown (timeout),violated,yes,120.7
+2019,108,7,false,unknown (timeout),violated,yes,120.9
+2019,108,8,true,unknown (timeout),violated,no,120.9
+2019,108,9,true,unknown (timeout),violated,no,120.9
+2019,108,10,true,unknown (timeout),violated,no,120.7
+2019,108,11,true,unknown (timeout),unknown (timeout),no,240.2
+2019,108,12,false,unknown (timeout),violated,yes,120.9
+2019,108,13,false,unknown (timeout),violated,yes,120.6
+2019,108,14,true,unknown (timeout),violated,no,121.0
+2019,108,15,true,unknown (timeout),unknown (timeout),no,240.2
+2019,108,16,false,unknown (timeout),unknown (timeout),unknown,240.2
+2019,108,17,false,unknown (timeout),unknown (timeout),unknown,240.2
+2019,108,18,false,unknown (timeout),violated,yes,120.8
+2019,108,19,false,unknown (timeout),violated,yes,120.5
+2019,108,20,true,unknown (timeout),violated,no,120.9
+2019,109,1,true,unknown (timeout),violated,no,120.6
+2019,109,2,false,violated,violated,yes,103.5
+2019,109,3,true,unknown (timeout),violated,no,120.6
+2019,109,4,true,unknown (timeout),violated,no,120.5
+2019,109,5,false,unknown (timeout),unknown (timeout),unknown,240.2
+2019,109,6,false,unknown (timeout),violated,yes,120.6
+2019,109,7,false,unknown (timeout),violated,yes,120.5
+2019,109,8,false,unknown (timeout),violated,yes,120.6
+2019,109,9,true,unknown (timeout),violated,no,120.5
+2019,109,10,false,unknown (timeout),violated,yes,120.6
+2019,109,11,false,unknown (timeout),violated,yes,120.6
+2019,109,12,false,unknown (timeout),violated,yes,120.5
+2019,109,13,false,unknown (timeout),violated,yes,120.6
+2019,109,14,true,unknown (timeout),violated,no,120.5
+2019,109,15,false,unknown (timeout),violated,yes,120.6
+2019,109,16,false,unknown (timeout),violated,yes,120.5
+2019,109,17,false,unknown (timeout),violated,yes,120.8
+2019,109,18,true,unknown (timeout),violated,no,120.6
+2019,109,19,false,unknown (timeout),violated,yes,120.4
+2019,109,20,false,unknown (timeout),violated,yes,120.5
