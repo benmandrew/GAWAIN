@@ -332,10 +332,15 @@ def main():
                 f = formulas.get((int(r["year"]), int(r["problem"]), int(r["prop"])))
                 if f is None or (ARGS.redo_next and uses_next(f)):
                     continue
-                if v in ("holds", "violated") or v == "unknown (timeout)":
-                    why = "timeout" if v.startswith("unknown") else ""
+                if ARGS.only_killed:
+                    # Keep every verdict except claims that an outside signal killed.
+                    keep = "exit -15" not in v
+                else:
+                    keep = v in ("holds", "violated") or v == "unknown (timeout)"
+                if keep:
+                    m = re.fullmatch(r"(\w+)(?: \((.*)\))?", v)
                     res[(int(r["year"]), int(r["problem"]), f"{kind}{r['prop']}")] = (
-                        v.split()[0], why, float(r["seconds"]) / 2)
+                        m.group(1), m.group(2) or "", float(r["seconds"]) / 2)
         tasks = [t for t in tasks if (t[0], t[1], t[2]) not in res]
         print(f"reusing {len(res)}, rerunning {len(tasks)}", file=sys.stderr, flush=True)
     with cf.ThreadPoolExecutor(ARGS.jobs) as ex:
@@ -397,6 +402,9 @@ if __name__ == "__main__":
     ap.add_argument("--reuse", help="previous results CSV; rerun only undecided claims")
     ap.add_argument("--redo-next", action="store_true",
                     help="with --reuse, also rerun every formula that uses X")
+    ap.add_argument("--only-killed", action="store_true",
+                    help="with --reuse, rerun only claims that ended with exit -15 "
+                         "(killed by a signal); keep every other verdict")
     ap.add_argument("--keep", action="store_true", help="keep the work directory")
     ARGS = ap.parse_args()
     main()
