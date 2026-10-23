@@ -27,12 +27,77 @@ Crossover is one side of `tlsf_crossover`. On a fair coin, a subformula of the f
 
 ## Objectives
 
-`score` returns a list of two objectives, both higher-is-better.
+`score` takes one generation's survivors and returns three objectives for each, all higher-is-better.
 
 - **Status.** 1 if the oracle answers `Holds`, 0 if it answers `Fails` or `Unknown`. The oracle never memoises `Unknown`, so a candidate that timed out is asked again if it is bred again.
 - **Syntactic similarity** to φ (`Formula::syntactic_similarity`).
+- **Model-counting similarity** to φ (`count::Counter`, next section), the measure of strength that PLAN.md ranks repairs by. A candidate whose counts fail scores 0, the worst value.
 
-Model-counting similarity, the measure of strength that PLAN.md ranks repairs by, joins this list as a third entry. The NSGA-II functions take objective vectors of any width, so nothing else changes. No trait was introduced for it, because no second implementation exists yet.
+The NSGA-II functions take objective vectors of any width, so nothing else changed. No trait was introduced for the objectives, because each has one implementation. The `weaken` binary prints both similarities on each repair line, as `repair<TAB>syntactic<TAB>semantic<TAB>vacuity<TAB>formula`.
+
+## Model-counting similarity
+
+`src/count/` follows PEREDUR's semantic similarity (`semantic_similarity.cpp`, `model_counter.cpp`, `exhaustive_count.cpp` and `runner/ganak.cpp`), at its defaults, with one change of definition. PEREDUR counts accepting paths in a transfer matrix (`transfer_matrix.cpp`), and that count is not monotone under implication. The count here is a count of lassos, which is monotone and sees liveness (see "Monotonicity" below).
+
+- **Count.** The number of pairs (u, v) of finite words over the valuations of the *atom universe*, with |u| + |v| = 20 (PEREDUR's `default_model_counting_bound`) and |v| ≥ 1, such that the infinite word u v^ω is in the formula's language. `ltl2tgba -D -H` builds a generalised Büchi automaton, trimmed to its *live* states, the states that reach a cycle visiting every acceptance set. A subset construction runs over u, one subset per prefix. The loops v run through the automaton's transition monoid: the relation of v links state p to state q when some run on v leads from p to q, and it records, per acceptance set, whether some such run visits it. v^ω is accepted from p when p reaches, in the graph of that relation, a strongly connected component that has an internal edge for every acceptance set. An infinite run may take each edge of that component by a different run of v on each pass, so the union over runs is exact. For each split |u| = 20 − |v|, the count is the sum, over each prefix subset and each loop relation, of their weights when some state of the subset accepts v^ω.
+- **Pairs, not words.** Different pairs can give the same infinite word: `(a, a)` and `(ε, aa)` both give `a^ω`. The count takes pairs, which is simpler and still monotone, since a language that accepts more words accepts at least the same pairs. A word with many lasso shapes, such as a constant word, weighs more than a word with one, and this weight is the same for every formula that accepts the word.
+- **Universe.** The atoms of φ and φ' together, so the three counts below share it. Mutation draws only φ's atoms, so in practice the universe is φ's atoms.
+- **Similarity.** PEREDUR's default `Logarithmic` metric over the counts of φ, φ' and `φ & φ'`: the harmonic mean of `log shared / log count(φ)` and `log shared / log count(φ')`, each clamped to [0, 1]. Two empty languages score 1, one empty against one non-empty 0, and a count of at most 1 falls back to membership. A candidate equal to φ up to `canonical()` scores 1 with no count, as an unchanged requirement pair does in PEREDUR.
+- **Letters.** The valuations are split once per automaton into classes by the set of live-edge labels they satisfy, so the valuations of one class move the automaton the same way, and each class is one letter weighted by its number of valuations. When the labels mention at most 16 atoms together (`k_exhaustive_count_max_atoms`), each label becomes one 64-bit truth table over those atoms, and a class is a set of rows. Its count is multiplied by 2 for each universe atom the labels do not mention. Wider labels make each class a conjunction, and a conjunction wider than 16 atoms goes to Ganak 2.5.3 as a Tseitin CNF with full bi-implications, so each auxiliary variable is determined and the CNF keeps the label's count. On both measured runs every label was narrow, so Ganak never ran; `tests/count.rs` drives it with a 17-atom φ and checks the result against a closed-form count.
+
+Two other details differ from PEREDUR. Counts are kept as base-2 logarithms in `f64`, and the weights are rescaled to a maximum of 1 after each step, because Rust has no x87 `long double`. This removes PEREDUR's clamp of the bound to `max_representable_step_count`, which no longer has a limit to enforce. PEREDUR also raises the bound to the *timing horizon* of a FRETISH requirement. Plain LTL input has no timings, so that rule has nothing to act on here.
+
+### Monotonicity
+
+PEREDUR's count is the number of weighted paths of exactly 20 edges from the initial state to a state carrying every acceptance set. That is a property of the automaton, not of the language, in two ways. Spot's `-D` only prefers a deterministic automaton, so in a nondeterministic one a word with two accepting-state paths counts twice. And a finite path that ends in an accepting state is not the same as a prefix of the language: it can end in a state with no accepting future, and a prefix whose path is between visits is missed. On the 1,200 implied pairs ψ ⇒ χ that `tests/search.rs` builds by monotone rewrites (depth-4 formulas over three atoms, each implication proved by Spot), PEREDUR's count gave count(ψ) > count(χ) on 26 pairs (2.2%), and 69 of the 2,400 counts exceeded the count of ⊤. On abp4, the repair `G F(… -> X(!s_get W (…)))` scored 0.9697 against 0.9623 for `G(s_get -> X F(s_wait & (…)))`, which implies it.
+
+The lasso count is monotone by definition. If L(ψ) ⊆ L(χ), every pair (u, v) with u v^ω in L(ψ) has u v^ω in L(χ). ⊤ gets the maximum, 20 · 2^(20n) pairs over n atoms, and equivalent formulas have equal languages and so similarity 1. `tests/count.rs` checks all three on the same 1,200 pairs: 0 violations, no count above ⊤, and 796 pairs strictly ordered. It also checks five equivalent pairs, such as `a U b` against `b | a & X (a U b)`, for similarity 1, and checks that on `ack.smv`'s φ `G(req -> X ack)` the order 1 > `G(req -> F ack)` > `G F req -> G F ack` > ⊤ holds strictly.
+
+Two other monotone counts were built and measured, and both were rejected.
+
+- **Prefixes.** The number of words of length 20 that are prefixes of some word of the language, by a subset construction over the live states. It is monotone (0 violations, no count above ⊤), but it orders only 679 of the 1,200 pairs strictly, and a finite prefix cannot see liveness: every finite word extends to one that satisfies `F p`, so it measures only a formula's safety closure. `G(req -> F ack)` scored 0.8906, the score of ⊤, and on abp4 every repair of every arm but the two `G(s_get & r_ack0 -> …)` ones scored 0.9599, again the score of ⊤. It cost 0.34 s in process on abp4.
+- **Sampled lassos.** A fixed seeded sample of N lassos over the universe, with |u| uniform in [0, 20) and |v| = 20 − |u|, each formula evaluated in process by `Lasso::satisfies`, and the similarity taken over the sample fractions. It is monotone by construction (0 violations), but uniform lassos almost never satisfy a safety specification. With N = 10,000, φ on `ack.smv` held on 56 lassos and abp4's φ on 39, so its similarity rested on a few dozen samples: `G(req -> F ack)` scored 0.6100 against 0.6083 for ⊤. On the 1,200 pairs it ordered 669 strictly, and in 384 of them ψ had no hit at all. It is also no cheaper: 2,400 formulas took 28.7 s in process at N = 10,000 (2.7 s at N = 1,000, with 668 pairs strictly ordered and 386 empty), against 0.59 s for the exact lasso count of the same formulas. These figures come from a one-off test on the local machine, not kept in the tree.
+
+### Cost and caching
+
+Each new candidate costs two automata, one for φ' and one for `φ & φ'`. φ's own count is computed once per universe. All three caches key on `canonical()` and never rename atoms. The similarity is relative to the fixed φ, and φ's atoms name model variables. The caches hold the log count per (formula, universe), the similarity per candidate, and the Ganak count per label. Within one count, each monoid element is interned once, with its successor under each letter and its accepting states. A failed translation is cached as a failure, as PEREDUR caches an `ltl2tgba` timeout.
+
+Every formula of one generation goes to `ltl2tgba` on one stdin, one formula per line, and the HOA documents come back in order. If the batch fails, each formula is retried in its own exec, so one formula that blows up costs only itself. `score` also runs the counts on a second thread while the oracle checks the same candidates, since the two are independent. The counter reports `time` (wall time in the counter), `tool_time` (the part spent in `ltl2tgba` and Ganak) and `wait` (the part the search waited for after the oracle had finished).
+
+Both optimisations were measured with PEREDUR's path count, on av3 (Spot 2.15.1 built from source, release build, five interleaved repetitions with other jobs at a load of 5 to 8, `bench/model_counting_batching.sh`). The slow arm, built by `bench/model_counting_seq.py`, runs one exec per formula and counts after the oracle. Both arms report identical repairs. The table gives medians, and every run is in `bench/results/model-counting-ab.csv`.
+
+| Run | Arm | `ltl2tgba` execs | Count time | Wait | Wall |
+|---|---|---|---|---|---|
+| `ack.smv`, seed 4 | one exec per formula, sequential | 1005 | 14.35 s | 14.35 s | 15.75 s |
+| `ack.smv`, seed 4 | batched, beside the oracle | 30 | 0.70 s | 0.10 s | 1.40 s |
+| abp4 `p2false`, seed 1 | one exec per formula, sequential | 1981 | 27.10 s | 27.10 s | 40.63 s |
+| abp4 `p2false`, seed 1 | batched, beside the oracle | 30 | 2.67 s | 0.00 s | 10.65 s |
+
+Batching cut the count time by 10× to 20×. Per exec, `ltl2tgba` start-up costs 7 to 17 ms on av3, against 0.7 to 1.3 ms per formula inside a batch. The thread then hides nearly all of what is left: on abp4 the oracle is always the slower side, and on `ack.smv` the search waited 0.10 s of 1.40 s. In process, the truth tables and the path count took 0.02 s to 0.14 s per run, 3% to 4% of the counter's time.
+
+The prefix count was then measured against the path count on av3 (release build, five repetitions with the order of the arms rotated, other jobs at a load of 12 to 15, `bench/model_counting_ab.sh`, rows `monotone` in the CSV). The first version built each class as a conjunction of labels and truth-tabled it from scratch, and on abp4 it spent 11.2 s of a 14.6 s count in process. Keeping one truth table per label and each class as a set of rows brought that to 0.34 s. The table gives medians for the final version.
+
+| Run | Count | Count time | In process | `ltl2tgba` | Wait |
+|---|---|---|---|---|---|
+| `ack.smv`, seed 4 | paths | 0.98 s | 0.01 s | 0.96 s | 0.19 s |
+| `ack.smv`, seed 4 | prefixes | 1.00 s | 0.04 s | 0.96 s | 0.05 s |
+| abp4 `p2false`, seed 1 | paths | 4.29 s | 0.13 s | 4.16 s | 0.00 s |
+| abp4 `p2false`, seed 1 | prefixes | 3.76 s | 0.34 s | 3.42 s | 0.02 s |
+
+The subset construction costs 2.5× to 4× the path count in process, which is under 10% of the counter's time. Dropping `-S` made the automata smaller, so `ltl2tgba` itself got faster, and on abp4 the whole count got 12% cheaper. The searches differ after the first generation, so these runs translate different formulas (1073 and 2025 for the prefix count, against 1005 and 1981).
+
+The lasso count costs more. Its monoid grows with the automaton: over the 2,015 formulas of one abp4 run, the median automaton had 12 distinct loop relations, the 99th percentile 6,554 and the largest, with 23 states and 20 letters, 117,303. Profiling on the local machine (abp4, seed 1, 30 × 40, release build, timers around each phase) put the time in the step from a relation to its successors. The first version spent 96 s of the count in process. Iterating set bits by `trailing_zeros` instead of testing all 64 brought the count to 72 s, and caching each relation's successors in a flat table, with the loop weights in a vector indexed by relation and a multiplicative hash for interning, brought it to 29.4 s. The four counts were then compared on av3 (release build, five repetitions with the order of the arms rotated, other jobs at a load of about 20 of 32 cores, `bench/model_counting_ab.sh`, rows `lasso-ab` in the CSV). The table gives medians.
+
+| Run | Count | Count time | In process | `ltl2tgba` | Wait | Wall |
+|---|---|---|---|---|---|---|
+| `ack.smv`, seed 4 | paths | 1.04 s | 0.02 s | 1.02 s | 0.14 s | 2.47 s |
+| `ack.smv`, seed 4 | prefixes | 1.05 s | 0.04 s | 1.01 s | 0.02 s | 2.85 s |
+| `ack.smv`, seed 4 | lassos | 1.03 s | 0.06 s | 0.97 s | 0.11 s | 2.21 s |
+| abp4 `p2false`, seed 1 | paths | 5.02 s | 0.14 s | 4.88 s | 0.00 s | 19.43 s |
+| abp4 `p2false`, seed 1 | prefixes | 4.50 s | 0.39 s | 4.11 s | 0.05 s | 17.37 s |
+| abp4 `p2false`, seed 1 | lassos | 36.74 s | 32.99 s | 3.75 s | 26.77 s | 43.32 s |
+
+On abp4 the lasso count takes 8.2× the prefix count's time and the search waits 26.8 s for it, so the run takes 2.5× the wall time. On `ack.smv` it costs nothing measurable. The cost stays under the 10× limit set for keeping the exact count over the sampled one, and the sample is slower at a useful size (see "Monotonicity"). Unoptimised, the count is about 20× slower again, and the abp4 test in `tests/search.rs` took 570 s, so `Cargo.toml` builds the dev profile at `opt-level = 2`. That test now takes 36 s.
 
 ## The output gate
 
@@ -75,14 +140,20 @@ The brief asked for a syntactic validity check only. That was not enough. On the
 
 ## Measured runs
 
-Both runs below come from `cargo test --test search -- --nocapture` (debug build, local machine). The test re-checks every reported repair with a direct nuXmv call and a Spot implication check.
+The runs below come from `cargo test --test search -- --nocapture` (debug build, local machine). The test re-checks every reported repair with a direct nuXmv call and a Spot implication check. The first two rows are from before the model-counting objective, the next two from PEREDUR's path count, the two after from the prefix count, and the last two from the lasso count, with the dev profile at `opt-level = 2`.
 
 | Model | φ | G × P, seed | Repairs | Wall | Queries | Back-end calls | Lasso hits | Implication hits | Memo hits | Spot execs |
 |---|---|---|---|---|---|---|---|---|---|---|
 | `ack.smv` (in the test) | `G (req -> X ack)` | 30 × 40, 4 | 2 | 2.35 s | 843 | 27 | 429 | 97 | 290 | 102 |
 | LMCS-2006 abp4 | `p2false` | 30 × 40, 1 | 2 | 12.5 s | 1121 | 140 | 676 | 199 | 106 | 228 |
+| `ack.smv`, path count | `G (req -> X ack)` | 30 × 40, 4 | 2 | 2.63 s | 790 | 21 | 398 | 87 | 284 | 92 |
+| abp4, path count | `p2false` | 30 × 40, 1 | 3 | 16.1 s | 1129 | 184 | 521 | 309 | 115 | 357 |
+| `ack.smv`, prefix count | `G (req -> X ack)` | 30 × 40, 4 | 3 | 3.01 s | 782 | 24 | 387 | 129 | 242 | 133 |
+| abp4, prefix count | `p2false` | 30 × 40, 1 | 1 | 15.1 s | 1101 | 180 | 648 | 190 | 83 | 247 |
+| `ack.smv`, lasso count | `G (req -> X ack)` | 30 × 40, 4 | 2 | 1.92 s | 800 | 22 | 407 | 80 | 291 | 82 |
+| abp4, lasso count | `p2false` | 30 × 40, 1 | 2 | 35.9 s | 1121 | 164 | 654 | 197 | 106 | 240 |
 
-The counts include the vacuity flags. On `ack.smv` there are no groups, and the repairs are `req -> F X ack` and `G(req -> F ack)`, the same as before. Neither is vacuous. The flags cost 7 queries and no back-end call.
+The counts include the vacuity flags. On `ack.smv` there are no groups, and without the third objective the repairs are `req -> F X ack` and `G(req -> F ack)`, the same as before the flags. Neither is vacuous. The flags cost 7 queries and no back-end call.
 
 On abp4 the propositions of `p2false` are DEFINEs appended to `main` (`s_get` for `sender.state = get`, and so on). The binary derives two groups, `{r_ack0, r_ack1}` and `{s_get, s_wait}`. Before the invariant, the gate reported `G(s_get & s_wait -> X(…))`. Now that candidate is dropped as trivial, and the search takes a different path from the same seed. The repairs are as follows.
 
@@ -92,6 +163,28 @@ On abp4 the propositions of `p2false` are DEFINEs appended to `main` (`s_get` fo
 The flags cost 32 queries, no back-end call and 0.23 s. Against the run before the invariant (1097 queries, 132 back-end calls, 12.1 s), the run made 24 more queries and 8 more back-end calls. That difference comes from the changed search path, not from extra processes.
 
 Seed 2 on abp4, with the same budget, ended with no repair after 237 back-end calls and 20.8 s. A run that finds nothing is a normal outcome at this budget.
+
+### With the model-counting objective
+
+The third objective changes the search path from the same seed. Four arms ran on av3 (release build, five repetitions with the order of the arms rotated, other jobs at a load of about 20 of 32 cores, `bench/model_counting_ab.sh`, rows `lasso-ab` in `bench/results/model-counting-ab.csv`): no counting objective, PEREDUR's path count, the prefix count and the lasso count. Every arm gave the same repairs and the same call counts on all five repetitions. The table gives medians.
+
+| Run | Arm | Repairs | Back-end calls | Count time | Wait | Wall |
+|---|---|---|---|---|---|---|
+| `ack.smv`, seed 4 | two objectives | 2 | 27 | — | — | 2.82 s |
+| `ack.smv`, seed 4 | path count | 2 | 21 | 1.04 s | 0.14 s | 2.47 s |
+| `ack.smv`, seed 4 | prefix count | 3 | 24 | 1.05 s | 0.02 s | 2.85 s |
+| `ack.smv`, seed 4 | lasso count | 2 | 22 | 1.03 s | 0.11 s | 2.21 s |
+| abp4 `p2false`, seed 1 | two objectives | 2 | 140 | — | — | 14.59 s |
+| abp4 `p2false`, seed 1 | path count | 3 | 184 | 5.02 s | 0.00 s | 19.43 s |
+| abp4 `p2false`, seed 1 | prefix count | 1 | 180 | 4.50 s | 0.05 s | 17.37 s |
+| abp4 `p2false`, seed 1 | lasso count | 2 | 164 | 36.74 s | 26.77 s | 43.32 s |
+
+Earlier runs at lower load (rows `ab` and `monotone`) gave the same repairs and call counts. Spot compared every lasso-count repair with every repair of the other three arms, and each repair below is scored by the lasso count.
+
+- `ack.smv`. ⊤ scores 0.8987. The lasso count finds `G F(req -> X ack)` at 0.8989 and `req -> F X ack` at 0.8987. `G(req -> F ack)`, found by the two-objective and path arms, scores 0.8993 and implies `G F(req -> X ack)`. The prefix arm's `req -> F ack` and the path arm's `X G req | F X ack | !req` also score 0.8987. These three only constrain the first request, so their languages miss few lassos and they equal ⊤ to four places, while the liveness repairs sit strictly between φ and ⊤.
+- abp4. ⊤ scores 0.9598. The lasso count finds `G(s_get & r_ack0 -> X(!s_get U (s_wait & (…))))` and the same with `r_ack1`, both at 0.9821, the highest score of any arm. The first implies the `G(s_get & r_ack0 -> …)` repairs of the two-objective arm (0.9734) and the path arm (0.9751): it keeps φ's `!s_get` where they weaken it. No other repair scores above 0.9751. The prefix arm's `F(…)` repair scores 0.9598, a tie with ⊤, and the path arm's `G(s_get -> X(… | s_get))` 0.9599.
+
+On abp4 the lasso count gives the strongest repairs found by any arm, and no repair of its own ties with ⊤. Two seeds are too few to judge the objective in general.
 
 ## Left out of PEREDUR
 
@@ -111,7 +204,11 @@ Seed 2 on abp4, with the same budget, ended with no repair after 237 back-end ca
 | The repair accumulator and streaming maximality | The gate runs once, on the final population. |
 | MUC repair mode | It splits a specification into cores; one formula has none. |
 | The atom-renaming cache key | Atoms name model variables, so renaming is unsound (see `CLAUDE.md`). |
-| Model-counting similarity | Deferred to the next round; the seam is described above. |
+| The timing horizon in the model-counting bound | It exists for FRETISH timings; plain LTL has none. |
+| `max_representable_step_count` | Counts are logarithms with rescaled weights, so no bound overflows. |
+| The transfer-matrix path count (`transfer_matrix.cpp`) | It is not monotone under implication, so the lasso count replaces it (see "Monotonicity"). |
+| The `Direct` similarity metric and the keyword mix | Only the default `Logarithmic` metric has a caller. |
+| The renamed cache keys of `cached_count_traces` and Ganak | The score is relative to the fixed φ, whose atoms name model variables. Ganak's label cache does renumber the label's own atoms, which a propositional count cannot tell apart. |
 | mt19937 and PEREDUR's draw stream | Each tool must reproduce its own runs, not the other's. |
 
 The rates kept (0.1 crossover, 1.0 mutation, 0.25 monotone, 0.2 temporal, a bloat ratio of 2) are PEREDUR's defaults and are not tuned here. None has been measured on this problem.

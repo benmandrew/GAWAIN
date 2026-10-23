@@ -5,6 +5,7 @@
 
 #![deny(missing_docs)]
 
+pub mod count;
 pub mod kripke;
 pub mod ltl;
 pub mod oracle;

@@ -69,7 +69,7 @@ fn scored(text: &str, holds: bool, phi: &Formula) -> Scored {
     let similarity = formula.syntactic_similarity(phi);
     Scored {
         formula,
-        objectives: vec![f64::from(u8::from(holds)), similarity],
+        objectives: vec![f64::from(u8::from(holds)), similarity, similarity],
     }
 }
 
@@ -225,9 +225,13 @@ fn flagged(stdout: &str) -> Vec<(Formula, String)> {
         .lines()
         .filter_map(|line| line.strip_prefix("repair\t"))
         .map(|rest| {
-            let fields: Vec<&str> = rest.splitn(3, '\t').collect();
-            assert_eq!(fields.len(), 3, "similarity, vacuity, formula: {rest}");
-            (parse(fields[2]), fields[1].to_string())
+            let fields: Vec<&str> = rest.splitn(4, '\t').collect();
+            assert_eq!(
+                fields.len(),
+                4,
+                "similarity, semantic, vacuity, formula: {rest}"
+            );
+            (parse(fields[3]), fields[2].to_string())
         })
         .collect()
 }
@@ -277,9 +281,11 @@ fn weaken_repairs_a_failing_property_reproducibly() {
     say(&format!("weaken on ack.smv:\n{stdout}"));
 
     let second = weaken(&model, ATOMS, PHI, 4, 30, 40);
+    // Wall times vary between runs; everything else must not.
     let without_wall = |text: &str| -> String {
         text.lines()
             .filter(|l| !l.starts_with("wall:"))
+            .map(|l| l.split(" time=").next().unwrap_or(l))
             .collect::<Vec<_>>()
             .join("\n")
     };
@@ -369,13 +375,18 @@ fn weaken_runs_on_lmcs_abp4_p2false() {
         "G (s_get & s_wait -> X (!s_get U (s_wait & ((!s_abp & r_ack0) | (s_abp & r_ack1)))))",
     );
     assert!(!found.contains(&trivial), "{stdout}");
-    // The U weakened to X F is kept, flagged vacuous in s_get: M satisfies
-    // G X F (s_wait & ...), so it says nothing about s_get.
+    // Every repair carries a semantic score in [0, 1].
+    for line in stdout.lines().filter_map(|l| l.strip_prefix("repair\t")) {
+        let semantic: f64 = line.split('\t').nth(1).unwrap().parse().unwrap();
+        assert!((0.0..=1.0).contains(&semantic), "{line}");
+    }
+    // The U weakened to X F, a repair of earlier runs, is vacuous in s_get:
+    // M satisfies G X F (s_wait & ...), so it says nothing about s_get.
     let eventual = parse("G (s_get -> X F (s_wait & ((!s_abp & r_ack0) | (s_abp & r_ack1))))");
-    let flags = flagged(&stdout);
-    let (_, flag) = flags
-        .iter()
-        .find(|(formula, _)| *formula == eventual)
-        .unwrap_or_else(|| panic!("no X F repair:\n{stdout}"));
-    assert!(flag.split("; ").any(|s| s == "s_get"), "{stdout}");
+    let atoms: Vec<&str> = ABP4_ATOMS.split(',').collect();
+    let backend = Nuxmv::new(&model, atoms.iter().copied(), LIMITS);
+    let mut oracle = Oracle::new(backend, Words::sample(atoms.iter().copied(), 1), LIMITS);
+    assert_eq!(oracle.check(&eventual), Verdict::Holds);
+    let found = vacuity(&eventual, &mut oracle, &mut VacuityCounts::default());
+    assert!(found.subformulae.contains(&parse("s_get")), "{found:?}");
 }
