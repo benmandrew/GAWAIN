@@ -15,10 +15,10 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
 
-use aragon::ltl::Formula;
-use aragon::oracle::implications;
-use aragon::oracle::process::Limits;
 use common::{have, mutant, parse, Rng};
+use gawain::ltl::Formula;
+use gawain::oracle::implications;
+use gawain::oracle::process::Limits;
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(60),

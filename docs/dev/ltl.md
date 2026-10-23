@@ -16,7 +16,7 @@ Both printers put parentheses around every operand of a binary operator unless i
 
 ## Spot-style word reading
 
-The parser reads Spot syntax with Spot's rules. Spot reads a word that starts with a run of `F`, `G` and `X` as that run of unary operators applied to the rest of the word. So `GFa` is `G(F(a))` and `Grant` is `G(rant)`. An atom with such a name must be quoted, as in `"Grant"`. The Spot printer quotes it automatically, and quotes any other name that Spot would misread (`U`, `true`, names with spaces). PEREDUR's parser reads `Grant` as one atom instead. The two parsers therefore disagree on such names, and aragon follows Spot because Spot is the tool that reads the output.
+The parser reads Spot syntax with Spot's rules. Spot reads a word that starts with a run of `F`, `G` and `X` as that run of unary operators applied to the rest of the word. So `GFa` is `G(F(a))` and `Grant` is `G(rant)`. An atom with such a name must be quoted, as in `"Grant"`. The Spot printer quotes it automatically, and quotes any other name that Spot would misread (`U`, `true`, names with spaces). PEREDUR's parser reads `Grant` as one atom instead. The two parsers therefore disagree on such names, and GAWAIN follows Spot because Spot is the tool that reads the output.
 
 The parser also accepts SPIN's spellings (`[]`, `<>`, `V`, `&&`, `||`) and nuXmv's constants (`TRUE`, `FALSE`), so the output of all three printers parses back. It rejects `xor` and `M`, which are outside the TLSF operator set.
 

@@ -5,7 +5,7 @@
 
 use std::io::Write;
 
-use aragon::ltl::{BinaryOp, Formula, Node, UnaryOp};
+use gawain::ltl::{BinaryOp, Formula, Node, UnaryOp};
 
 pub fn on_path(tool: &str) -> bool {
     std::env::var_os("PATH")

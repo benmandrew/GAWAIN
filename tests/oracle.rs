@@ -11,11 +11,11 @@ use std::io::Write;
 use std::path::Path;
 use std::time::Duration;
 
-use aragon::ltl::Formula;
-use aragon::oracle::nuxmv::Nuxmv;
-use aragon::oracle::process::Limits;
-use aragon::oracle::{Backend, Oracle, Verdict, Words};
 use common::{have, mutant, parse, Rng};
+use gawain::ltl::Formula;
+use gawain::oracle::nuxmv::Nuxmv;
+use gawain::oracle::process::Limits;
+use gawain::oracle::{Backend, Oracle, Verdict, Words};
 
 /// An arbiter: `req` is free; a grant follows a request when the arbiter is
 /// idle, and the step after a grant is busy.

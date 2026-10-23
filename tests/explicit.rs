@@ -11,13 +11,13 @@ use std::io::Write;
 use std::path::Path;
 use std::time::Duration;
 
-use aragon::kripke::Kripke;
-use aragon::ltl::Formula;
-use aragon::oracle::explicit::Explicit;
-use aragon::oracle::nuxmv::Nuxmv;
-use aragon::oracle::process::Limits;
-use aragon::oracle::{Backend, Verdict};
-use aragon::rers::Model;
+use gawain::kripke::Kripke;
+use gawain::ltl::Formula;
+use gawain::oracle::explicit::Explicit;
+use gawain::oracle::nuxmv::Nuxmv;
+use gawain::oracle::process::Limits;
+use gawain::oracle::{Backend, Verdict};
+use gawain::rers::Model;
 
 mod common;
 use common::{have, mutant, Rng};

@@ -12,9 +12,9 @@ mod common;
 use std::io::Write;
 use std::time::Duration;
 
-use aragon::oracle::process::Limits;
-use aragon::oracle::{implications, Words};
 use common::{formula, mutant, on_path, Rng};
+use gawain::oracle::process::Limits;
+use gawain::oracle::{implications, Words};
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(120),

@@ -10,11 +10,11 @@ use std::process::{Command, Output, Stdio};
 
 use std::time::Duration;
 
-use aragon::ltl::Formula;
-use aragon::oracle::nuxmv::Nuxmv;
-use aragon::oracle::process::Limits;
-use aragon::oracle::spin::{Spin, MAX_CLAIMS};
-use aragon::oracle::{Backend, Lasso, Valuation, Verdict};
+use gawain::ltl::Formula;
+use gawain::oracle::nuxmv::Nuxmv;
+use gawain::oracle::process::Limits;
+use gawain::oracle::spin::{Spin, MAX_CLAIMS};
+use gawain::oracle::{Backend, Lasso, Valuation, Verdict};
 
 const TIMEOUT_SECS: &str = "60";
 

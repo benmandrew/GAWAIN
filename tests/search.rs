@@ -13,14 +13,14 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::time::{Duration, Instant};
 
-use aragon::ltl::Formula;
-use aragon::oracle::nuxmv::{exclusive_groups, Nuxmv};
-use aragon::oracle::process::Limits;
-use aragon::oracle::{implications, Backend, Oracle, Verdict, Words};
-use aragon::search::{
+use common::{formula, have, parse};
+use gawain::ltl::Formula;
+use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
+use gawain::oracle::process::Limits;
+use gawain::oracle::{implications, Backend, Oracle, Verdict, Words};
+use gawain::search::{
     gate, invariant, monotone_rewrite, vacuity, Direction, Rng, Scored, Vacuity, VacuityCounts,
 };
-use common::{formula, have, parse};
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(120),

@@ -268,7 +268,7 @@ impl Drop for Spin {
 fn scratch_dir() -> Result<PathBuf, String> {
     static NEXT: AtomicUsize = AtomicUsize::new(0);
     let n = NEXT.fetch_add(1, Ordering::Relaxed);
-    let dir = std::env::temp_dir().join(format!("aragon-spin-{}-{n}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("gawain-spin-{}-{n}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).map_err(|e| format!("cannot create {}: {e}", dir.display()))?;
     Ok(dir)

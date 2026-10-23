@@ -9,8 +9,8 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-use aragon::ltl::{BinaryOp, Formula, UnaryOp};
-use aragon::oracle::{Lasso, Valuation};
+use gawain::ltl::{BinaryOp, Formula, UnaryOp};
+use gawain::oracle::{Lasso, Valuation};
 
 const TIMEOUT_SECS: &str = "60";
 const CASES: usize = 300;

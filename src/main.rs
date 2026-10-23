@@ -22,11 +22,11 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use aragon::ltl::Formula;
-use aragon::oracle::nuxmv::{exclusive_groups, Nuxmv};
-use aragon::oracle::process::Limits;
-use aragon::oracle::{Oracle, Verdict, Words};
-use aragon::search::{gate, invariant, search, Params, Rng};
+use gawain::ltl::Formula;
+use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
+use gawain::oracle::process::Limits;
+use gawain::oracle::{Oracle, Verdict, Words};
+use gawain::search::{gate, invariant, search, Params, Rng};
 
 const USAGE: &str =
     "usage: weaken --model m.smv --atoms a,b,... --ltl 'φ' --seed N --generations G --population P [--exclusive a,b,...]...";

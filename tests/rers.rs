@@ -8,7 +8,7 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use aragon::rers::Model;
+use gawain::rers::Model;
 
 /// The directory of each year's problems, under `bench/data/rers`.
 const YEARS: &[(&str, &str)] = &[
@@ -57,7 +57,7 @@ fn problems(dir: &Path) -> Vec<PathBuf> {
     files
 }
 
-fn parse(path: &Path) -> Result<Model, aragon::rers::Error> {
+fn parse(path: &Path) -> Result<Model, gawain::rers::Error> {
     Model::parse(&std::fs::read_to_string(path).unwrap())
 }
 

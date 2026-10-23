@@ -9,10 +9,10 @@
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use aragon::ltl::Formula;
-use aragon::oracle::explicit::Explicit;
-use aragon::oracle::process::{self, Limits};
-use aragon::oracle::{Backend, Verdict};
+use gawain::ltl::Formula;
+use gawain::oracle::explicit::Explicit;
+use gawain::oracle::process::{self, Limits};
+use gawain::oracle::{Backend, Verdict};
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(300),
@@ -27,7 +27,7 @@ fn main() {
     for path in std::env::args().skip(1) {
         let source = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
         let start = Instant::now();
-        let kripke = aragon::rers::Model::parse(&source)
+        let kripke = gawain::rers::Model::parse(&source)
             .and_then(|m| m.explore())
             .unwrap_or_else(|e| panic!("{path}: {e}"));
         println!(

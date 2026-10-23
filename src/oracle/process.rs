@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn no_grandchild_survives_a_timeout() {
-        let dir = std::env::temp_dir().join(format!("aragon-process-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("gawain-process-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let pid_file = dir.join("grandchild.pid");
         let script = format!("sleep 30 & echo $! > '{}'; wait", pid_file.display());
