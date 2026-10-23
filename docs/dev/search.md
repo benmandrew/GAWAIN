@@ -2,6 +2,21 @@
 
 `src/search/` breeds candidate weakenings φ' of one LTL property φ that the model M violates, scores them with the tiered oracle, and selects under NSGA-II. An output gate then keeps only the candidates proved to be weakenings that hold on M and that no other survivor beats. The `weaken` binary (`src/main.rs`) runs it over the nuXmv back end. This file records the loop, the objectives, the gate, and which parts of PEREDUR (`~/projects/peredur`) were left out and why.
 
+## The degeneracy filter
+
+An instance (M, φ) is worth weakening only when M ⊭ φ and M ⊭ ¬φ. If M ⊨ φ, there is nothing to weaken. If M ⊨ ¬φ, φ fails on every run of M, so on M the weakening ¬φ ∨ χ is equivalent to χ, and every repair that holds is some truth of M to which φ contributes nothing (see "Evaluation without a ground truth" in `PLAN.md`). `instance::classify` asks the search's own oracle about φ and then ¬φ, and returns `Proper`, `Satisfied` or `Degenerate`. Both verdicts are memoised, and each refuting lasso goes into the lasso tier, so the search starts with them. ¬φ is not asked when M ⊨ φ.
+
+The `weaken` binary runs `classify` before the search. It prints one line to stderr and exits with status 1 for `Satisfied` and 3 for `Degenerate`, without searching; status 2 stays the usage error. A check with no verdict (a timeout or a tool error) does not drop the instance. The binary prints a warning naming the formula and the reason, and searches anyway, because an `Unknown` proves neither case and a filter that dropped it would make the benchmark set depend on machine load. Earlier versions exited with status 2 when φ's own verdict was unknown. A proper instance prints `instance: proper time=…`, the wall time of the two checks. The bench scripts `bench/rers_filter.py` and `bench/lmcs_check.py` run the same two checks in Python, with SPIN and nuXmv directly; a Rust benchmark loader should call `classify`.
+
+The added cost was measured on abp4 `p2false` (seed 1, 30 × 40), against the commit before the filter, on the local machine (20 cores, release build, five repetitions with the arm order alternated, other jobs at a load of 7 to 12, `bench/degeneracy_ab.sh`, rows in `bench/results/degeneracy-ab.csv`). The table gives medians.
+
+| Arm | Checks before the search | Wall | Back-end calls | Lasso hits | Repairs |
+|---|---|---|---|---|---|
+| φ only (before) | — | 37.46 s | 164 | 654 | 2 |
+| φ and ¬φ | 0.17 s | 39.03 s | 165 | 654 | 2 |
+
+The two checks took 0.15 to 0.17 s, and ¬φ costs one nuXmv call. The repairs and every other counter were identical on all ten runs. The φ lasso already seeded the lasso tier before this change, since the binary checked φ first. The new seed is the lasso that refutes ¬φ, a run of M on which φ holds, and it refuted no candidate that the other lassos did not, so the lasso hits stayed at 654. The difference in median wall time, 1.6 s, is inside the spread of either arm (37.1 to 41.5 s before, 35.0 to 39.8 s after), so the filter has no measurable effect on the total.
+
 ## The loop
 
 An individual is one formula. The seed population is P copies of φ, collapsed by the survivor step to one distinct member replicated P times. Each of G generations then runs four steps.
