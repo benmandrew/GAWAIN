@@ -62,7 +62,7 @@ LTLCardinality and LTLFireability on Petri nets. The oracles are mirrored at [ya
 
 Original BEEM ([archive](https://paradise.fi.muni.cz/data/beem_models_data.tar.gz); the portal is discontinued; mirror at [plug-obp/beem-benchmark](https://github.com/plug-obp/beem-benchmark)) has 57 models, 300 instances and 76 LTL properties, for 457 LTL × instance pairs. 54 instances carry deliberate `ERROR=1/2` bugs (Peterson with `pos[k] <= j` in place of `<`), giving 96 LTL pairs. These match CEGIW's degraded-system framing: a real requirement, a buggy model.
 
-- There are no published verdicts, so they must be computed.
+- Each model's `generated_files/results.xml` publishes BEEM's own yes/no/unknown verdicts and state counts. On the ERROR pairs they give 54 no, 11 yes and 31 unknown. 53 instances carry ERROR, not 54; 38 of them, from 13 models, have LTL properties.
 - Formats are DVE (DiVinE, LTSmin) and Promela for 235 instances. The Promela files carry no LTL, and the propositions are DVE expressions that need translating.
 - The its-ltl derivative ([ltl_bench.md](https://github.com/lip6/ITSTools-web/blob/master/ltl_bench.md)) is unusable. Its "822 formulae" is a line count, and the real count is 807: 406 BEEM formulae plus 401 negations. It has no verdict file.
 - No licence found.
@@ -124,8 +124,9 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [x] RERS parallel track degeneracy filter (`bench/rers_filter.py`, `bench/results/rers-parallel-filter.csv`; SPIN on av2/av3, 120 s per claim). Of 472 false properties, 401 survive (M ⊭ ¬φ), 6 are degenerate and 65 are unknown (¬φ timed out): 2016 168/5/2, 2017 126/1/41, 2018 23/0/16, 2019 84/0/6. X is read at Listener@step positions; the 2017 Promela solutions read X over stutter steps, so 2017 uses the dot/Petri solutions (all 23 differences are X properties 111–115). Explicit agrees on 2017/110–111; 112–113 exceed 40 GB and 114–115 exceed the 128-bit state key.
 - [ ] RERS 2016/2017: check whether the correct "precedes" patterns hold, and keep the 105 affected cases as a small set with an intended weakening.
 - [ ] MCC: find a tool that emits LTL counterexamples on PNML, then pick a subset of instances with 1e9 states or fewer.
-- [ ] BEEM: translate the LTL propositions for the 96 ERROR pairs, and compute verdicts on both the correct and the erroneous variants.
+- [x] BEEM ERROR pairs (`bench/beem/`, `bench/results/beem-verdicts.csv`, `bench/notes/beem.md`): a new DVE→Promela translator for SPIN, since the shipped Promela breaks DVE step atomicity and 15 correct twins are not BEEM instances. All 113 verdicts that BEEM publishes agree; BEEM's 40 unknowns are decided. Of 96 pairs, 20 fail only on the erroneous variant and all 20 survive the degeneracy filter; 15 of the 20 are `GF p`.
 - [ ] Trace sets: add a trace-based M (check φ' on finite traces and lassos), and fix or skip the OrderedSequence formulas.
+- [ ] Graded satisfaction objective in place of the binary status (decided 2026-10-24): 1 if M ⊨ φ', otherwise the fraction of stored counterexample lassos that φ' satisfies, scaled into [0, 1). φ scores 0, it is monotone under implication for a fixed lasso set, costs no back-end call and works on every back end; the pool is rescored each generation as the set grows. Ablate binary against graded, as PEREDUR's ladder against MRS. Compare the reachable-state fraction on the explicit back end.
 - [ ] Baselines: ⊤ and CEGIW on the subset with intervals.
 - [x] Investigate LMCPS, ARCH-COMP falsification and parametric STL mining (`bench/notes/simulink-sources.md`). ARCH-COMP models are continuous hybrid systems, and STL mining produces satisfied formulas, so neither is usable. LMCPS has 74 discrete-time requirements, about 23 of them violated, but its models need MATLAB and it carries no licence, so at most a few small models could be hand-translated to nuXmv.
 
