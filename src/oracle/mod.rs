@@ -6,6 +6,8 @@
 //! `docs/dev/oracle-performance.md` for the tiered design and its costs.
 
 mod lasso;
+pub mod nuxmv;
+pub mod process;
 
 use std::collections::BTreeSet;
 use std::sync::Arc;

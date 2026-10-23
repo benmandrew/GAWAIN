@@ -6,3 +6,4 @@ description = "Specification weakening against a model by genetic search"
 publish = false
 
 [dependencies]
+libc = "0.2.191"

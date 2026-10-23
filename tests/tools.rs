@@ -1,4 +1,5 @@
-//! End-to-end tests: Spot, SPIN and nuXmv read what the printers write.
+//! End-to-end tests: Spot, SPIN and nuXmv read what the printers write, and
+//! the nuXmv back end answers queries on a real model.
 //!
 //! Each test skips, with a reason on stderr, when a tool it needs is not on
 //! `PATH`. Every tool call runs under `timeout`.
@@ -7,7 +8,12 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
+use std::time::Duration;
+
 use aragon::ltl::Formula;
+use aragon::oracle::nuxmv::Nuxmv;
+use aragon::oracle::process::Limits;
+use aragon::oracle::{Backend, Lasso, Valuation, Verdict};
 
 const TIMEOUT_SECS: &str = "60";
 
@@ -183,5 +189,127 @@ fn nuxmv_gives_known_verdicts() {
             "nuXmv on {spec:?}:\n{stdout}{}",
             String::from_utf8_lossy(&output.stderr)
         );
+    }
+}
+
+/// The same run as `MODEL`, with a DEFINE and an integer the formulas do not
+/// mention, so a lasso must report atoms beyond the formula's.
+const INTERFACE_MODEL: &str = "MODULE main
+VAR x : boolean; y : boolean; n : 0..3;
+DEFINE both := x & y;
+ASSIGN
+  init(x) := FALSE; next(x) := !x;
+  init(y) := FALSE; next(y) := y | x;
+  init(n) := 0; next(n) := case n < 3 : n + 1; TRUE : 0; esac;
+";
+
+/// x is false at the start and true forever after.
+const LATCH_MODEL: &str = "MODULE main
+VAR x : boolean;
+ASSIGN init(x) := FALSE; next(x) := TRUE;
+";
+
+const LIMITS: Limits = Limits {
+    timeout: Duration::from_secs(60),
+    memory_bytes: 1 << 30,
+};
+
+fn nuxmv(name: &str, model: &str, atoms: &[&str], limits: Limits) -> Nuxmv {
+    let path = scratch(name);
+    std::fs::write(&path, model).expect("write model");
+    Nuxmv::new(path, atoms, limits)
+}
+
+fn check(backend: &mut Nuxmv, text: &str) -> Verdict {
+    backend.check(&parse(text))
+}
+
+/// The first `n` positions of `prefix · cycle^ω`, as sorted atom names.
+fn unroll(lasso: &Lasso, n: usize) -> Vec<Vec<String>> {
+    let names = |v: &Valuation| v.iter().map(|a| a.to_string()).collect();
+    lasso
+        .prefix()
+        .iter()
+        .chain(lasso.cycle().iter().cycle())
+        .take(n)
+        .map(names)
+        .collect()
+}
+
+fn expect_lasso(verdict: Verdict) -> Lasso {
+    match verdict {
+        Verdict::Fails(lasso) => lasso,
+        other => panic!("expected a counterexample, got {other:?}"),
+    }
+}
+
+#[test]
+fn nuxmv_backend_proves_a_holding_property() {
+    if !have(&["nuXmv"], "nuxmv_backend_proves_a_holding_property") {
+        return;
+    }
+    let mut backend = nuxmv("holds.smv", INTERFACE_MODEL, &["x", "y", "both"], LIMITS);
+    assert_eq!(check(&mut backend, "G F both"), Verdict::Holds);
+    assert_eq!(check(&mut backend, "F G y"), Verdict::Holds);
+}
+
+#[test]
+fn nuxmv_backend_returns_the_run_that_fails() {
+    if !have(&["nuXmv"], "nuxmv_backend_returns_the_run_that_fails") {
+        return;
+    }
+    let mut backend = nuxmv("fails.smv", INTERFACE_MODEL, &["x", "y", "both"], LIMITS);
+    let lasso = expect_lasso(check(&mut backend, "G !(x & y)"));
+    // The model has one run: x alternates from false, y holds from step 2.
+    let expected: Vec<Vec<String>> = (0..12)
+        .map(|i| {
+            let x = i % 2 == 1;
+            let y = i >= 2;
+            [("both", x && y), ("x", x), ("y", y)]
+                .iter()
+                .filter(|(_, holds)| *holds)
+                .map(|(name, _)| name.to_string())
+                .collect()
+        })
+        .collect();
+    assert_eq!(unroll(&lasso, 12), expected, "{lasso:?}");
+}
+
+#[test]
+fn nuxmv_backend_keeps_the_prefix() {
+    if !have(&["nuXmv"], "nuxmv_backend_keeps_the_prefix") {
+        return;
+    }
+    let mut backend = nuxmv("prefix.smv", LATCH_MODEL, &["x"], LIMITS);
+    let lasso = expect_lasso(check(&mut backend, "G !x"));
+    assert!(!lasso.prefix().is_empty(), "{lasso:?}");
+    assert!(lasso.prefix()[0].is_empty(), "{lasso:?}");
+    assert!(lasso.cycle().iter().all(|v| v.contains("x")), "{lasso:?}");
+    let mut expected = vec![vec![]];
+    expected.extend(std::iter::repeat_n(vec!["x".to_string()], 7));
+    assert_eq!(unroll(&lasso, 8), expected);
+}
+
+#[test]
+fn nuxmv_backend_reports_unknown_on_timeout_or_error() {
+    if !have(
+        &["nuXmv"],
+        "nuxmv_backend_reports_unknown_on_timeout_or_error",
+    ) {
+        return;
+    }
+    let hurried = Limits {
+        timeout: Duration::from_millis(1),
+        ..LIMITS
+    };
+    let mut backend = nuxmv("timeout.smv", INTERFACE_MODEL, &["x"], hurried);
+    match check(&mut backend, "G F x") {
+        Verdict::Unknown(reason) => assert!(reason.contains("timed out"), "{reason}"),
+        other => panic!("expected a timeout, got {other:?}"),
+    }
+    let mut backend = nuxmv("undefined.smv", INTERFACE_MODEL, &["x"], LIMITS);
+    match check(&mut backend, "G undefined") {
+        Verdict::Unknown(reason) => assert!(reason.contains("undefined"), "{reason}"),
+        other => panic!("expected an error, got {other:?}"),
     }
 }
