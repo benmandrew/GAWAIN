@@ -9,6 +9,7 @@ mod implication;
 mod lasso;
 pub mod nuxmv;
 pub mod process;
+pub mod spin;
 mod spot;
 mod tiered;
 

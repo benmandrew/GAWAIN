@@ -1,5 +1,5 @@
 //! End-to-end tests: Spot, SPIN and nuXmv read what the printers write, and
-//! the nuXmv back end answers queries on a real model.
+//! the nuXmv and SPIN back ends answer queries on real models.
 //!
 //! Each test skips, with a reason on stderr, when a tool it needs is not on
 //! `PATH`. Every tool call runs under `timeout`.
@@ -13,6 +13,7 @@ use std::time::Duration;
 use aragon::ltl::Formula;
 use aragon::oracle::nuxmv::Nuxmv;
 use aragon::oracle::process::Limits;
+use aragon::oracle::spin::{Spin, MAX_CLAIMS};
 use aragon::oracle::{Backend, Lasso, Valuation, Verdict};
 
 const TIMEOUT_SECS: &str = "60";
@@ -334,4 +335,227 @@ fn nuxmv_backend_reports_unknown_on_timeout_or_error() {
         Verdict::Unknown(reason) => assert!(reason.contains("undefined"), "{reason}"),
         other => panic!("expected an error, got {other:?}"),
     }
+}
+
+/// RERS-style: a sender reports each action by rendezvous to a listener,
+/// which receives it into `last`. The actions run a, then any sequence of
+/// the blocks `b` and `a a`, so the observable run is ∅ a (b | a a)^ω. The
+/// shipped `ltl` block is false and must be ignored.
+const PROMELA: &str = "mtype = { a, b, none };
+chan act = [0] of { mtype };
+mtype last = none;
+#define p_a (last == a)
+#define p_b (last == b)
+active proctype Listener() { do :: act ? last od }
+active proctype Sender() {
+  act ! a;
+  do
+  :: act ! b
+  :: act ! a; act ! a
+  od
+}
+ltl shipped { [] p_b }
+";
+
+const PROMELA_VERDICTS: &[(&str, bool)] = &[
+    ("G F (p_a | p_b)", true),
+    ("F p_b", false),
+    ("!p_a & !p_b", true),
+    ("X p_a", true),
+    ("X X (p_a | p_b)", true),
+    ("G (p_b -> X p_b)", false),
+    ("F G p_a", false),
+    ("G F p_a", false),
+    ("X (p_a W p_b)", true),
+    ("X (p_a U p_b)", false),
+    ("G (p_a -> F p_b)", false),
+    ("X G (p_a | p_b)", true),
+    ("p_a R !p_b", true),
+    ("G (p_b -> X (p_b | (p_a & X p_a)))", true),
+    ("X p_b", false),
+];
+
+fn spin(name: &str, model: &str, limits: Limits) -> Spin {
+    let path = scratch(name);
+    std::fs::write(&path, model).expect("write model");
+    Spin::new(path, ["p_a", "p_b"], limits).unwrap_or_else(|e| panic!("{e}"))
+}
+
+/// Checks a verdict against the expected truth, and replays every
+/// counterexample: a lasso that satisfies its formula would let tier 1
+/// cache a run that refutes nothing.
+fn assert_verdict(verdict: &Verdict, formula: &Formula, expected: bool) {
+    match verdict {
+        Verdict::Holds => assert!(expected, "SPIN proved {formula}"),
+        Verdict::Fails(lasso) => {
+            assert!(!expected, "SPIN refuted {formula}");
+            assert!(!lasso.satisfies(formula), "{formula} holds on {lasso:?}");
+        }
+        Verdict::Unknown(reason) => panic!("{formula}: {reason}"),
+    }
+}
+
+#[test]
+fn spin_batch_gives_known_verdicts() {
+    if !have(&["spin", "gcc"], "spin_batch_gives_known_verdicts") {
+        return;
+    }
+    let mut backend = spin("batch.pml", PROMELA, LIMITS);
+    let formulas: Vec<Formula> = PROMELA_VERDICTS.iter().map(|(t, _)| parse(t)).collect();
+    let verdicts = backend.check_all(&formulas);
+    assert_eq!(verdicts.len(), formulas.len());
+    for (i, verdict) in verdicts.iter().enumerate() {
+        assert_verdict(verdict, &formulas[i], PROMELA_VERDICTS[i].1);
+    }
+}
+
+/// The same replay check as `nuxmv_lassos_violate_their_formula`, one
+/// build per query.
+#[test]
+fn spin_lassos_violate_their_formula() {
+    if !have(&["spin", "gcc"], "spin_lassos_violate_their_formula") {
+        return;
+    }
+    let mut backend = spin("replay.pml", PROMELA, LIMITS);
+    for (text, expected) in PROMELA_VERDICTS {
+        let formula = parse(text);
+        assert_verdict(&backend.check(&formula), &formula, *expected);
+    }
+}
+
+#[test]
+fn spin_lasso_has_one_position_per_action() {
+    if !have(&["spin", "gcc"], "spin_lasso_has_one_position_per_action") {
+        return;
+    }
+    let mut backend = spin("positions.pml", PROMELA, LIMITS);
+    // The only run without b is ∅ a a a ...; the SPIN steps of each
+    // rendezvous add no positions.
+    let lasso = expect_lasso(backend.check(&parse("F p_b")));
+    let mut expected = vec![vec![]];
+    expected.extend(std::iter::repeat_n(vec!["p_a".to_string()], 7));
+    assert_eq!(unroll(&lasso, 8), expected, "{lasso:?}");
+}
+
+/// A batch larger than one build is split. With the cap raised so that all
+/// 270 claims went into one `pan.c`, this test failed: SPIN reported a
+/// violation of `F p_b` whose trail had no cycle.
+#[test]
+fn spin_splits_a_batch_over_the_claim_cap() {
+    if !have(&["spin", "gcc"], "spin_splits_a_batch_over_the_claim_cap") {
+        return;
+    }
+    let mut backend = spin("split.pml", PROMELA, LIMITS);
+    assert_eq!(backend.claims_per_build(), MAX_CLAIMS - 2);
+    // X-free only: formulas with and without X are built apart, and the
+    // batch must overflow one group.
+    let cases: Vec<(Formula, bool)> = PROMELA_VERDICTS
+        .iter()
+        .filter(|(text, _)| !text.contains('X'))
+        .cycle()
+        .take(270)
+        .map(|(text, expected)| (parse(text), *expected))
+        .collect();
+    assert!(cases.len() > backend.claims_per_build());
+    let formulas: Vec<Formula> = cases.iter().map(|(f, _)| f.clone()).collect();
+    let batched = backend.check_all(&formulas);
+    let singles: Vec<Verdict> = PROMELA_VERDICTS
+        .iter()
+        .filter(|(text, _)| !text.contains('X'))
+        .map(|(text, _)| backend.check(&parse(text)))
+        .collect();
+    for (i, ((formula, expected), verdict)) in cases.iter().zip(&batched).enumerate() {
+        assert_verdict(verdict, formula, *expected);
+        let single = &singles[i % singles.len()];
+        assert_eq!(
+            matches!(verdict, Verdict::Holds),
+            matches!(single, Verdict::Holds),
+            "{formula}: batched {verdict:?}, single {single:?}"
+        );
+    }
+}
+
+#[test]
+fn spin_backend_reports_unknown_on_timeout_or_error() {
+    if !have(
+        &["spin", "gcc"],
+        "spin_backend_reports_unknown_on_timeout_or_error",
+    ) {
+        return;
+    }
+    let hurried = Limits {
+        timeout: Duration::from_millis(1),
+        ..LIMITS
+    };
+    let mut backend = spin("timeout.pml", PROMELA, hurried);
+    match backend.check(&parse("G F p_a")) {
+        Verdict::Unknown(reason) => assert!(reason.contains("timed out"), "{reason}"),
+        other => panic!("expected a timeout, got {other:?}"),
+    }
+    let mut backend = spin("foreign.pml", PROMELA, LIMITS);
+    match backend.check(&parse("G undefined")) {
+        Verdict::Unknown(reason) => assert!(reason.contains("undefined"), "{reason}"),
+        other => panic!("expected an error, got {other:?}"),
+    }
+    let path = scratch("bad-atom.pml");
+    std::fs::write(&path, PROMELA).expect("write model");
+    let error = Spin::new(&path, ["last"], LIMITS).err().expect("an error");
+    assert!(error.contains("no #define"), "{error}");
+}
+
+/// The RERS data is not in git; link `bench/data` to a checkout of it.
+const RERS_2016: &str = "bench/data/rers/2016";
+
+/// RERS 2016 parallel problem101: all 20 shipped properties in one batch,
+/// against the official solutions, with every counterexample replayed.
+#[test]
+fn spin_matches_rers_2016_problem101() {
+    let test = "spin_matches_rers_2016_problem101";
+    if !have(&["spin", "gcc"], test) {
+        return;
+    }
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join(RERS_2016);
+    let model =
+        root.join("ParallelRERS2016_version2/ParallelRERS2016_version2/problem101/problem101.pml");
+    let solutions = root.join("participantsolutions/Parallel-solution.csv");
+    let (Ok(text), Ok(csv)) = (
+        std::fs::read_to_string(&model),
+        std::fs::read_to_string(&solutions),
+    ) else {
+        let _ = writeln!(
+            std::io::stderr(),
+            "skipping {test}: no RERS data under {}",
+            root.display()
+        );
+        return;
+    };
+    // `ltl pN { ... }`, one per line, in the order 1 to 20.
+    let properties: Vec<Formula> = text
+        .lines()
+        .filter(|line| line.starts_with("ltl p"))
+        .map(|line| parse(&line[line.find('{').unwrap() + 1..line.rfind('}').unwrap()]))
+        .collect();
+    let atoms: Vec<&str> = text
+        .lines()
+        .filter_map(|line| line.strip_prefix("#define "))
+        .filter_map(|rest| rest.split_whitespace().next())
+        .collect();
+    // CR line endings: `101,N,true`, in the order 1 to 20.
+    let expected: Vec<bool> = csv
+        .split(['\r', '\n'])
+        .filter_map(|line| line.strip_prefix("101,"))
+        .map(|rest| rest.ends_with("true"))
+        .collect();
+    assert_eq!(properties.len(), 20);
+    assert_eq!(expected.len(), 20);
+    let mut backend = Spin::new(&model, &atoms, LIMITS).unwrap_or_else(|e| panic!("{e}"));
+    let verdicts = backend.check_all(&properties);
+    for (i, verdict) in verdicts.iter().enumerate() {
+        assert_verdict(verdict, &properties[i], expected[i]);
+    }
+    let _ = writeln!(
+        std::io::stderr(),
+        "{test}: {} of 20 false, each lasso replayed",
+        expected.iter().filter(|holds| !**holds).count()
+    );
 }

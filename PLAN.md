@@ -111,7 +111,7 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [x] Oracle tier 2, in-process half: lasso-word fingerprints and the known-truths antichain. On 400 pairs the fingerprint refuted all 208 that Spot refuted and none of the 192 it proved.
 - [x] Tier 0 memo, tier 2 Spot implication (one batched `ltlfilt` exec, 74–80 µs per pair) and the tiered `Oracle` over any back end, with per-tier counters (`docs/dev/oracle.md`).
 - [x] Process runner with resource limits, and the nuXmv back end (batch mode, lasso from the trace). Every nuXmv lasso replays as a violation under the lasso evaluator.
-- [ ] SPIN back end: single and batched checks (at most 200 claims per build), lasso from the trail.
+- [x] SPIN back end (`src/oracle/spin.rs`): batched, at most 200 claims per build less the model's processes, lassos over observable positions. Agrees with the official verdicts on RERS 2016 problem101. Refuses formulas with `X`, since X counts SPIN steps there.
 - [x] RERS Promela front end exploring an explicit Kripke structure (model side of tier 3a). Counts match the note for 2016 101–104. On av2: 2016/105 in 0.13 s (78 MB), 2017/102 in 0.39 s (150 MB), 2016/107 at 64M states in 53.6 s (9.8 GB). 2018 models (global `state_N` guards) are rejected. See `docs/dev/rers-kripke.md`.
 - [ ] Next wave: tier 3a product of the explicit Kripke structure with the ¬φ' automaton, as a `Backend`.
 - [ ] Port operators, model-counting similarity and NSGA-II selection.
