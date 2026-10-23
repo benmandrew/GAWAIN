@@ -75,7 +75,7 @@ Two other monotone counts were built and measured, and both were rejected.
 
 ### Cost and caching
 
-Each new candidate costs two automata, one for φ' and one for `φ & φ'`. φ's own count is computed once per universe. All three caches key on `canonical()` and never rename atoms. The similarity is relative to the fixed φ, and φ's atoms name model variables. The caches hold the log count per (formula, universe), the similarity per candidate, and the Ganak count per label. Within one count, each monoid element is interned once, with its successor under each letter and its accepting states. A failed translation is cached as a failure, as PEREDUR caches an `ltl2tgba` timeout.
+Each new candidate costs two automata, one for φ' and one for `φ & φ'`. φ's own count is computed once per universe. All three caches key on `canonical()` and never rename atoms. The similarity is relative to the fixed φ, and φ's atoms name model variables. The caches hold the log count per (formula, universe), the similarity per candidate, and the Ganak count per label. Within one count, each row and each monoid element is interned once, with its successor under each letter, and each element with its accepting states (see "Interned rows"). A failed translation is cached as a failure, as PEREDUR caches an `ltl2tgba` timeout.
 
 Every formula of one generation goes to `ltl2tgba` on one stdin, one formula per line, and the HOA documents come back in order. If the batch fails, each formula is retried in its own exec, so one formula that blows up costs only itself. `score` also runs the counts on a second thread while the oracle checks the same candidates, since the two are independent. The counter reports `time` (wall time in the counter), `tool_time` (the part spent in `ltl2tgba` and Ganak) and `wait` (the part the search waited for after the oracle had finished).
 
@@ -112,7 +112,34 @@ The lasso count costs more. Its monoid grows with the automaton: over the 2,015 
 | abp4 `p2false`, seed 1 | prefixes | 4.50 s | 0.39 s | 4.11 s | 0.05 s | 17.37 s |
 | abp4 `p2false`, seed 1 | lassos | 36.74 s | 32.99 s | 3.75 s | 26.77 s | 43.32 s |
 
-On abp4 the lasso count takes 8.2× the prefix count's time and the search waits 26.8 s for it, so the run takes 2.5× the wall time. On `ack.smv` it costs nothing measurable. The cost stays under the 10× limit set for keeping the exact count over the sampled one, and the sample is slower at a useful size (see "Monotonicity"). Unoptimised, the count is about 20× slower again, and the abp4 test in `tests/search.rs` took 570 s, so `Cargo.toml` builds the dev profile at `opt-level = 2`. That test now takes 36 s.
+As first built, on abp4 the lasso count took 8.2× the prefix count's time and the search waited 26.8 s for it, so the run took 2.5× the wall time; "Interned rows" below cuts that wait to 2.3 s. On `ack.smv` it costs nothing measurable. The cost stays under the 10× limit set for keeping the exact count over the sampled one, and the sample is slower at a useful size (see "Monotonicity"). Unoptimised, the count is about 20× slower again, and the abp4 test in `tests/search.rs` took 570 s, so `Cargo.toml` builds the dev profile at `opt-level = 2`. That test then took 36 s.
+
+### Interned rows
+
+Callgrind on the release build (abp4, seed 1, 15 generations, collection limited to the count; `perf` is blocked on both hosts) put 70% of the instructions in the step from a relation to its successors, mostly in the bit loops over the rows, and 5% in interning. The 50 slowest automata of a 30-generation run took 98% of the time in process. The slowest, with 46 states, 28 letters and 5 planes, had 47,544 relations and took 9.4 s. Its rows were sparse, at 2.4 targets per row in plane 0 and 9.3 in the other planes together.
+
+Row p of v·a depends only on row p of v and on a. The monoid therefore interns rows on their own, a relation is its list of row ids, and the step of each (row, letter) pair is computed once and kept in a flat table. A step of a relation is then one table lookup per state and an intern of a list of 32-bit ids, in place of a pass over every bit of every plane and an intern of the whole bit matrix. Each relation's closure for its accepting states is Warshall's algorithm on bit rows. On the 15-generation profile, instructions in the count fell from 166.7 × 10⁹, with the row layout of the last item below, to 27.8 × 10⁹. The count stays exact: every test gives the same counts, and the runs below give the same repairs, scores and call counts.
+
+The comparison ran on av3 (release build, every run pinned to cores 0 to 7 by `taskset`, five repetitions with the order of the arms alternated, other jobs at a load of 17 to 20 of 32 cores, `bench/lasso_count_opt.sh`, rows `opt-final` in `bench/results/model-counting-ab.csv`). The table gives medians.
+
+| Run | Count | Count time | In process | Wait | Wall |
+|---|---|---|---|---|---|
+| `ack.smv`, seed 4 | whole relations | 1.03 s | 0.07 s | 0.11 s | 2.32 s |
+| `ack.smv`, seed 4 | interned rows | 1.02 s | 0.06 s | 0.12 s | 2.19 s |
+| abp4 `p2false`, seed 1 | whole relations | 36.59 s | 33.24 s | 27.54 s | 42.39 s |
+| abp4 `p2false`, seed 1 | interned rows | 9.56 s | 6.06 s | 2.26 s | 17.06 s |
+
+On abp4 the wait fell from 27.5 s to 2.3 s and the wall time from 42.4 s to 17.1 s. The count in process is 5.5× cheaper, and `ltl2tgba` is now a third of the count. `ack.smv` is unchanged, since its count was already almost all `ltl2tgba`.
+
+Five other ideas were measured and left out.
+
+- **Threads by candidate.** A pool that counted the automata of one generation on every core, each thread taking the next automaton as it finished one. On the same av3 setup (rows `opt-arms`) it cut the in-process time on abp4 from 7.07 s to 5.71 s and the wait from 2.46 s to 1.81 s, but the wall time stayed at 18.7 s, because the slowest automaton of a generation still runs on one thread and the oracle is the longer side. It is not worth a thread pool and eight busy cores.
+- **Sharing counts between automata.** Of the 2,021 automata of one abp4 run, 47 were exact repeats of an earlier one, and their counts took 0.002 s in all, so a cache keyed on the automaton has nothing to save. The counts of φ and of each `φ & φ'` are already cached on `canonical()` across generations (76 hits of 1,086 queries).
+- **State-based Büchi automata.** `ltl2tgba -B -D` gives one acceptance set, so two planes, but more states. The local abp4 run went past its 8 GB limit and was killed.
+- **A cheaper hash.** Reading the hashed bytes 8 at a time, in place of copying each chunk into a buffer, removed the `memcpy` calls from the profile and changed no measured time. It stays, since it is no longer than the copy.
+- **Laying out each relation's planes by row.** Before rows were interned, keeping the planes of one row next to each other and iterating set bits directly cut the local abp4 count from 33.6 s to 23.1 s. Interned rows replaced that step, so only the layout of a row survives.
+
+The remaining ideas were not built. The v-DP is already computed once per automaton, independent of u. Symmetry between atoms would merge letters, but the letters are already classes of valuations that move the automaton the same way.
 
 ## The output gate
 
@@ -155,7 +182,7 @@ The brief asked for a syntactic validity check only. That was not enough. On the
 
 ## Measured runs
 
-The runs below come from `cargo test --test search -- --nocapture` (debug build, local machine). The test re-checks every reported repair with a direct nuXmv call and a Spot implication check. The first two rows are from before the model-counting objective, the next two from PEREDUR's path count, the two after from the prefix count, and the last two from the lasso count, with the dev profile at `opt-level = 2`.
+The runs below come from `cargo test --test search -- --nocapture` (debug build, local machine). The test re-checks every reported repair with a direct nuXmv call and a Spot implication check. The first two rows are from before the model-counting objective, the next two from PEREDUR's path count, the two after from the prefix count, and the last two from the lasso count with interned rows, with the dev profile at `opt-level = 2` and the degeneracy filter, which adds one query and one back-end call on abp4.
 
 | Model | φ | G × P, seed | Repairs | Wall | Queries | Back-end calls | Lasso hits | Implication hits | Memo hits | Spot execs |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -165,8 +192,8 @@ The runs below come from `cargo test --test search -- --nocapture` (debug build,
 | abp4, path count | `p2false` | 30 × 40, 1 | 3 | 16.1 s | 1129 | 184 | 521 | 309 | 115 | 357 |
 | `ack.smv`, prefix count | `G (req -> X ack)` | 30 × 40, 4 | 3 | 3.01 s | 782 | 24 | 387 | 129 | 242 | 133 |
 | abp4, prefix count | `p2false` | 30 × 40, 1 | 1 | 15.1 s | 1101 | 180 | 648 | 190 | 83 | 247 |
-| `ack.smv`, lasso count | `G (req -> X ack)` | 30 × 40, 4 | 2 | 1.92 s | 800 | 22 | 407 | 80 | 291 | 82 |
-| abp4, lasso count | `p2false` | 30 × 40, 1 | 2 | 35.9 s | 1121 | 164 | 654 | 197 | 106 | 240 |
+| `ack.smv`, lasso count | `G (req -> X ack)` | 30 × 40, 4 | 2 | 2.35 s | 801 | 22 | 408 | 80 | 291 | 82 |
+| abp4, lasso count | `p2false` | 30 × 40, 1 | 2 | 14.6 s | 1122 | 165 | 654 | 197 | 106 | 240 |
 
 The counts include the vacuity flags. On `ack.smv` there are no groups, and without the third objective the repairs are `req -> F X ack` and `G(req -> F ack)`, the same as before the flags. Neither is vacuous. The flags cost 7 queries and no back-end call.
 
