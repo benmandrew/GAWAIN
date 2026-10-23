@@ -11,10 +11,12 @@
 //! atoms come from the model's DEFINEs (`p := v = c`) and from each
 //! `--exclusive`, and print at start-up; a candidate valid modulo them is
 //! trivial and drops. Each repair prints on one line as
-//! `repair<TAB>similarity<TAB>vacuity<TAB>formula`, where vacuity names the
-//! subformulae in which the repair is vacuous on M, separated by `; `, `?`
-//! for an unknown verdict, or `-`. Then come the oracle counters (search
-//! and gate together) and the cost of the vacuity flags.
+//! `repair<TAB>similarity<TAB>semantic<TAB>vacuity<TAB>formula`, where
+//! similarity is syntactic, semantic is the model-counting similarity, and
+//! vacuity names the subformulae in which the repair is vacuous on M,
+//! separated by `; `, `?` for an unknown verdict, or `-`. Then come the oracle counters (search
+//! and gate together), the cost of the model counts and the cost of the
+//! vacuity flags.
 //! Exits 0 after a search, 1 when the model already satisfies φ, and 2 on a
 //! usage error or when φ's own verdict is unknown.
 
@@ -22,6 +24,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use gawain::count::Counter;
 use gawain::ltl::Formula;
 use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
@@ -167,9 +170,11 @@ fn main() -> ExitCode {
         Verdict::Fails(_) => println!("input fails: {phi}"),
     }
     let mut rng = Rng::new(args.seed);
+    let mut counter = Counter::new(&phi, SPOT_LIMITS);
     let population = search(
         &phi,
         &mut oracle,
+        &mut counter,
         &invariant,
         args.params,
         SPOT_LIMITS,
@@ -198,8 +203,8 @@ fn main() -> ExitCode {
             flags.join("; ")
         };
         println!(
-            "repair\t{:.4}\t{flags}\t{}",
-            repair.similarity, repair.formula
+            "repair\t{:.4}\t{:.4}\t{flags}\t{}",
+            repair.similarity, repair.semantic, repair.formula
         );
     }
     let c = oracle.counters();
@@ -214,6 +219,19 @@ fn main() -> ExitCode {
         c.spot_errors,
         c.backend_calls,
         c.backend_unknowns
+    );
+    let k = counter.counts();
+    println!(
+        "count: queries={} hits={} translations={} formulas={} ganak_calls={} failures={} time={:.2}s tool_time={:.2}s wait={:.2}s",
+        k.queries,
+        k.hits,
+        k.translations,
+        k.formulas,
+        k.ganak_calls,
+        k.failures,
+        k.time.as_secs_f64(),
+        k.tool_time.as_secs_f64(),
+        k.wait.as_secs_f64()
     );
     let v = outcome.vacuity;
     println!(

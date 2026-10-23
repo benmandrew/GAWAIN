@@ -10,6 +10,9 @@
 //! Spot can build the automaton for this alphabet itself (`autfilt
 //! --exclusive-ap`), but that costs a second process per query and would
 //! still be read the same way here, so the reader does the restriction.
+//!
+//! [`parse_raw`] keeps each label as a [`Guard`] over the full alphabet of
+//! AP valuations instead, for the model counter (`crate::count`).
 
 /// A bit mask over acceptance sets.
 pub type Marks = u64;
@@ -41,8 +44,98 @@ pub struct Automaton {
     pub edges: Vec<Vec<Edge>>,
 }
 
-/// Parses `ltl2tgba -H` output.
+/// Parses `ltl2tgba -H` output over the one-hot alphabet.
 pub fn parse(text: &str) -> Result<Automaton, String> {
+    let raw = parse_raw(text)?;
+    let aps = raw.aps.len();
+    if aps >= 64 {
+        return Err(format!("{aps} atomic propositions, at most 63 fit"));
+    }
+    let edges = raw
+        .edges
+        .iter()
+        .zip(&raw.state_marks)
+        .map(|(edges, &state_marks)| {
+            edges
+                .iter()
+                .map(|edge| Edge {
+                    letters: edge.guard.letters(aps),
+                    target: edge.target,
+                    marks: state_marks | edge.marks,
+                })
+                .collect()
+        })
+        .collect();
+    Ok(Automaton {
+        aps: raw.aps,
+        start: raw.start,
+        all_marks: raw.all_marks,
+        edges,
+    })
+}
+
+/// One `ltl2tgba -H` automaton with its labels kept as boolean formulas,
+/// over the full alphabet of AP valuations.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct Raw {
+    /// The atomic propositions, in index order.
+    pub aps: Vec<String>,
+    /// The initial state.
+    pub start: u32,
+    /// Every acceptance set, as in [`Automaton::all_marks`].
+    pub all_marks: Marks,
+    /// The acceptance sets marked on each state.
+    pub state_marks: Vec<Marks>,
+    /// The outgoing edges of each state.
+    pub edges: Vec<Vec<RawEdge>>,
+}
+
+/// One edge of a [`Raw`] automaton.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct RawEdge {
+    /// The label.
+    pub guard: Guard,
+    /// The target state.
+    pub target: u32,
+    /// The acceptance sets marked on the edge itself.
+    pub marks: Marks,
+}
+
+/// A boolean label over AP indices.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub(crate) enum Guard {
+    /// `t`.
+    True,
+    /// `f`.
+    False,
+    /// One AP, by index.
+    Ap(usize),
+    /// `!g`.
+    Not(Box<Guard>),
+    /// `g & h`.
+    And(Box<Guard>, Box<Guard>),
+    /// `g | h`.
+    Or(Box<Guard>, Box<Guard>),
+}
+
+impl Guard {
+    /// The letters of the one-hot alphabet over `aps` propositions that
+    /// satisfy the guard (see the module header). `aps` is at most 63.
+    fn letters(&self, aps: usize) -> u64 {
+        let full = (1 << (aps + 1)) - 1;
+        match self {
+            Guard::True => full,
+            Guard::False => 0,
+            Guard::Ap(i) => 1 << i,
+            Guard::Not(g) => !g.letters(aps) & full,
+            Guard::And(g, h) => g.letters(aps) & h.letters(aps),
+            Guard::Or(g, h) => g.letters(aps) | h.letters(aps),
+        }
+    }
+}
+
+/// Parses one `ltl2tgba -H` automaton, keeping each label as a [`Guard`].
+pub(crate) fn parse_raw(text: &str) -> Result<Raw, String> {
     let (header, body) = text
         .split_once("--BODY--")
         .ok_or("no --BODY-- in the automaton")?;
@@ -76,15 +169,13 @@ pub fn parse(text: &str) -> Result<Automaton, String> {
     let start = start.ok_or("no Start: header")?;
     let aps = aps.ok_or("no AP: header")?;
     let all_marks = all_marks.ok_or("no Acceptance: header")?;
-    if aps.len() >= 64 {
-        return Err(format!("{} atomic propositions, at most 63 fit", aps.len()));
-    }
     if start as usize >= states {
         return Err(format!("initial state {start} out of range"));
     }
 
     let mut edges = vec![Vec::new(); states];
-    let mut current: Option<(usize, Marks)> = None;
+    let mut state_marks = vec![0; states];
+    let mut current = None;
     for line in body.lines().map(str::trim).filter(|l| !l.is_empty()) {
         if let Some(rest) = line.strip_prefix("State:") {
             let rest = rest.trim();
@@ -95,9 +186,10 @@ pub fn parse(text: &str) -> Result<Automaton, String> {
             if state >= states {
                 return Err(format!("state {state} out of range"));
             }
-            current = Some((state, trailing_marks(&rest[end..])?));
+            state_marks[state] = trailing_marks(&rest[end..])?;
+            current = Some(state);
         } else if let Some(rest) = line.strip_prefix('[') {
-            let (state, state_marks) = current.ok_or("an edge before any State:")?;
+            let state = current.ok_or("an edge before any State:")?;
             let (label, rest) = rest.split_once(']').ok_or("unclosed label")?;
             let rest = rest.trim();
             let end = rest
@@ -107,10 +199,10 @@ pub fn parse(text: &str) -> Result<Automaton, String> {
             if target as usize >= states {
                 return Err(format!("edge target {target} out of range"));
             }
-            let letters = Label::new(label, aps.len()).parse()?;
-            let marks = state_marks | trailing_marks(&rest[end..])?;
-            edges[state].push(Edge {
-                letters,
+            let guard = Label::new(label, aps.len()).parse()?;
+            let marks = trailing_marks(&rest[end..])?;
+            edges[state].push(RawEdge {
+                guard,
                 target,
                 marks,
             });
@@ -118,10 +210,11 @@ pub fn parse(text: &str) -> Result<Automaton, String> {
             return Err(format!("unsupported body line {line:?}"));
         }
     }
-    Ok(Automaton {
+    Ok(Raw {
         aps,
         start,
         all_marks,
+        state_marks,
         edges,
     })
 }
@@ -220,18 +313,13 @@ impl<'a> Label<'a> {
         }
     }
 
-    /// Every letter: one per AP, plus "no AP".
-    fn full(&self) -> u64 {
-        (1 << (self.aps + 1)) - 1
-    }
-
-    fn parse(mut self) -> Result<u64, String> {
-        let mask = self.or()?;
+    fn parse(mut self) -> Result<Guard, String> {
+        let guard = self.or()?;
         self.skip_space();
         if self.at != self.text.len() {
             return Err(format!("trailing text in label at byte {}", self.at));
         }
-        Ok(mask)
+        Ok(guard)
     }
 
     fn skip_space(&mut self) {
@@ -249,39 +337,39 @@ impl<'a> Label<'a> {
         found
     }
 
-    fn or(&mut self) -> Result<u64, String> {
-        let mut mask = self.and()?;
+    fn or(&mut self) -> Result<Guard, String> {
+        let mut guard = self.and()?;
         while self.eat(b'|') {
-            mask |= self.and()?;
+            guard = Guard::Or(Box::new(guard), Box::new(self.and()?));
         }
-        Ok(mask)
+        Ok(guard)
     }
 
-    fn and(&mut self) -> Result<u64, String> {
-        let mut mask = self.not()?;
+    fn and(&mut self) -> Result<Guard, String> {
+        let mut guard = self.not()?;
         while self.eat(b'&') {
-            mask &= self.not()?;
+            guard = Guard::And(Box::new(guard), Box::new(self.not()?));
         }
-        Ok(mask)
+        Ok(guard)
     }
 
-    fn not(&mut self) -> Result<u64, String> {
+    fn not(&mut self) -> Result<Guard, String> {
         if self.eat(b'!') {
-            return Ok(!self.not()? & self.full());
+            return Ok(Guard::Not(Box::new(self.not()?)));
         }
         if self.eat(b'(') {
-            let mask = self.or()?;
+            let guard = self.or()?;
             return if self.eat(b')') {
-                Ok(mask)
+                Ok(guard)
             } else {
                 Err("unclosed ( in label".into())
             };
         }
         if self.eat(b't') {
-            return Ok(self.full());
+            return Ok(Guard::True);
         }
         if self.eat(b'f') {
-            return Ok(0);
+            return Ok(Guard::False);
         }
         let start = self.at;
         while self.text.get(self.at).is_some_and(u8::is_ascii_digit) {
@@ -292,7 +380,7 @@ impl<'a> Label<'a> {
         if ap >= self.aps {
             return Err(format!("AP {ap} out of range in label"));
         }
-        Ok(1 << ap)
+        Ok(Guard::Ap(ap))
     }
 }
 

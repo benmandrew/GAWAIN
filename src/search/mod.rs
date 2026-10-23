@@ -4,7 +4,8 @@
 //!
 //! One generation breeds one offspring per population slot (crossover, then
 //! mutation, then `simplify`), filters them (repeats, bloat, validity),
-//! scores the survivors, pools
+//! scores the survivors (status, syntactic and model-counting similarity),
+//! pools
 //! them with their parents and keeps the population size by PEREDUR's
 //! `nsga2-apportion` step. See `docs/dev/search.md`.
 
@@ -14,10 +15,12 @@ mod rng;
 
 use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::Instant;
 
 pub use operators::{crossover, monotone_rewrite, mutate, Direction};
 pub use rng::Rng;
 
+use crate::count::Counter;
 use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 use crate::oracle::process::Limits;
 use crate::oracle::{implications, Backend, Oracle, Verdict};
@@ -35,6 +38,9 @@ const BLOAT_RATIO: usize = 2;
 pub const STATUS: usize = 0;
 /// The index of the syntactic-similarity objective.
 pub const SIMILARITY: usize = 1;
+/// The index of the model-counting similarity objective (see
+/// [`crate::count`]).
+pub const SEMANTIC: usize = 2;
 
 /// The size of a run.
 #[derive(Clone, Copy, Debug)]
@@ -45,8 +51,8 @@ pub struct Params {
     pub population: usize,
 }
 
-/// A candidate with its objective vector, indexed by [`STATUS`] and
-/// [`SIMILARITY`].
+/// A candidate with its objective vector, indexed by [`STATUS`],
+/// [`SIMILARITY`] and [`SEMANTIC`].
 #[derive(Clone, Debug)]
 pub struct Scored {
     /// The candidate φ'.
@@ -63,20 +69,44 @@ impl Scored {
     }
 }
 
-/// Scores `candidate` against the input `phi`. Model-counting similarity
-/// to `phi` will join this list as a third objective.
-pub fn score<B: Backend>(candidate: Formula, phi: &Formula, oracle: &mut Oracle<B>) -> Scored {
-    let status = match oracle.check(&candidate) {
-        Verdict::Holds => 1.0,
-        // Unknown scores as a failure. The oracle never memoises it, so the
-        // same formula is asked again if it comes back.
-        Verdict::Fails(_) | Verdict::Unknown(_) => 0.0,
-    };
-    let similarity = candidate.syntactic_similarity(phi);
-    Scored {
-        formula: candidate,
-        objectives: vec![status, similarity],
-    }
+/// Scores `candidates` against the input `phi`: the oracle's status,
+/// syntactic similarity and model-counting similarity. The counts run on a
+/// second thread while the oracle checks the candidates one by one, so
+/// their `ltl2tgba` exec overlaps the model checker's.
+pub fn score<B: Backend>(
+    candidates: Vec<Formula>,
+    phi: &Formula,
+    oracle: &mut Oracle<B>,
+    counter: &mut Counter,
+) -> Vec<Scored> {
+    let (semantic, statuses, wait) = std::thread::scope(|scope| {
+        let counting = scope.spawn(|| counter.similarities(&candidates));
+        let statuses: Vec<f64> = candidates
+            .iter()
+            .map(|candidate| match oracle.check(candidate) {
+                Verdict::Holds => 1.0,
+                // Unknown scores as a failure. The oracle never memoises
+                // it, so the same formula is asked again if it comes back.
+                Verdict::Fails(_) | Verdict::Unknown(_) => 0.0,
+            })
+            .collect();
+        let checked = Instant::now();
+        let semantic = counting.join().expect("the counting thread");
+        (semantic, statuses, checked.elapsed())
+    });
+    counter.record_wait(wait);
+    candidates
+        .into_iter()
+        .zip(statuses)
+        .zip(semantic)
+        .map(|((candidate, status), semantic)| {
+            let similarity = candidate.syntactic_similarity(phi);
+            Scored {
+                formula: candidate,
+                objectives: vec![status, similarity, semantic],
+            }
+        })
+        .collect()
 }
 
 /// Runs the search from `phi` and returns the final population, best first.
@@ -84,6 +114,7 @@ pub fn score<B: Backend>(candidate: Formula, phi: &Formula, oracle: &mut Oracle<
 pub fn search<B: Backend>(
     phi: &Formula,
     oracle: &mut Oracle<B>,
+    counter: &mut Counter,
     invariant: &Formula,
     params: Params,
     spot_limits: Limits,
@@ -91,16 +122,12 @@ pub fn search<B: Backend>(
 ) -> Vec<Scored> {
     assert!(params.population >= 1, "the population needs a member");
     let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
-    let seed = score(phi.clone(), phi, oracle);
-    let mut population = select(vec![seed], params.population);
+    let seed = score(vec![phi.clone()], phi, oracle, counter);
+    let mut population = select(seed, params.population);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
         let offspring = drop_valid(offspring, invariant, spot_limits);
-        let scored: Vec<Scored> = offspring
-            .into_iter()
-            .map(|candidate| score(candidate, phi, oracle))
-            .collect();
-        population.extend(scored);
+        population.extend(score(offspring, phi, oracle, counter));
         population = select(population, params.population);
     }
     population
@@ -223,6 +250,8 @@ pub struct Repair {
     pub formula: Formula,
     /// Its syntactic similarity to φ.
     pub similarity: f64,
+    /// Its model-counting similarity to φ.
+    pub semantic: f64,
     /// Where it is vacuous on M. A flag for the reader, never a reason to
     /// drop it.
     pub vacuity: Vacuity,
@@ -331,6 +360,7 @@ pub fn gate<B: Backend>(
         .map(|(s, _)| Repair {
             formula: s.formula.clone(),
             similarity: s.objectives[SIMILARITY],
+            semantic: s.objectives[SEMANTIC],
             vacuity: Vacuity::default(),
         })
         .collect();
@@ -435,7 +465,7 @@ mod tests {
     fn scored(text: &str, status: f64, similarity: f64) -> Scored {
         Scored {
             formula: f(text),
-            objectives: vec![status, similarity],
+            objectives: vec![status, similarity, similarity],
         }
     }
 
