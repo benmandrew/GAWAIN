@@ -21,7 +21,7 @@ jobs:
   check:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
       - uses: nix-community/cache-nix-action@v6
         with:
@@ -36,7 +36,7 @@ jobs:
   test:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
       - uses: nix-community/cache-nix-action@v6
         with:
