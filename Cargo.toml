@@ -5,5 +5,9 @@ edition = "2021"
 description = "Specification weakening against a model by genetic search"
 publish = false
 
+[[bin]]
+name = "weaken"
+path = "src/main.rs"
+
 [dependencies]
 libc = "0.2.191"

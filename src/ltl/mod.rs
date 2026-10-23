@@ -13,6 +13,7 @@ mod similarity;
 mod simplify;
 
 use std::cmp::Ordering;
+use std::collections::BTreeSet;
 use std::fmt;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
@@ -138,6 +139,17 @@ impl Formula {
     /// occurrence: `a & a` has three. O(1).
     pub fn n_subformulae(&self) -> usize {
         self.0.size
+    }
+
+    /// The atoms the formula mentions, in sorted order.
+    pub fn atoms(&self) -> BTreeSet<Arc<str>> {
+        self.subformulae()
+            .into_iter()
+            .filter_map(|sub| match sub.node() {
+                Node::Atom(name) => Some(name.clone()),
+                _ => None,
+            })
+            .collect()
     }
 
     /// Every subtree in post-order (left before right, root last), with
@@ -331,6 +343,17 @@ pub(crate) mod tests {
         assert_eq!(f("a").n_subformulae(), 1);
         assert_eq!(f("a & a").n_subformulae(), 3);
         assert_eq!(f("G (a -> F b)").n_subformulae(), 5);
+    }
+
+    #[test]
+    fn atoms_are_sorted_and_distinct() {
+        let atoms: Vec<String> = f("G (b -> F a) & X b & true")
+            .atoms()
+            .iter()
+            .map(|a| a.to_string())
+            .collect();
+        assert_eq!(atoms, ["a", "b"]);
+        assert!(f("G true").atoms().is_empty());
     }
 
     #[test]
