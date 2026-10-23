@@ -11,9 +11,12 @@ use std::str::FromStr;
 
 use super::{BinaryOp, Formula, UnaryOp};
 
+/// Why a string is not a formula, and where.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError {
+    /// Byte offset into the input.
     pub offset: usize,
+    /// What was wrong there.
     pub message: String,
 }
 
@@ -218,7 +221,7 @@ impl Parser {
         while self.peek_binary(&[BinaryOp::Or]).is_some() {
             self.position += 1;
             let rhs = self.conjunction()?;
-            lhs = Formula::or(lhs, rhs);
+            lhs = Formula::binary(BinaryOp::Or, lhs, rhs);
         }
         Ok(lhs)
     }
@@ -228,7 +231,7 @@ impl Parser {
         while self.peek_binary(&[BinaryOp::And]).is_some() {
             self.position += 1;
             let rhs = self.temporal()?;
-            lhs = Formula::and(lhs, rhs);
+            lhs = Formula::binary(BinaryOp::And, lhs, rhs);
         }
         Ok(lhs)
     }
@@ -282,7 +285,7 @@ impl Parser {
 #[cfg(test)]
 mod tests {
     use crate::ltl::tests::f;
-    use crate::ltl::Formula;
+    use crate::ltl::{BinaryOp::*, Formula, UnaryOp::*};
 
     fn a(name: &str) -> Formula {
         Formula::atom(name)
@@ -301,60 +304,44 @@ mod tests {
 
     #[test]
     fn precedence_matches_spot() {
-        assert_eq!(
-            f("a & b U c"),
-            Formula::and(a("a"), Formula::until(a("b"), a("c")))
-        );
-        assert_eq!(
-            f("a | b & c"),
-            Formula::or(a("a"), Formula::and(a("b"), a("c")))
-        );
-        assert_eq!(
-            f("a -> b | c"),
-            Formula::implies(a("a"), Formula::or(a("b"), a("c")))
-        );
-        assert_eq!(
-            f("F a U b"),
-            Formula::until(Formula::eventually(a("a")), a("b"))
-        );
-        assert_eq!(f("!a U b"), Formula::until(!a("a"), a("b")));
+        let b_until_c = Formula::binary(Until, a("b"), a("c"));
+        assert_eq!(f("a & b U c"), Formula::binary(And, a("a"), b_until_c));
+        let b_and_c = Formula::binary(And, a("b"), a("c"));
+        assert_eq!(f("a | b & c"), Formula::binary(Or, a("a"), b_and_c));
+        let b_or_c = Formula::binary(Or, a("b"), a("c"));
+        assert_eq!(f("a -> b | c"), Formula::binary(Implies, a("a"), b_or_c));
+        let fa = Formula::unary(Eventually, a("a"));
+        assert_eq!(f("F a U b"), Formula::binary(Until, fa, a("b")));
+        let not_a = Formula::unary(Not, a("a"));
+        assert_eq!(f("!a U b"), Formula::binary(Until, not_a, a("b")));
     }
 
     #[test]
     fn associativity_matches_spot() {
-        assert_eq!(
-            f("a U b U c"),
-            Formula::until(a("a"), Formula::until(a("b"), a("c")))
-        );
-        assert_eq!(
-            f("a W b R c"),
-            Formula::weak_until(a("a"), Formula::release(a("b"), a("c")))
-        );
-        assert_eq!(
-            f("a -> b -> c"),
-            Formula::implies(a("a"), Formula::implies(a("b"), a("c")))
-        );
-        assert_eq!(
-            f("a <-> b -> c"),
-            Formula::iff(a("a"), Formula::implies(a("b"), a("c")))
-        );
-        assert_eq!(
-            f("a & b & c"),
-            Formula::and(Formula::and(a("a"), a("b")), a("c"))
-        );
-        assert_eq!(
-            f("a | b | c"),
-            Formula::or(Formula::or(a("a"), a("b")), a("c"))
-        );
+        for (text, outer, inner) in [
+            ("a U b U c", Until, Until),
+            ("a W b R c", WeakUntil, Release),
+            ("a -> b -> c", Implies, Implies),
+            ("a <-> b -> c", Iff, Implies),
+        ] {
+            let right = Formula::binary(inner, a("b"), a("c"));
+            assert_eq!(f(text), Formula::binary(outer, a("a"), right), "{text}");
+        }
+        for (text, op) in [("a & b & c", And), ("a | b | c", Or)] {
+            let left = Formula::binary(op, a("a"), a("b"));
+            assert_eq!(f(text), Formula::binary(op, left, a("c")), "{text}");
+        }
     }
 
     #[test]
     fn letter_operators_split_like_spot() {
-        assert_eq!(f("GFa"), Formula::globally(Formula::eventually(a("a"))));
-        assert_eq!(f("Grant"), Formula::globally(a("rant")));
-        assert_eq!(f("FOO"), Formula::eventually(a("OO")));
-        assert_eq!(f("XFab"), Formula::next(Formula::eventually(a("ab"))));
-        assert_eq!(f("Ftrue"), Formula::eventually(Formula::tt()));
+        let fa = Formula::unary(Eventually, a("a"));
+        assert_eq!(f("GFa"), Formula::unary(Globally, fa));
+        assert_eq!(f("Grant"), Formula::unary(Globally, a("rant")));
+        assert_eq!(f("FOO"), Formula::unary(Eventually, a("OO")));
+        let fab = Formula::unary(Eventually, a("ab"));
+        assert_eq!(f("XFab"), Formula::unary(Next, fab));
+        assert_eq!(f("Ftrue"), Formula::unary(Eventually, Formula::tt()));
         assert_eq!(f("\"Grant\""), a("Grant"));
         assert_eq!(f("Uab"), a("Uab"));
         assert_eq!(f("aUb"), a("aUb"));
@@ -373,8 +360,8 @@ mod tests {
 
     #[test]
     fn quoted_atoms_may_hold_any_text() {
-        assert_eq!(f("F\"a b\""), Formula::eventually(a("a b")));
-        assert_eq!(f("\"U\" U \"W\""), Formula::until(a("U"), a("W")));
+        assert_eq!(f("F\"a b\""), Formula::unary(Eventually, a("a b")));
+        assert_eq!(f("\"U\" U \"W\""), Formula::binary(Until, a("U"), a("W")));
     }
 
     #[test]
@@ -383,12 +370,8 @@ mod tests {
         assert_eq!(err.offset, 4);
         let err = "a &".parse::<Formula>().unwrap_err();
         assert_eq!(err.offset, 3);
-        assert!("a b".parse::<Formula>().is_err());
-        assert!("a xor b".parse::<Formula>().is_err());
-        assert!("a M b".parse::<Formula>().is_err());
-        assert!("a ^ b".parse::<Formula>().is_err());
-        assert!("\"open".parse::<Formula>().is_err());
-        assert!("".parse::<Formula>().is_err());
-        assert!("12".parse::<Formula>().is_err());
+        for bad in ["a b", "a xor b", "a M b", "a ^ b", "\"open", "", "12"] {
+            assert!(bad.parse::<Formula>().is_err(), "{bad:?}");
+        }
     }
 }

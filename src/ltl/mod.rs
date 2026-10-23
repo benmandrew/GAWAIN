@@ -1,10 +1,10 @@
 //! LTL formulas over the TLSF operator set, ported from PEREDUR's `Formula`.
 //!
-//! A [`Formula`] is an immutable, reference-counted tree. Cloning is a
+//! A [`Formula`] is an immutable tree of shared nodes. Cloning one is a
 //! refcount bump, and every node caches its structural hash and size, so a
-//! formula is a cheap `HashMap` key and `n_subformulae` is O(1). Equality and
-//! ordering are structural; use [`Formula::canonical`] or
-//! [`Formula::renamed`] to collapse spellings of one formula into one key.
+//! formula is a cheap `HashMap` key. Equality and ordering are structural;
+//! [`Formula::canonical`] collapses spellings of one formula into one key.
+//! See `docs/dev/ltl.md` for the design reasons.
 
 mod canonical;
 mod parse;
@@ -13,53 +13,56 @@ mod similarity;
 mod simplify;
 
 use std::cmp::Ordering;
-use std::collections::BTreeSet;
 use std::fmt;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
 
 pub use parse::ParseError;
 
+/// A unary operator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum UnaryOp {
+    /// Negation, `!φ`.
     Not,
+    /// Next, `X φ`.
     Next,
+    /// Eventually, `F φ`.
     Eventually,
+    /// Globally, `G φ`.
     Globally,
 }
 
+/// A binary operator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum BinaryOp {
+    /// Conjunction, `φ & ψ`.
     And,
+    /// Disjunction, `φ | ψ`.
     Or,
+    /// Implication, `φ -> ψ`.
     Implies,
+    /// Equivalence, `φ <-> ψ`.
     Iff,
+    /// Strong until, `φ U ψ`.
     Until,
+    /// Weak until, `φ W ψ`.
     WeakUntil,
+    /// Release, `φ R ψ`.
     Release,
 }
 
-impl UnaryOp {
-    pub fn is_temporal(self) -> bool {
-        self != UnaryOp::Not
-    }
-}
-
-impl BinaryOp {
-    pub fn is_temporal(self) -> bool {
-        matches!(
-            self,
-            BinaryOp::Until | BinaryOp::WeakUntil | BinaryOp::Release
-        )
-    }
-}
-
+/// The root of a formula, with its children.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Node {
+    /// The constant true.
     True,
+    /// The constant false.
     False,
+    /// An atomic proposition.
     Atom(Arc<str>),
+    /// A unary operator applied to one formula.
     Unary(UnaryOp, Formula),
+    /// A binary operator applied to two formulas.
     Binary(BinaryOp, Formula, Formula),
 }
 
@@ -69,11 +72,13 @@ struct Inner {
     size: usize,
 }
 
+/// An LTL formula. Parse one from Spot syntax with [`str::parse`], and print
+/// it with `Display` (Spot), [`Formula::to_spin`] or [`Formula::to_nuxmv`].
 #[derive(Clone)]
 pub struct Formula(Arc<Inner>);
 
 impl Formula {
-    pub fn from_node(node: Node) -> Self {
+    fn from_node(node: Node) -> Self {
         // DefaultHasher::new() uses fixed keys, so the cached hash is stable
         // within a build; children contribute their own cached hashes.
         let mut hasher = DefaultHasher::new();
@@ -90,140 +95,54 @@ impl Formula {
         }))
     }
 
+    /// The constant true.
     pub fn tt() -> Self {
         Self::from_node(Node::True)
     }
 
+    /// The constant false.
     pub fn ff() -> Self {
         Self::from_node(Node::False)
     }
 
-    pub fn constant(value: bool) -> Self {
-        if value {
-            Self::tt()
-        } else {
-            Self::ff()
-        }
-    }
-
+    /// An atomic proposition. Any name is allowed; the printers quote or pass
+    /// it through as each back end requires.
     pub fn atom(name: impl AsRef<str>) -> Self {
         Self::from_node(Node::Atom(Arc::from(name.as_ref())))
     }
 
+    /// `op child`.
     pub fn unary(op: UnaryOp, child: Formula) -> Self {
         Self::from_node(Node::Unary(op, child))
     }
 
+    /// `lhs op rhs`.
     pub fn binary(op: BinaryOp, lhs: Formula, rhs: Formula) -> Self {
         Self::from_node(Node::Binary(op, lhs, rhs))
     }
 
-    pub fn negated(child: Formula) -> Self {
-        Self::unary(UnaryOp::Not, child)
-    }
-
-    pub fn next(child: Formula) -> Self {
-        Self::unary(UnaryOp::Next, child)
-    }
-
-    pub fn eventually(child: Formula) -> Self {
-        Self::unary(UnaryOp::Eventually, child)
-    }
-
-    pub fn globally(child: Formula) -> Self {
-        Self::unary(UnaryOp::Globally, child)
-    }
-
-    pub fn and(lhs: Formula, rhs: Formula) -> Self {
-        Self::binary(BinaryOp::And, lhs, rhs)
-    }
-
-    pub fn or(lhs: Formula, rhs: Formula) -> Self {
-        Self::binary(BinaryOp::Or, lhs, rhs)
-    }
-
-    pub fn implies(lhs: Formula, rhs: Formula) -> Self {
-        Self::binary(BinaryOp::Implies, lhs, rhs)
-    }
-
-    pub fn iff(lhs: Formula, rhs: Formula) -> Self {
-        Self::binary(BinaryOp::Iff, lhs, rhs)
-    }
-
-    pub fn until(lhs: Formula, rhs: Formula) -> Self {
-        Self::binary(BinaryOp::Until, lhs, rhs)
-    }
-
-    pub fn weak_until(lhs: Formula, rhs: Formula) -> Self {
-        Self::binary(BinaryOp::WeakUntil, lhs, rhs)
-    }
-
-    pub fn release(lhs: Formula, rhs: Formula) -> Self {
-        Self::binary(BinaryOp::Release, lhs, rhs)
-    }
-
+    /// The root node.
     pub fn node(&self) -> &Node {
         &self.0.node
     }
 
-    pub fn is_true(&self) -> bool {
+    fn is_true(&self) -> bool {
         matches!(self.node(), Node::True)
     }
 
-    pub fn is_false(&self) -> bool {
+    fn is_false(&self) -> bool {
         matches!(self.node(), Node::False)
     }
 
-    pub fn atom_name(&self) -> Option<&str> {
-        match self.node() {
-            Node::Atom(name) => Some(name),
-            _ => None,
-        }
-    }
-
-    pub fn unary_child(&self) -> Option<&Formula> {
-        match self.node() {
-            Node::Unary(_, child) => Some(child),
-            _ => None,
-        }
-    }
-
-    pub fn binary_children(&self) -> Option<(&Formula, &Formula)> {
-        match self.node() {
-            Node::Binary(_, lhs, rhs) => Some((lhs, rhs)),
-            _ => None,
-        }
-    }
-
-    /// Number of nodes in the tree, counting repeated subtrees once per
-    /// occurrence: `a & a` has three.
+    /// Number of nodes in the tree, counting a repeated subtree once per
+    /// occurrence: `a & a` has three. O(1).
     pub fn n_subformulae(&self) -> usize {
         self.0.size
     }
 
-    pub fn is_propositional(&self) -> bool {
-        match self.node() {
-            Node::True | Node::False | Node::Atom(_) => true,
-            Node::Unary(op, child) => !op.is_temporal() && child.is_propositional(),
-            Node::Binary(op, lhs, rhs) => {
-                !op.is_temporal() && lhs.is_propositional() && rhs.is_propositional()
-            }
-        }
-    }
-
-    pub fn atoms(&self) -> BTreeSet<&str> {
-        let mut out = BTreeSet::new();
-        for sub in self.subformulae() {
-            if let Some(name) = sub.atom_name() {
-                out.insert(name);
-            }
-        }
-        out
-    }
-
     /// Every subtree in post-order (left before right, root last), with
     /// repeats.
-    pub fn subformulae(&self) -> Vec<&Formula> {
+    fn subformulae(&self) -> Vec<&Formula> {
         fn walk<'a>(formula: &'a Formula, out: &mut Vec<&'a Formula>) {
             match formula.node() {
                 Node::True | Node::False | Node::Atom(_) => {}
@@ -243,7 +162,8 @@ impl Formula {
     /// Rebuilds the formula bottom-up. Each node is offered to `rewrite` after
     /// its children have been rewritten, and is replaced if it returns
     /// `Some`. Children are visited left before right, so a callback that
-    /// draws from a seeded RNG sees a fixed draw order.
+    /// draws from a seeded RNG sees a fixed draw order. Untouched subtrees are
+    /// shared with the input, not copied.
     pub fn rewrite_post_order<F>(&self, mut rewrite: F) -> Formula
     where
         F: FnMut(&Formula) -> Option<Formula>,
@@ -278,18 +198,7 @@ impl Formula {
         rewrite(&rebuilt).unwrap_or(rebuilt)
     }
 
-    /// Replaces every `a W b` with `(a U b) | G a`, for back ends without W.
-    pub fn expand_weak_until(&self) -> Formula {
-        self.rewrite_post_order(|f| match f.node() {
-            Node::Binary(BinaryOp::WeakUntil, lhs, rhs) => Some(Formula::or(
-                Formula::until(lhs.clone(), rhs.clone()),
-                Formula::globally(lhs.clone()),
-            )),
-            _ => None,
-        })
-    }
-
-    pub fn ptr_eq(&self, other: &Formula) -> bool {
+    fn ptr_eq(&self, other: &Formula) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
     }
 }
@@ -330,27 +239,6 @@ impl Ord for Formula {
 impl fmt::Debug for Formula {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Formula({self})")
-    }
-}
-
-impl std::ops::Not for Formula {
-    type Output = Formula;
-    fn not(self) -> Formula {
-        Formula::negated(self)
-    }
-}
-
-impl std::ops::BitAnd for Formula {
-    type Output = Formula;
-    fn bitand(self, rhs: Formula) -> Formula {
-        Formula::and(self, rhs)
-    }
-}
-
-impl std::ops::BitOr for Formula {
-    type Output = Formula;
-    fn bitor(self, rhs: Formula) -> Formula {
-        Formula::or(self, rhs)
     }
 }
 
@@ -412,10 +300,12 @@ pub(crate) mod tests {
 
     #[test]
     fn equality_is_structural_not_by_pointer() {
-        assert_eq!(
-            f("a & G b"),
-            Formula::and(Formula::atom("a"), Formula::globally(Formula::atom("b")))
+        let built = Formula::binary(
+            BinaryOp::And,
+            Formula::atom("a"),
+            Formula::unary(UnaryOp::Globally, Formula::atom("b")),
         );
+        assert_eq!(f("a & G b"), built);
         assert_ne!(f("a & b"), f("b & a"));
     }
 
@@ -455,22 +345,6 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn is_propositional_rejects_temporal_operators() {
-        assert!(f("a & !(b -> c) <-> true").is_propositional());
-        assert!(!f("a & X b").is_propositional());
-        assert!(!f("a W b").is_propositional());
-    }
-
-    #[test]
-    fn atoms_collects_names_but_not_constants() {
-        let formula = f("G (req -> F grant) & true");
-        assert_eq!(
-            formula.atoms().into_iter().collect::<Vec<_>>(),
-            ["grant", "req"]
-        );
-    }
-
-    #[test]
     fn rewrite_post_order_visits_children_first() {
         let mut seen = Vec::new();
         let _ = f("(a & b) | c").rewrite_post_order(|node| {
@@ -480,16 +354,26 @@ pub(crate) mod tests {
         assert_eq!(seen, ["a", "b", "a & b", "c", "a & b | c"]);
     }
 
+    fn replace_atom(
+        name: &'static str,
+        with: &'static str,
+    ) -> impl FnMut(&Formula) -> Option<Formula> {
+        move |node| match node.node() {
+            Node::Atom(atom) if &**atom == name => Some(f(with)),
+            _ => None,
+        }
+    }
+
     #[test]
     fn rewrite_post_order_replaces_and_shares_untouched_subtrees() {
         let formula = f("G a & F b");
-        let rewritten = formula.rewrite_post_order(|node| match node.atom_name() {
-            Some("b") => Some(Formula::atom("c")),
-            _ => None,
-        });
+        let rewritten = formula.rewrite_post_order(replace_atom("b", "c"));
         assert_eq!(rewritten, f("G a & F c"));
-        let (old_lhs, _) = formula.binary_children().unwrap();
-        let (new_lhs, _) = rewritten.binary_children().unwrap();
+        let (Node::Binary(_, old_lhs, _), Node::Binary(_, new_lhs, _)) =
+            (formula.node(), rewritten.node())
+        else {
+            panic!("expected conjunctions");
+        };
         assert!(old_lhs.ptr_eq(new_lhs));
 
         let unchanged = formula.rewrite_post_order(|_| None);
@@ -498,26 +382,7 @@ pub(crate) mod tests {
 
     #[test]
     fn rewrite_sees_rewritten_children() {
-        let rewritten = f("!!a").rewrite_post_order(|node| match node.atom_name() {
-            Some("a") => Some(Formula::tt()),
-            _ => None,
-        });
+        let rewritten = f("!!a").rewrite_post_order(replace_atom("a", "true"));
         assert_eq!(rewritten, f("!!true"));
-    }
-
-    #[test]
-    fn expand_weak_until_removes_every_w() {
-        assert_eq!(f("a W b").expand_weak_until(), f("(a U b) | G a"));
-        assert_eq!(
-            f("(a W b) W c").expand_weak_until(),
-            f("(((a U b) | G a) U c) | G ((a U b) | G a)")
-        );
-    }
-
-    #[test]
-    fn operator_overloads_build_nodes() {
-        let a = Formula::atom("a");
-        let b = Formula::atom("b");
-        assert_eq!(!a.clone() & b.clone() | a, f("!a & b | a"));
     }
 }

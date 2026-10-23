@@ -7,18 +7,10 @@
 use super::{BinaryOp, Formula, Node, UnaryOp};
 
 impl Formula {
+    /// An equivalent formula with the folds in the module header applied,
+    /// bottom-up in one pass. The result is never larger than the input.
     pub fn simplify(&self) -> Formula {
         self.rewrite_post_order(simplify_node)
-    }
-
-    pub fn remove_double_negation(&self) -> Formula {
-        self.rewrite_post_order(|node| match node.node() {
-            Node::Unary(UnaryOp::Not, child) => match child.node() {
-                Node::Unary(UnaryOp::Not, grandchild) => Some(grandchild.clone()),
-                _ => None,
-            },
-            _ => None,
-        })
     }
 }
 
@@ -35,7 +27,7 @@ fn negate(formula: &Formula) -> Formula {
         Node::Unary(UnaryOp::Not, child) => child.clone(),
         Node::True => Formula::ff(),
         Node::False => Formula::tt(),
-        _ => Formula::negated(formula.clone()),
+        _ => Formula::unary(UnaryOp::Not, formula.clone()),
     }
 }
 
@@ -125,7 +117,7 @@ fn simplify_binary(op: BinaryOp, lhs: &Formula, rhs: &Formula) -> Option<Formula
             if rhs.is_true() || rhs.is_false() || lhs.is_false() {
                 Some(rhs.clone())
             } else if lhs.is_true() {
-                Some(Formula::eventually(rhs.clone()))
+                Some(Formula::unary(UnaryOp::Eventually, rhs.clone()))
             } else {
                 self_join(lhs, rhs)
             }
@@ -136,7 +128,7 @@ fn simplify_binary(op: BinaryOp, lhs: &Formula, rhs: &Formula) -> Option<Formula
             } else if lhs.is_true() {
                 Some(lhs.clone())
             } else if rhs.is_false() {
-                Some(Formula::globally(lhs.clone()))
+                Some(Formula::unary(UnaryOp::Globally, lhs.clone()))
             } else {
                 self_join(lhs, rhs)
             }
@@ -145,7 +137,7 @@ fn simplify_binary(op: BinaryOp, lhs: &Formula, rhs: &Formula) -> Option<Formula
             if rhs.is_true() || rhs.is_false() || lhs.is_true() {
                 Some(rhs.clone())
             } else if lhs.is_false() {
-                Some(Formula::globally(rhs.clone()))
+                Some(Formula::unary(UnaryOp::Globally, rhs.clone()))
             } else {
                 self_join(lhs, rhs)
             }
@@ -285,11 +277,5 @@ mod tests {
                 "{formula}"
             );
         }
-    }
-
-    #[test]
-    fn remove_double_negation_strips_pairs_only() {
-        assert_eq!(f("!!a & !!!b").remove_double_negation(), f("a & !b"));
-        assert_eq!(f("!true").remove_double_negation(), f("!true"));
     }
 }

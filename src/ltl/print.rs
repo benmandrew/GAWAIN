@@ -1,10 +1,11 @@
 //! Printers for Spot, SPIN and nuXmv.
 //!
-//! The Spot printer (also `Display`) omits parentheses that Spot's precedence
+//! The Spot printer is `Display`. It omits parentheses that Spot's precedence
 //! makes redundant, and quotes any atom Spot would misread. The SPIN and
-//! nuXmv printers parenthesise every non-atomic operand of a binary operator, since their precedence
-//! tables differ from Spot's and from each other's, and they print atom names
-//! verbatim: a name must already be a valid identifier in the target language.
+//! nuXmv printers parenthesise every non-atomic operand of a binary operator,
+//! since their precedence tables differ from Spot's and from each other's.
+//! They print atom names verbatim, so a name must already be a valid
+//! identifier in the target language.
 
 use std::fmt::{self, Write};
 
@@ -17,24 +18,32 @@ impl fmt::Display for Formula {
 }
 
 impl Formula {
-    pub fn to_spot(&self) -> String {
-        self.to_string()
-    }
-
-    /// SPIN `ltl` syntax. SPIN has W, but `W` is expanded into `U`, `[]` and
-    /// `||` so both back ends receive the same operator set.
+    /// SPIN `ltl` syntax. SPIN has W, but it is expanded as for
+    /// [`Formula::to_nuxmv`] so both back ends receive the same operator set.
     pub fn to_spin(&self) -> String {
         let mut out = String::new();
-        explicit(&self.expand_weak_until(), &SPIN, &mut out);
+        explicit(&expand_weak_until(self), &SPIN, &mut out);
         out
     }
 
-    /// nuXmv `LTLSPEC` syntax, with `W` expanded as for [`Formula::to_spin`].
+    /// nuXmv `LTLSPEC` syntax. nuXmv has no W, so `a W b` is printed as
+    /// `(a U b) | (G a)`.
     pub fn to_nuxmv(&self) -> String {
         let mut out = String::new();
-        explicit(&self.expand_weak_until(), &NUXMV, &mut out);
+        explicit(&expand_weak_until(self), &NUXMV, &mut out);
         out
     }
+}
+
+fn expand_weak_until(formula: &Formula) -> Formula {
+    formula.rewrite_post_order(|node| match node.node() {
+        Node::Binary(BinaryOp::WeakUntil, lhs, rhs) => Some(Formula::binary(
+            BinaryOp::Or,
+            Formula::binary(BinaryOp::Until, lhs.clone(), rhs.clone()),
+            Formula::unary(UnaryOp::Globally, lhs.clone()),
+        )),
+        _ => None,
+    })
 }
 
 fn precedence(formula: &Formula) -> u8 {
@@ -223,16 +232,29 @@ fn explicit_operand(formula: &Formula, syntax: &Syntax, out: &mut String) {
 
 #[cfg(test)]
 mod tests {
+    use super::expand_weak_until;
     use crate::ltl::tests::{f, random_formulas};
-    use crate::ltl::Formula;
+    use crate::ltl::{Formula, Node, UnaryOp};
 
     fn identifier_atoms(formula: &Formula) -> Formula {
-        formula.rewrite_post_order(|node| match node.atom_name() {
-            Some("U") => Some(Formula::atom("u")),
-            Some("x y") => Some(Formula::atom("x_y")),
-            Some("Grant") => Some(Formula::atom("grant")),
+        formula.rewrite_post_order(|node| match node.node() {
+            Node::Atom(name) => match &**name {
+                "U" => Some(Formula::atom("u")),
+                "x y" => Some(Formula::atom("x_y")),
+                "Grant" => Some(Formula::atom("grant")),
+                _ => None,
+            },
             _ => None,
         })
+    }
+
+    #[test]
+    fn expand_weak_until_removes_every_w() {
+        assert_eq!(expand_weak_until(&f("a W b")), f("(a U b) | G a"));
+        assert_eq!(
+            expand_weak_until(&f("(a W b) W c")),
+            f("(((a U b) | G a) U c) | G ((a U b) | G a)")
+        );
     }
 
     #[test]
@@ -256,25 +278,25 @@ mod tests {
             ("1 W 0", "true W false"),
         ];
         for (input, expected) in cases {
-            assert_eq!(f(input).to_spot(), expected, "{input}");
+            assert_eq!(f(input).to_string(), expected, "{input}");
         }
     }
 
     #[test]
     fn spot_quotes_atoms_it_would_misread() {
         for name in ["Grant", "Fail", "X", "U", "true", "a b", "xor", ""] {
-            let formula = Formula::eventually(Formula::atom(name));
-            assert_eq!(formula.to_spot(), format!("F \"{name}\""));
-            assert_eq!(f(&formula.to_spot()), formula);
+            let formula = Formula::unary(UnaryOp::Eventually, Formula::atom(name));
+            assert_eq!(formula.to_string(), format!("F \"{name}\""));
+            assert_eq!(f(&formula.to_string()), formula);
         }
-        assert_eq!(Formula::atom("req_1").to_spot(), "req_1");
-        assert_eq!(Formula::atom("Uab").to_spot(), "Uab");
+        assert_eq!(Formula::atom("req_1").to_string(), "req_1");
+        assert_eq!(Formula::atom("Uab").to_string(), "Uab");
     }
 
     #[test]
     fn spot_round_trip() {
         for formula in random_formulas(2000, 1) {
-            let text = formula.to_spot();
+            let text = formula.to_string();
             assert_eq!(f(&text), formula, "{text}");
         }
     }
@@ -304,7 +326,7 @@ mod tests {
     fn spin_and_nuxmv_round_trip_through_the_parser() {
         for formula in random_formulas(2000, 2) {
             let formula = identifier_atoms(&formula);
-            let expected = formula.expand_weak_until();
+            let expected = expand_weak_until(&formula);
             assert_eq!(f(&formula.to_spin()), expected, "{}", formula.to_spin());
             assert_eq!(f(&formula.to_nuxmv()), expected, "{}", formula.to_nuxmv());
         }

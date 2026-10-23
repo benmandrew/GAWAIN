@@ -8,7 +8,7 @@ use super::Formula;
 impl Formula {
     /// Subtrees the two formulas have in common, matched as multisets: a
     /// subtree occurring twice on one side and once on the other counts once.
-    pub fn shared_subformulae(&self, other: &Formula) -> usize {
+    fn shared_subformulae(&self, other: &Formula) -> usize {
         let mut counts: HashMap<&Formula, usize> = HashMap::new();
         for sub in self.subformulae() {
             *counts.entry(sub).or_default() += 1;
@@ -25,7 +25,8 @@ impl Formula {
         shared
     }
 
-    /// Harmonic mean of the shared fraction of each side, in [0, 1].
+    /// The harmonic mean of the fraction of each side's subtrees that the
+    /// other shares, in [0, 1]. Subtrees are matched as multisets.
     ///
     /// The harmonic mean rather than the arithmetic one because a small
     /// formula contained in a large one has a trivial ratio of 1 on its own

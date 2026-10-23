@@ -1,11 +1,8 @@
-//! Cache keys, ported from PEREDUR's `canonical.cpp` and `formula_key.cpp`.
+//! Canonical cache keys, ported from PEREDUR's `canonical.cpp`.
 //!
-//! A cache that stores a verdict or a count, both invariant under a bijection
-//! on atoms, may key on [`Formula::renamed`]. One that stores a formula or an
-//! automaton must key on [`Formula::canonical`], which keeps atom names.
-
-use std::collections::HashMap;
-use std::sync::Arc;
+//! PEREDUR also keys some caches on a form with atoms renamed. That is unsound
+//! here, where atoms name model variables, so only [`Formula::canonical`] is
+//! ported.
 
 use super::{BinaryOp, Formula, Node, UnaryOp};
 
@@ -44,30 +41,11 @@ impl Formula {
                     }
                     // Commutative but not idempotent (`a <-> a` is true, not
                     // `a`), so ordered but neither flattened nor deduplicated.
-                    BinaryOp::Iff if rhs < lhs => Formula::iff(rhs, lhs),
+                    BinaryOp::Iff if rhs < lhs => Formula::binary(BinaryOp::Iff, rhs, lhs),
                     _ => Formula::binary(*op, lhs, rhs),
                 }
             }
         }
-    }
-
-    /// [`Formula::canonical`] with atoms renamed to `p0`, `p1`, … in order of
-    /// first appearance, so formulas differing only in atom names share a key.
-    pub fn renamed(&self) -> Formula {
-        let canonical = self.canonical();
-        let mut names: HashMap<Arc<str>, Formula> = HashMap::new();
-        for sub in canonical.subformulae() {
-            if let Node::Atom(name) = sub.node() {
-                let next = names.len();
-                names
-                    .entry(name.clone())
-                    .or_insert_with(|| Formula::atom(format!("p{next}")));
-            }
-        }
-        canonical.rewrite_post_order(|node| match node.node() {
-            Node::Atom(name) => names.get(name).cloned(),
-            _ => None,
-        })
     }
 }
 
@@ -90,7 +68,7 @@ mod tests {
         let key = f("a & (b & c)").canonical();
         assert_eq!(f("(c & b) & a").canonical(), key);
         assert_eq!(f("!!a & b & c & b").canonical(), key);
-        assert_eq!(key.to_spot(), "a & b & c");
+        assert_eq!(key.to_string(), "a & b & c");
         assert_eq!(f("b | a | b").canonical(), f("a | b"));
     }
 
@@ -119,19 +97,7 @@ mod tests {
         for formula in random_formulas(1000, 6) {
             let key = formula.canonical();
             assert_eq!(key.canonical(), key, "{formula}");
-            assert_eq!(f(&key.to_spot()), key, "{formula}");
+            assert_eq!(f(&key.to_string()), key, "{formula}");
         }
-    }
-
-    #[test]
-    fn renamed_forgets_atom_names_but_not_constants() {
-        assert_eq!(f("G (req -> F grant)").renamed(), f("G (p0 -> F p1)"));
-        assert_eq!(
-            f("G (x -> F y)").renamed(),
-            f("G (req -> F grant)").renamed()
-        );
-        assert_eq!(f("b & !a").renamed(), f("a & !b").renamed());
-        assert_eq!(f("a U true").renamed(), f("p0 U true"));
-        assert_ne!(f("a U b").renamed(), f("a U a").renamed());
     }
 }
