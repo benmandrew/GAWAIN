@@ -72,7 +72,7 @@ RERS parallel models are finite and small at the action level. A Python script p
 | 2017/101 | 4 | 20,093 | 69,187 | 0.09 s |
 | 2017/102 | 6 | 1,163,558 | 5,780,665 | 9.9 s |
 
-2016 problems 107 to 112 did not complete locally inside 4 GB and 300 s. The Python explorer stores each state as a tuple of Python objects, so a compact explorer in Rust should reach further, though how far is unmeasured. Above about 10^8 states, explicit exploration stops being an option and the symbolic back ends are the only route.
+2016 problems 107 to 112 did not complete locally inside 4 GB and 300 s. The Python explorer stores each state as a tuple of Python objects. The Rust explorer in `src/rers.rs` reproduces these counts and explores 2016/107 (64,021,489 states) in 54 s and 9.8 GB; `docs/dev/rers-kripke.md` has its semantics and timings. Above about 10^8 states, explicit exploration stops being an option and the symbolic back ends are the only route.
 
 The explored structure was written as HOA (state-labelled, acceptance `t`), and each query ran `ltl2tgba '!φ'` and then `autfilt model.hoa --intersect=neg.hoa -c`. The negation took 11.5–13.1 ms per formula (mean over 20, almost all of it process start-up). The product cost:
 
