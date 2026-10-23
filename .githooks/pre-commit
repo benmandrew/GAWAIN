@@ -1,0 +1,10 @@
+#!/bin/sh
+# Rejects a commit that cargo fmt or clippy would fail in CI.
+# Enable once per clone with: git config core.hooksPath .githooks
+set -e
+
+echo "pre-commit: cargo fmt --check"
+cargo fmt --check
+
+echo "pre-commit: cargo clippy"
+cargo clippy --all-targets -q -- -D warnings

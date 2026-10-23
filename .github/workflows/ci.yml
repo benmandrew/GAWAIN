@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # SPIN comes from Ubuntu and Spot from the LRDE Debian repository.
+      # nuXmv has no redistributable package, so its tests skip here, and
+      # bench/data is gitignored, so the RERS data tests skip too.
+      - name: Install SPIN and Spot
+        run: |
+          sudo install -d /etc/apt/keyrings
+          curl -fsSL https://www.lrde.epita.fr/repo/debian.gpg | sudo tee /etc/apt/keyrings/lrde.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/" | sudo tee /etc/apt/sources.list.d/lrde.list
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends spin spot
+      - run: cargo test -- --nocapture

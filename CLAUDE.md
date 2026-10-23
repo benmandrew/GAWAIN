@@ -8,6 +8,7 @@ GAWAIN (Genetic Algorithm for Weakening Against Implementations under NSGA-II) w
 - **Tested.** Every module has unit tests. Every path that reaches an external tool (SPIN, nuXmv, Spot) has an end-to-end test under `tests/` that runs the real tool. A test skips with a printed reason when the tool is not on `PATH`, and never passes silently.
 - **Documented.** `#![deny(missing_docs)]` holds in the crate root. Every module has a `//!` header saying what it is for. Design reasons that span modules go in `docs/dev/`.
 - `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps` and `cargo test` are clean before every commit.
+- The pre-commit hook in `.githooks/` runs `cargo fmt --check` and clippy. Enable it once per clone with `git config core.hooksPath .githooks`. CI (`.github/workflows/ci.yml`) runs those two, the doc build and the tests, with SPIN and Spot installed; nuXmv tests skip there.
 
 ## Running tools
 
