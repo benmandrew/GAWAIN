@@ -9,6 +9,8 @@ mod implication;
 mod lasso;
 pub mod nuxmv;
 pub mod process;
+mod spot;
+mod tiered;
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -17,6 +19,8 @@ use crate::ltl::Formula;
 
 pub use implication::{Fingerprint, KnownTruths, Words};
 pub use lasso::LassoCache;
+pub use spot::implications;
+pub use tiered::{Counters, Oracle};
 
 /// The atoms that hold at one position of a run.
 pub type Valuation = BTreeSet<Arc<str>>;

@@ -7,85 +7,18 @@
 //! a reason on stderr, when `ltlfilt` is not on `PATH`. Every tool call runs
 //! under `timeout`.
 
+mod common;
+
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-use aragon::ltl::{BinaryOp, Formula, Node, UnaryOp};
+use aragon::ltl::Formula;
 use aragon::oracle::Words;
+use common::{formula, mutant, on_path, Rng};
 
 const TIMEOUT_SECS: &str = "60";
 const PAIRS: usize = 400;
 const ATOMS: &[&str] = &["a", "b", "c"];
-
-fn on_path(tool: &str) -> bool {
-    std::env::var_os("PATH")
-        .is_some_and(|path| std::env::split_paths(&path).any(|dir| dir.join(tool).is_file()))
-}
-
-/// Marsaglia's xorshift64, enough for a fixed-seed test.
-struct Rng(u64);
-
-impl Rng {
-    fn below(&mut self, n: usize) -> usize {
-        self.0 ^= self.0 << 13;
-        self.0 ^= self.0 >> 7;
-        self.0 ^= self.0 << 17;
-        (self.0 % n as u64) as usize
-    }
-}
-
-const UNARY: &[UnaryOp] = &[
-    UnaryOp::Not,
-    UnaryOp::Next,
-    UnaryOp::Eventually,
-    UnaryOp::Globally,
-];
-
-const BINARY: &[BinaryOp] = &[
-    BinaryOp::And,
-    BinaryOp::Or,
-    BinaryOp::Implies,
-    BinaryOp::Iff,
-    BinaryOp::Until,
-    BinaryOp::WeakUntil,
-    BinaryOp::Release,
-];
-
-fn formula(rng: &mut Rng, depth: usize) -> Formula {
-    if depth == 0 || rng.below(4) == 0 {
-        return match rng.below(8) {
-            0 => Formula::tt(),
-            1 => Formula::ff(),
-            _ => Formula::atom(ATOMS[rng.below(ATOMS.len())]),
-        };
-    }
-    if rng.below(3) == 0 {
-        let op = UNARY[rng.below(UNARY.len())];
-        Formula::unary(op, formula(rng, depth - 1))
-    } else {
-        let op = BINARY[rng.below(BINARY.len())];
-        Formula::binary(op, formula(rng, depth - 1), formula(rng, depth - 1))
-    }
-}
-
-/// `f` with its subformula at pre-order index `target` replaced by `new`.
-fn replace(f: &Formula, target: usize, new: &Formula) -> Formula {
-    if target == 0 {
-        return new.clone();
-    }
-    match f.node() {
-        Node::Unary(op, child) => Formula::unary(*op, replace(child, target - 1, new)),
-        Node::Binary(op, lhs, rhs) => {
-            let n = lhs.n_subformulae();
-            if target <= n {
-                Formula::binary(*op, replace(lhs, target - 1, new), rhs.clone())
-            } else {
-                Formula::binary(*op, lhs.clone(), replace(rhs, target - 1 - n, new))
-            }
-        }
-        _ => unreachable!("a leaf has only index 0"),
-    }
-}
 
 /// Spot's verdict on `psi -> phi`, valid or not.
 fn spot_implies(psi: &Formula, phi: &Formula) -> bool {
@@ -120,9 +53,8 @@ fn fingerprint_is_sound_against_spot() {
     let mut rng = Rng(0x9E37_79B9_7F4A_7C15);
     let (mut implied, mut refuted, mut caught) = (0, 0, 0);
     for _ in 0..PAIRS {
-        let psi = formula(&mut rng, 4);
-        let target = rng.below(psi.n_subformulae());
-        let phi = replace(&psi, target, &formula(&mut rng, 2));
+        let psi = formula(&mut rng, 4, ATOMS);
+        let phi = mutant(&mut rng, &psi, 2, ATOMS);
         let may = words.fingerprint(&psi).may_imply(&words.fingerprint(&phi));
         if spot_implies(&psi, &phi) {
             assert!(

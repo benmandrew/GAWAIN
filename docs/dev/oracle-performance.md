@@ -124,6 +124,8 @@ A timed-out or killed query has no verdict. The oracle must not cache it as fals
 
 ## Recommended oracle
 
+`docs/dev/oracle.md` describes the implemented tiers 0 to 2 and their counters.
+
 Order the checks cheapest first and stop at the first answer:
 
 | Tier | Check | Answers | Measured cost |
