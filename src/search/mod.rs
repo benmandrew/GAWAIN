@@ -126,7 +126,7 @@ fn breed(parents: &[Scored], atoms: &[Arc<str>], rng: &mut Rng) -> Vec<Formula> 
 }
 
 /// The filters before scoring, in PEREDUR's order: drop repeats up to
-/// [`Formula::canonical`], then anything over [`BLOAT_RATIO`] times `phi`'s
+/// [`Formula::canonical`], then anything over `BLOAT_RATIO` times `phi`'s
 /// size, then anything `simplify` folds to `true`, the trivial weakening.
 /// A dropped candidate costs no oracle call.
 pub fn filter(offspring: Vec<Formula>, phi: &Formula) -> Vec<Formula> {

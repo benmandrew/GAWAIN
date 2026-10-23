@@ -7,7 +7,7 @@ Specification weakening against a model by genetic search, in Rust. The goal, be
 - **Minimal.** Write only what a current caller or test needs. Do not port PEREDUR code ahead of its first use, and add no option, feature flag or abstraction without a second use.
 - **Tested.** Every module has unit tests. Every path that reaches an external tool (SPIN, nuXmv, Spot) has an end-to-end test under `tests/` that runs the real tool. A test skips with a printed reason when the tool is not on `PATH`, and never passes silently.
 - **Documented.** `#![deny(missing_docs)]` holds in the crate root. Every module has a `//!` header saying what it is for. Design reasons that span modules go in `docs/dev/`.
-- `cargo fmt`, `cargo clippy --all-targets -- -D warnings` and `cargo test` are clean before every commit.
+- `cargo fmt`, `cargo clippy --all-targets -- -D warnings`, `RUSTDOCFLAGS="-D warnings" cargo doc --no-deps` and `cargo test` are clean before every commit.
 
 ## Running tools
 
