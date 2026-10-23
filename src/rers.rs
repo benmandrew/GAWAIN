@@ -435,7 +435,7 @@ fn parse_branch(p: &mut Parser) -> Result<Branch, Error> {
 
 /// A cheap multiplicative hash for the packed state keys.
 #[derive(Default)]
-struct KeyHasher(u64);
+pub(crate) struct KeyHasher(u64);
 
 impl Hasher for KeyHasher {
     fn finish(&self) -> u64 {

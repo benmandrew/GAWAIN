@@ -86,6 +86,22 @@ So per query, the parse is the main cost, and an oracle that keeps M in memory a
 
 Neither model checker is a good source of that graph. `pan -d` and `-D` print the process automata, not the reachable graph. nuXmv's `print_fair_transitions -v -f csv` does dump it, but on problem104 it took 3.25 s and wrote 65,537 lines against 71,764 transitions, so the output looks truncated at 2^16 rows. For Promela inputs, a front end that explores M itself is the dependable route.
 
+### The in-process back end
+
+`Explicit` (`src/oracle/explicit.rs`) implements this route. It keeps the `Kripke` structure from `src/rers.rs` in memory, runs `ltl2tgba -H` on `!(φ')` through `process::run`, reads the generalised Büchi automaton (`src/oracle/hoa.rs`), and searches the product on the fly with Couvreur's SCC-based emptiness check. The check handles several acceptance sets directly, so the automaton needs no degeneralisation, and it uses an explicit stack, so a million-state product cannot overflow the thread stack. At most one action atom holds per Kripke state, so each edge label is read as a bit mask over "only AP i holds" and "no AP holds". Spot's `autfilt --exclusive-ap` would build that restriction into the automaton, but it costs a second process per query (`ltl2tgba` has no such option). A non-empty product gives the lasso directly: the DFS path to the root of the accepting SCC, then a breadth-first cycle inside it through every acceptance set.
+
+`cargo test --test explicit -- --nocapture` checks it. All 80 properties of 2016 problems 101 to 104 get the official verdict, and every lasso fails its formula under `Lasso::satisfies`. SPIN refuses formulas with `X`, since its `X` counts SPIN steps, so this back end decides them, on the action-level positions of `docs/dev/rers-kripke.md`. The same test therefore writes problems 101 and 102 as SMV and compares 336 formulas against nuXmv, 195 of them with `X`, including random mutants of the properties. All 336 verdicts agree.
+
+The per-query cost was measured on av2 (32 cores, load average 15 to 18 from other users, Spot 2.14.5) with `cargo run --release --example explicit_cost -- FILE.pml...` under `systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0 nice -n 10 timeout 1500`. The example times one `ltl2tgba -H` call alone and then the whole `Explicit::check`, and reports the difference as the product cost. The Spot figure includes the polling of `process::run`, whose interval grows 1, 2, 4, 8 ms, which is why it clusters at 7.7 and 15.9 ms on problem104.
+
+| Problem | States | Spot translation, mean | Product and emptiness, mean | Product, max |
+|---|---|---|---|---|
+| 2016/104 | 19,255 | 11.4 ms | 0.3 ms | 2.7 ms |
+| 2016/105 | 499,041 | 17.0 ms | 70.2 ms | 186.5 ms |
+| 2017/102 | 1,163,558 | 16.4 ms | 88.9 ms | 370.2 ms |
+
+Each row covers the 20 RERS properties of the problem. On 2016/105 all 20 verdicts also match the solution file. Peak RSS for the whole run, with the largest structure loaded, was 182 MB. On problem104 the product cost is below the noise of the subtraction, so a query costs one Spot process. On the larger models, true properties cost the most, because only they explore the whole product: on 2016/105 the product cost averaged 112 ms over the 9 true properties and 36 ms over the 11 false ones. A whole query there costs about 90 ms, against 1.5–6.8 s for the `autfilt` route above, and SPIN did not finish problem105 at all.
+
 ## Counterexample (lasso) cache
 
 Every false verdict yields a lasso u·v^ω of M with u·v^ω ⊭ φ'. The cache stores these lassos, and a new candidate whose evaluation on any stored lasso is false is refuted without a model-checking call. This is sound, because each lasso is a real run of M. It can never prove a candidate true.
@@ -135,7 +151,7 @@ Order the checks cheapest first and stop at the first answer:
 | 0 | Verdict memo keyed on `canonical()` or Spot-simplified text (never renamed atoms) | repeats, both verdicts | a hash lookup |
 | 1 | Evaluate φ' on every stored lasso of M | false | 37–682 µs in Python; refuted 95.2–95.7% of false mutants |
 | 2 | Fingerprint prefilter, then Spot implication from the antichain of known truths | true | 10.8 ms per candidate as one exec; 53 µs per pair batched; proved 62% of true mutants |
-| 3a | Explicit M in memory, product with the ¬φ' automaton, emptiness check; store the lasso on failure | both | problem104: 12 ms translation + 6–21 ms product (75–90 ms through the CLI) |
+| 3a | Explicit M in memory, product with the ¬φ' automaton, emptiness check; store the lasso on failure | both | problem104: 12 ms translation + 6–21 ms product (75–90 ms through the CLI); in process (`Explicit`, av2): 11 ms + 0.3 ms on problem104, 17 ms + 70 ms on 105 |
 | 3b | nuXmv, one persistent session per worker | both | problem104: 0.03–0.13 s true, 0.38–13.2 s false |
 | 3c | SPIN, one `pan.c` per generation with ≤ 200 claims | both | problem104: 17 ms compile per claim at 100 claims, plus 16–625 ms search |
 

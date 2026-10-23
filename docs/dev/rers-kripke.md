@@ -1,6 +1,6 @@
 # RERS models as explicit Kripke structures
 
-The module `src/rers.rs` reads a RERS parallel-track Promela file and explores its reachable states into a `Kripke` value from `src/kripke.rs`. This is the model side of tier 3a in `docs/dev/oracle-performance.md`. The automaton for ¬φ', the product and the emptiness check come later and live elsewhere.
+The module `src/rers.rs` reads a RERS parallel-track Promela file and explores its reachable states into a `Kripke` value from `src/kripke.rs`. This is the model side of tier 3a in `docs/dev/oracle-performance.md`. The automaton for ¬φ', the product and the emptiness check live in `src/oracle/explicit.rs`.
 
 ## Input shapes
 

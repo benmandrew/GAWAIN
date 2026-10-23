@@ -65,6 +65,20 @@ impl Kripke {
         &self.successors[self.offsets[s]..self.offsets[s + 1]]
     }
 
+    /// Every atom, in index order.
+    pub fn atoms(&self) -> &[Arc<str>] {
+        &self.atoms
+    }
+
+    /// The index into [`Kripke::atoms`] of the atom that holds at `state`,
+    /// if any.
+    pub fn atom_index(&self, state: StateId) -> Option<usize> {
+        match self.labels[state as usize] {
+            NO_ATOM => None,
+            a => Some(a as usize),
+        }
+    }
+
     /// The atom that holds at `state`, if any. No other atom holds there.
     pub fn atom(&self, state: StateId) -> Option<&Arc<str>> {
         match self.labels[state as usize] {
@@ -90,5 +104,7 @@ mod tests {
         assert_eq!(k.successors(2), &[0]);
         assert_eq!(k.atom(0), None);
         assert_eq!(k.atom(1).map(|a| &**a), Some("b"));
+        assert_eq!(k.atom_index(1), Some(1));
+        assert_eq!(k.atoms().len(), 2);
     }
 }

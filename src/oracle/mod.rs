@@ -5,6 +5,8 @@
 //! to refute later candidates without another model-checking call. See
 //! `docs/dev/oracle-performance.md` for the tiered design and its costs.
 
+pub mod explicit;
+mod hoa;
 mod implication;
 mod lasso;
 pub mod nuxmv;
