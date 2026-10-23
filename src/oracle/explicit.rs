@@ -2,7 +2,7 @@
 //! for the negated candidate, and an emptiness check of their product.
 //!
 //! Each query runs `ltl2tgba -H` on `!(φ)` through [`process::run`], reads
-//! the generalised Büchi automaton with [`super::hoa`], and searches the
+//! the generalised Büchi automaton with the private `hoa` reader, and searches the
 //! product on the fly from (Kripke state 0, initial automaton state). A
 //! non-empty product gives a run of M that satisfies ¬φ, returned as the
 //! lasso of a failing verdict.
