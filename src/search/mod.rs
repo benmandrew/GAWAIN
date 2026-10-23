@@ -18,7 +18,7 @@ use std::sync::Arc;
 pub use operators::{crossover, monotone_rewrite, mutate, Direction};
 pub use rng::Rng;
 
-use crate::ltl::{Formula, Node};
+use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 use crate::oracle::process::Limits;
 use crate::oracle::{implications, Backend, Oracle, Verdict};
 
@@ -84,6 +84,7 @@ pub fn score<B: Backend>(candidate: Formula, phi: &Formula, oracle: &mut Oracle<
 pub fn search<B: Backend>(
     phi: &Formula,
     oracle: &mut Oracle<B>,
+    invariant: &Formula,
     params: Params,
     spot_limits: Limits,
     rng: &mut Rng,
@@ -94,7 +95,7 @@ pub fn search<B: Backend>(
     let mut population = select(vec![seed], params.population);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
-        let offspring = drop_valid(offspring, spot_limits);
+        let offspring = drop_valid(offspring, invariant, spot_limits);
         let scored: Vec<Scored> = offspring
             .into_iter()
             .map(|candidate| score(candidate, phi, oracle))
@@ -140,16 +141,18 @@ pub fn filter(offspring: Vec<Formula>, phi: &Formula) -> Vec<Formula> {
         .collect()
 }
 
-/// Drops the candidates Spot proves valid, in one `ltlfilt` exec, as
-/// PEREDUR's vacuity filter asks a solver whether a guarantee is valid. The
-/// syntactic check in [`filter`] misses most valid offspring: on the first
-/// runs every repair the gate reported was valid, such as
-/// `G (ack -> X φ | ack)` and `a W (ψ | !a)`, and a valid candidate holds on
-/// every model, so it crowds the front. A batch with no answer drops
-/// nothing, so the verdict never depends on machine load.
-pub fn drop_valid(offspring: Vec<Formula>, limits: Limits) -> Vec<Formula> {
-    let tt = Formula::tt();
-    let pairs: Vec<(&Formula, &Formula)> = offspring.iter().map(|c| (&tt, c)).collect();
+/// Drops the candidates Spot proves valid modulo the encoding `invariant`
+/// (that `invariant -> φ'` is valid, so `invariant & !φ'` is
+/// unsatisfiable), in one `ltlfilt` exec, as PEREDUR's vacuity filter asks
+/// a solver whether a guarantee is valid. The syntactic check in [`filter`]
+/// misses most valid offspring: on the first runs every repair the gate
+/// reported was valid, such as `G (ack -> X φ | ack)` and `a W (ψ | !a)`,
+/// and a valid candidate holds on every model, so it crowds the front. With
+/// no exclusive groups the invariant is `true` and this is plain validity.
+/// A batch with no answer drops nothing, so the verdict never depends on
+/// machine load.
+pub fn drop_valid(offspring: Vec<Formula>, invariant: &Formula, limits: Limits) -> Vec<Formula> {
+    let pairs: Vec<(&Formula, &Formula)> = offspring.iter().map(|c| (invariant, c)).collect();
     let Ok(valid) = implications(&pairs, limits) else {
         return offspring;
     };
@@ -159,6 +162,31 @@ pub fn drop_valid(offspring: Vec<Formula>, limits: Limits) -> Vec<Formula> {
         .filter(|(_, valid)| !valid)
         .map(|(candidate, _)| candidate)
         .collect()
+}
+
+/// The encoding invariant I of `groups` of mutually exclusive atoms:
+/// `G` of `!(a & b)` over every pair within a group, or `true` when there
+/// is no pair. A candidate that I implies is trivial on any model whose
+/// atoms keep the groups exclusive, such as the values of one SMV variable.
+pub fn invariant(groups: &[Vec<Arc<str>>]) -> Formula {
+    let exclusions: Vec<Formula> = groups
+        .iter()
+        .flat_map(|group| {
+            group.iter().enumerate().flat_map(move |(i, a)| {
+                group[i + 1..].iter().map(move |b| {
+                    let both = Formula::binary(BinaryOp::And, Formula::atom(a), Formula::atom(b));
+                    Formula::unary(UnaryOp::Not, both)
+                })
+            })
+        })
+        .collect();
+    match exclusions
+        .into_iter()
+        .reduce(|l, r| Formula::binary(BinaryOp::And, l, r))
+    {
+        Some(all) => Formula::unary(UnaryOp::Globally, all),
+        None => Formula::tt(),
+    }
 }
 
 /// PEREDUR's `nsga2-apportion` survivor step: drop repeats up to
@@ -195,6 +223,20 @@ pub struct Repair {
     pub formula: Formula,
     /// Its syntactic similarity to φ.
     pub similarity: f64,
+    /// Where it is vacuous on M. A flag for the reader, never a reason to
+    /// drop it.
+    pub vacuity: Vacuity,
+}
+
+/// The subformula occurrences in which a repair is vacuous on M (see
+/// [`vacuity`]).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Vacuity {
+    /// Each occurrence ψ whose witness M satisfies, in pre-order. Distinct
+    /// occurrences with the same text appear once.
+    pub subformulae: Vec<Formula>,
+    /// Whether the oracle answered `Unknown` for some witness.
+    pub unknown: bool,
 }
 
 /// What the output gate kept, and why any `ltlfilt` batch gave no answer.
@@ -205,56 +247,63 @@ pub struct Gate {
     /// One reason per Spot batch that failed. A failed weakening batch drops
     /// every candidate; a failed maximality batch drops none.
     pub errors: Vec<String>,
-    /// What the vacuity step cost and dropped.
+    /// What the vacuity flags cost.
     pub vacuity: VacuityCounts,
 }
 
-/// The cost and effect of the gate's vacuity step.
+/// The cost of the gate's vacuity flags.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct VacuityCounts {
     /// Witnesses sent to the oracle.
     pub queries: u64,
-    /// Witnesses the oracle answered `Unknown`, read as "not shown vacuous".
+    /// Witnesses the oracle answered `Unknown`.
     pub unknowns: u64,
-    /// Candidates dropped as vacuous on M.
-    pub dropped: u64,
 }
 
-/// Whether `candidate` holds vacuously on M: whether M satisfies one of its
-/// vacuity witnesses (a subformula replaced by the constant that makes the
-/// whole stronger; see `docs/dev/search.md`). Stops at the first witness M
-/// satisfies. A witness that folds to `true` is vacuous with no query, and
-/// an unknown verdict is counted and shows nothing.
-pub fn vacuous<B: Backend>(
+/// Where `candidate` is vacuous on M (Beer, Ben-David, Eisner and Rodeh;
+/// Kupferman and Vardi): each subformula occurrence ψ whose vacuity
+/// witness, the candidate with ψ replaced by the constant that makes it
+/// stronger, M satisfies. A witness that folds to `true` holds with no
+/// query. Every witness is asked; an unknown verdict is counted and shows
+/// nothing about its ψ.
+pub fn vacuity<B: Backend>(
     candidate: &Formula,
     oracle: &mut Oracle<B>,
     counts: &mut VacuityCounts,
-) -> bool {
-    for witness in operators::vacuity_witnesses(candidate) {
-        if matches!(witness.node(), Node::True) {
-            return true;
-        }
-        counts.queries += 1;
-        match oracle.check(&witness) {
-            Verdict::Holds => return true,
-            Verdict::Fails(_) => {}
-            Verdict::Unknown(_) => counts.unknowns += 1,
+) -> Vacuity {
+    let mut found = Vacuity::default();
+    for (subformula, witness) in operators::vacuity_witnesses(candidate) {
+        let holds = matches!(witness.node(), Node::True) || {
+            counts.queries += 1;
+            match oracle.check(&witness) {
+                Verdict::Holds => true,
+                Verdict::Fails(_) => false,
+                Verdict::Unknown(_) => {
+                    counts.unknowns += 1;
+                    found.unknown = true;
+                    false
+                }
+            }
+        };
+        if holds && !found.subformulae.contains(&subformula) {
+            found.subformulae.push(subformula);
         }
     }
-    false
+    found
 }
 
 /// The output gate. From `population`, keeps the distinct candidates that M
-/// satisfies, that `phi` implies and that Spot does not prove valid (one
-/// batch; if it fails, no weakening is proved and every candidate drops).
-/// Then it drops the candidates that hold [`vacuous`]ly on M, through
-/// `oracle`, and keeps only the maximal rest: a candidate implied by
-/// another survivor is dropped (one more batch). Of two equivalent
-/// survivors the one more similar to φ stays, then the smaller in formula
-/// order. "Not proved" never counts as proved.
+/// satisfies, that `phi` implies and that Spot does not prove valid modulo
+/// the encoding `invariant` (one batch; if it fails, no weakening is proved
+/// and every candidate drops). Then it keeps only the maximal ones: a
+/// candidate implied by another survivor is dropped (one more batch). Of
+/// two equivalent survivors the one more similar to φ stays, then the
+/// smaller in formula order. "Not proved" never counts as proved. Last, it
+/// flags where each repair is [`vacuity`]-vacuous on M, through `oracle`.
 pub fn gate<B: Backend>(
     phi: &Formula,
     population: &[Scored],
+    invariant: &Formula,
     oracle: &mut Oracle<B>,
     limits: Limits,
 ) -> Gate {
@@ -265,12 +314,11 @@ pub fn gate<B: Backend>(
         .filter(|s| s.holds() && seen.insert(s.formula.canonical()))
         .collect();
     // Pair 2k asks whether φ implies candidate k, pair 2k + 1 whether
-    // candidate k is valid, which the search's filter may have let through
-    // on a failed batch.
-    let tt = Formula::tt();
+    // candidate k is valid modulo the invariant, which the search's filter
+    // may have let through on a failed batch.
     let pairs: Vec<(&Formula, &Formula)> = holding
         .iter()
-        .flat_map(|s| [(phi, &s.formula), (&tt, &s.formula)])
+        .flat_map(|s| [(phi, &s.formula), (invariant, &s.formula)])
         .collect();
     let proved = implications(&pairs, limits).unwrap_or_else(|e| {
         gate.errors.push(e);
@@ -283,15 +331,9 @@ pub fn gate<B: Backend>(
         .map(|(s, _)| Repair {
             formula: s.formula.clone(),
             similarity: s.objectives[SIMILARITY],
+            vacuity: Vacuity::default(),
         })
         .collect();
-    // Before maximality, so that a vacuous candidate cannot drop a weaker,
-    // non-vacuous one that it implies.
-    let mut counts = VacuityCounts::default();
-    let before = candidates.len();
-    candidates.retain(|repair| !vacuous(&repair.formula, oracle, &mut counts));
-    counts.dropped = (before - candidates.len()) as u64;
-    gate.vacuity = counts;
     candidates.sort_by(|a, b| {
         b.similarity
             .total_cmp(&a.similarity)
@@ -325,6 +367,9 @@ pub fn gate<B: Backend>(
         .filter(|(_, dropped)| !dropped)
         .map(|(repair, _)| repair)
         .collect();
+    for repair in &mut gate.repairs {
+        repair.vacuity = vacuity(&repair.formula, oracle, &mut gate.vacuity);
+    }
     gate
 }
 
@@ -360,14 +405,31 @@ mod tests {
         let mut counts = VacuityCounts::default();
         let candidate = f("G (x & y -> X z)");
         assert_eq!(oracle.check(&candidate), Verdict::Holds);
-        assert!(vacuous(&candidate, &mut oracle, &mut counts));
-        // G X z, G (y -> X z) and G (x -> X z) fail; G !(x & y) holds.
-        assert_eq!(counts.queries, 4);
+        // G X z, G (y -> X z) and G (x -> X z) fail; G !(x & y), the
+        // witness for both X z and z, holds.
+        let found = vacuity(&candidate, &mut oracle, &mut counts);
+        assert_eq!(found.subformulae, [f("X z"), f("z")]);
+        assert!(!found.unknown);
+        assert_eq!(counts.queries, 5);
         // The control holds on the run and every witness fails.
         let control = f("G (x -> X y)");
         assert_eq!(oracle.check(&control), Verdict::Holds);
-        assert!(!vacuous(&control, &mut oracle, &mut counts));
+        assert_eq!(
+            vacuity(&control, &mut oracle, &mut counts),
+            Vacuity::default()
+        );
         assert_eq!(counts.unknowns, 0);
+    }
+
+    #[test]
+    fn the_invariant_excludes_pairs_within_each_group() {
+        let group = |names: &[&str]| names.iter().map(|&n| Arc::from(n)).collect::<Vec<_>>();
+        assert_eq!(invariant(&[]), Formula::tt());
+        assert_eq!(invariant(&[group(&["a"])]), Formula::tt());
+        assert_eq!(
+            invariant(&[group(&["a", "b", "c"]), group(&["p", "q"])]),
+            f("G (!(a & b) & !(a & c) & !(b & c) & !(p & q))")
+        );
     }
 
     fn scored(text: &str, status: f64, similarity: f64) -> Scored {

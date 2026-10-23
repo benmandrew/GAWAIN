@@ -110,15 +110,16 @@ pub fn monotone_rewrite(
 /// The vacuity witnesses of `formula`: for each subformula occurrence ψ of
 /// determinate polarity, other than the whole formula and the constants,
 /// `formula[ψ ← false]` where ψ is positive and `formula[ψ ← true]` where it
-/// is negative, simplified, in pre-order and without repeats up to
-/// [`Formula::canonical`]. Each witness implies `formula`, so a model that
-/// satisfies one satisfies `formula` whatever ψ says (Beer, Ben-David,
-/// Eisner and Rodeh; Kupferman and Vardi). A witness that folds to `false`
-/// is left out, since no model with a run satisfies it.
-pub fn vacuity_witnesses(formula: &Formula) -> Vec<Formula> {
+/// is negative, simplified, as pairs (ψ, witness) in pre-order. Each
+/// witness implies `formula`, so a model that satisfies one satisfies
+/// `formula` whatever ψ says (Beer, Ben-David, Eisner and Rodeh; Kupferman
+/// and Vardi). A witness that folds to `false` is left out, since no model
+/// with a run satisfies it.
+pub fn vacuity_witnesses(formula: &Formula) -> Vec<(Formula, Formula)> {
     let mut polarities = Vec::new();
     collect_polarities(formula, Polarity::Positive, &mut polarities);
-    let mut seen = std::collections::HashSet::new();
+    let mut nodes = Vec::new();
+    pre_order(formula, &mut nodes);
     let mut witnesses = Vec::new();
     for (target, &polarity) in polarities.iter().enumerate().skip(1) {
         let constant = match polarity {
@@ -131,11 +132,24 @@ pub fn vacuity_witnesses(formula: &Formula) -> Vec<Formula> {
             continue;
         };
         let witness = witness.simplify();
-        if !matches!(witness.node(), Node::False) && seen.insert(witness.canonical()) {
-            witnesses.push(witness);
+        if !matches!(witness.node(), Node::False) {
+            witnesses.push((nodes[target].clone(), witness));
         }
     }
     witnesses
+}
+
+/// Every subformula occurrence of `formula`, in pre-order.
+fn pre_order(formula: &Formula, out: &mut Vec<Formula>) {
+    out.push(formula.clone());
+    match formula.node() {
+        Node::True | Node::False | Node::Atom(_) => {}
+        Node::Unary(_, child) => pre_order(child, out),
+        Node::Binary(_, lhs, rhs) => {
+            pre_order(lhs, out);
+            pre_order(rhs, out);
+        }
+    }
 }
 
 /// `formula` with the node at pre-order index `target` replaced by `with`,
@@ -863,14 +877,18 @@ mod tests {
         // `a & b`, `a` and `b` are negative and become true; `X c` and `c`
         // are positive and become false, both giving `G !(a & b)`. The
         // implication itself gives `G false`, which is left out.
+        let pairs = |list: &[(&str, &str)]| -> Vec<(Formula, Formula)> {
+            list.iter().map(|&(s, w)| (f(s), f(w))).collect()
+        };
         assert_eq!(
             vacuity_witnesses(&f("G (a & b -> X c)")),
-            [
-                f("G X c"),
-                f("G (b -> X c)"),
-                f("G (a -> X c)"),
-                f("G !(a & b)")
-            ]
+            pairs(&[
+                ("a & b", "G X c"),
+                ("a", "G (b -> X c)"),
+                ("b", "G (a -> X c)"),
+                ("X c", "G !(a & b)"),
+                ("c", "G !(a & b)"),
+            ])
         );
         // Under <-> nothing is a site but the root, which is skipped.
         assert!(vacuity_witnesses(&f("a <-> b")).is_empty());

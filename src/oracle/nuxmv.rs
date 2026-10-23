@@ -145,9 +145,114 @@ fn valuation(state: &State, atoms: &[Arc<str>]) -> Result<Valuation, String> {
     Ok(holds)
 }
 
+/// The words that open a section of an SMV module.
+const SECTIONS: &[&str] = &[
+    "MODULE",
+    "VAR",
+    "IVAR",
+    "FROZENVAR",
+    "DEFINE",
+    "CONSTANTS",
+    "ASSIGN",
+    "INIT",
+    "TRANS",
+    "INVAR",
+    "FAIRNESS",
+    "JUSTICE",
+    "COMPASSION",
+    "SPEC",
+    "CTLSPEC",
+    "LTLSPEC",
+    "INVARSPEC",
+    "PSLSPEC",
+];
+
+/// Groups of mutually exclusive DEFINEs in `MODULE main` of an SMV model:
+/// `name := v = c` for one `v` and distinct constants `c`, with
+/// `name := v` and `name := !v` read as `v = TRUE` and `v = FALSE`. Of
+/// several names for the same constant only the first joins, since they are
+/// equivalent, not exclusive. Groups of one are left out, and any other
+/// DEFINE is skipped, so a model this does not understand gives no groups.
+pub fn exclusive_groups(source: &str) -> Vec<Vec<Arc<str>>> {
+    let text: String = source
+        .lines()
+        .map(|line| line.split("--").next().unwrap_or(""))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let mut by_variable: BTreeMap<&str, Vec<(&str, Arc<str>)>> = BTreeMap::new();
+    let mut section = "";
+    let mut module = "";
+    for statement in text.split(';') {
+        let mut rest = statement;
+        // A statement may open new sections; the last one opened is current.
+        let words: Vec<&str> = statement.split_whitespace().collect();
+        for (i, word) in words.iter().enumerate() {
+            if SECTIONS.contains(word) {
+                section = *word;
+                if *word == "MODULE" {
+                    module = words
+                        .get(i + 1)
+                        .map_or("", |name| name.split('(').next().unwrap_or(""));
+                }
+                let at = rest.find(word).map_or(0, |at| at + word.len());
+                rest = &rest[at..];
+            }
+        }
+        if module != "main" || section != "DEFINE" {
+            continue;
+        }
+        let Some((name, value)) = rest.split_once(":=") else {
+            continue;
+        };
+        let (name, value) = (name.trim(), value.trim());
+        let (variable, constant) = match value.split_once('=') {
+            Some((v, c)) => (v.trim(), c.trim()),
+            None => match value.strip_prefix('!') {
+                Some(v) => (v.trim(), "FALSE"),
+                None => (value, "TRUE"),
+            },
+        };
+        let plain = |s: &str| {
+            !s.is_empty()
+                && s.chars()
+                    .all(|c| c.is_alphanumeric() || "_.$#-".contains(c))
+        };
+        if !plain(name) || !plain(variable) || !plain(constant) {
+            continue;
+        }
+        let group = by_variable.entry(variable).or_default();
+        if !group.iter().any(|(c, _)| *c == constant) {
+            group.push((constant, Arc::from(name)));
+        }
+    }
+    by_variable
+        .into_values()
+        .filter(|group| group.len() > 1)
+        .map(|group| group.into_iter().map(|(_, name)| name).collect())
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn exclusive_groups_come_from_defines_of_main() {
+        let source = "MODULE sender
+DEFINE hidden := st = a; other := st = b;
+MODULE main
+VAR st : {a, b, c}; flag : boolean; n : 0..3; s : sender;
+ASSIGN next(st) := case st = a : b; TRUE : a; esac;
+DEFINE
+  p := st = a;  -- a comment; with a semicolon
+  q := st = b; q2 := st = b;
+  r := s.st = c;
+  on := flag; off := !flag;
+  small := n < 2; big := n = 3 & flag;
+";
+        let groups = exclusive_groups(source);
+        assert_eq!(groups, [atoms(&["on", "off"]), atoms(&["p", "q"])]);
+    }
 
     fn atoms(names: &[&str]) -> Vec<Arc<str>> {
         names.iter().map(|&n| Arc::from(n)).collect()

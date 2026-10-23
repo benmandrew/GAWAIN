@@ -14,10 +14,12 @@ use std::process::{Command, Output};
 use std::time::{Duration, Instant};
 
 use aragon::ltl::Formula;
-use aragon::oracle::nuxmv::Nuxmv;
+use aragon::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use aragon::oracle::process::Limits;
 use aragon::oracle::{implications, Backend, Oracle, Verdict, Words};
-use aragon::search::{gate, monotone_rewrite, Direction, Rng, Scored};
+use aragon::search::{
+    gate, invariant, monotone_rewrite, vacuity, Direction, Rng, Scored, Vacuity, VacuityCounts,
+};
 use common::{formula, have, parse};
 
 const LIMITS: Limits = Limits {
@@ -106,11 +108,11 @@ fn the_gate_keeps_maximal_proved_weakenings() {
         scored("G (a -> X b | b)", false, &phi),
         scored("G (a -> F b)", true, &phi),
     ];
-    let outcome = gate(&phi, &population, &mut oracle, LIMITS);
+    let outcome = gate(&phi, &population, &Formula::tt(), &mut oracle, LIMITS);
     assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
     let kept: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
     assert_eq!(kept, [parse("G (a -> X b | X X b)")]);
-    assert_eq!(outcome.vacuity.dropped, 0);
+    assert_eq!(outcome.repairs[0].vacuity, Vacuity::default());
 }
 
 /// A sender cycling through three states. `s_get & s_wait` never holds,
@@ -125,31 +127,58 @@ DEFINE
 ";
 
 #[test]
-fn the_gate_drops_a_repair_vacuous_on_the_model() {
+fn the_gate_drops_validity_modulo_the_encoding_and_flags_vacuity() {
     if !have(
         &["nuXmv", "ltlfilt"],
-        "the_gate_drops_a_repair_vacuous_on_the_model",
+        "the_gate_drops_validity_modulo_the_encoding_and_flags_vacuity",
     ) {
         return;
     }
+    let groups = exclusive_groups(CYCLE);
+    let names: Vec<Vec<&str>> = groups
+        .iter()
+        .map(|g| g.iter().map(|a| &**a).collect())
+        .collect();
+    assert_eq!(names, [["s_get", "s_send", "s_wait"]]);
+    let invariant = invariant(&groups);
     let mut oracle = oracle_on("cycle.smv", CYCLE, &["s_get", "s_send", "s_wait"]);
     let phi = parse("G (s_get -> X (s_send & s_get))");
     assert!(matches!(oracle.check(&phi), Verdict::Fails(_)));
     let population = [
-        // Holds only because its antecedent never does.
+        // Valid modulo the encoding: its antecedent never holds.
         scored("G (s_get & s_wait -> X s_get)", true, &phi),
+        // Holds and is kept, but is vacuous in s_get: M satisfies
+        // G X F s_send, since the cycle passes through send forever.
+        scored("G (s_get -> X F s_send)", true, &phi),
         // The control: holds, and not vacuously.
         scored("G (s_get -> X s_send)", true, &phi),
     ];
     for candidate in &population {
         assert_eq!(oracle.check(&candidate.formula), Verdict::Holds);
     }
-    let outcome = gate(&phi, &population, &mut oracle, LIMITS);
+    // Without the invariant the first candidate is a repair.
+    let plain = gate(&phi, &population, &Formula::tt(), &mut oracle, LIMITS);
+    assert!(plain
+        .repairs
+        .iter()
+        .any(|r| r.formula == population[0].formula));
+    let outcome = gate(&phi, &population, &invariant, &mut oracle, LIMITS);
     assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
-    let kept: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
-    assert_eq!(kept, [parse("G (s_get -> X s_send)")]);
-    assert_eq!(outcome.vacuity.dropped, 1);
-    assert_eq!(outcome.vacuity.unknowns, 0);
+    let flags: Vec<(Formula, Vec<Formula>)> = outcome
+        .repairs
+        .iter()
+        .map(|r| (r.formula.clone(), r.vacuity.subformulae.clone()))
+        .collect();
+    // G (s_get -> X s_send) implies the X F one, so only it is maximal;
+    // ask the X F one directly.
+    assert_eq!(flags, [(parse("G (s_get -> X s_send)"), vec![])]);
+    let mut counts = VacuityCounts::default();
+    let eventual = vacuity(&population[1].formula, &mut oracle, &mut counts);
+    assert!(
+        eventual.subformulae.contains(&parse("s_get")),
+        "{eventual:?}"
+    );
+    assert_eq!(counts.unknowns, 0);
 }
 
 /// A request is acknowledged one step later, or two when `slow` holds, so
@@ -184,10 +213,22 @@ fn weaken(
 
 /// The repairs the binary printed.
 fn repairs(stdout: &str) -> Vec<Formula> {
+    flagged(stdout)
+        .into_iter()
+        .map(|(formula, _)| formula)
+        .collect()
+}
+
+/// Each repair line as (formula, vacuity column).
+fn flagged(stdout: &str) -> Vec<(Formula, String)> {
     stdout
         .lines()
         .filter_map(|line| line.strip_prefix("repair\t"))
-        .map(|rest| parse(rest.split_once('\t').expect("similarity, formula").1))
+        .map(|rest| {
+            let fields: Vec<&str> = rest.splitn(3, '\t').collect();
+            assert_eq!(fields.len(), 3, "similarity, vacuity, formula: {rest}");
+            (parse(fields[2]), fields[1].to_string())
+        })
         .collect()
 }
 
@@ -321,13 +362,20 @@ fn weaken_runs_on_lmcs_abp4_p2false() {
         start.elapsed().as_secs_f64(),
         found.len()
     ));
-    // The vacuity step drops the repair whose antecedent never holds on M.
-    // It drops the one that weakens U to X F too: M satisfies
-    // G X F (s_wait & ...), so that repair says nothing about s_get.
-    let vacuous = parse(
+    // s_get and s_wait are two values of sender.state, so the encoding
+    // invariant makes the repair with both in its antecedent trivial.
+    assert!(stdout.contains("exclusive: s_get, s_wait"), "{stdout}");
+    let trivial = parse(
         "G (s_get & s_wait -> X (!s_get U (s_wait & ((!s_abp & r_ack0) | (s_abp & r_ack1)))))",
     );
+    assert!(!found.contains(&trivial), "{stdout}");
+    // The U weakened to X F is kept, flagged vacuous in s_get: M satisfies
+    // G X F (s_wait & ...), so it says nothing about s_get.
     let eventual = parse("G (s_get -> X F (s_wait & ((!s_abp & r_ack0) | (s_abp & r_ack1))))");
-    assert!(!found.contains(&vacuous), "{stdout}");
-    assert!(!found.contains(&eventual), "{stdout}");
+    let flags = flagged(&stdout);
+    let (_, flag) = flags
+        .iter()
+        .find(|(formula, _)| *formula == eventual)
+        .unwrap_or_else(|| panic!("no X F repair:\n{stdout}"));
+    assert!(flag.split("; ").any(|s| s == "s_get"), "{stdout}");
 }
