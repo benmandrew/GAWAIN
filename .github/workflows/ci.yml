@@ -35,14 +35,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      # SPIN comes from Ubuntu and Spot from the LRDE Debian repository.
+      # Spot comes from the LRDE Debian repository. SPIN is built from source
+      # because Ubuntu's package is compiled without -DNXT, so it rejects X.
       # nuXmv has no redistributable package, so its tests skip here, and
       # bench/data is gitignored, so the RERS data tests skip too.
-      - name: Install SPIN and Spot
+      - name: Install Spot
         run: |
           sudo install -d /etc/apt/keyrings
           curl -fsSL https://www.lrde.epita.fr/repo/debian.gpg | sudo tee /etc/apt/keyrings/lrde.gpg > /dev/null
           echo "deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/" | sudo tee /etc/apt/sources.list.d/lrde.list
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends spin spot
+          sudo apt-get install -y --no-install-recommends spot byacc
+      - name: Build SPIN 6.5.2
+        run: |
+          git clone -q --depth 1 --branch version-6.5.2 https://github.com/nimble-code/Spin.git "$RUNNER_TEMP/spin"
+          make -C "$RUNNER_TEMP/spin/Src" -s
+          sudo install "$RUNNER_TEMP/spin/Src/spin" /usr/local/bin/spin
+          spin -V
       - run: cargo test -- --nocapture
