@@ -13,6 +13,7 @@ pub mod nuxmv;
 pub mod process;
 pub mod spin;
 mod spot;
+pub mod tapaal;
 mod tiered;
 
 use std::collections::BTreeSet;

@@ -48,9 +48,28 @@
           dontStrip = true;
           meta.platforms = [ "x86_64-linux" ];
         });
+
+        # TAPAAL's verifypn, the MCC back end (src/oracle/tapaal.rs), is not
+        # in nixpkgs, and its source build needs gcc 16 and its own Spot.
+        # The TAPAAL 4.0.4 bundle ships it as a static x86-64 binary
+        # (verifypn 4.4.2, GPL-3.0-or-later); install that as `verifypn`.
+        verifypn = pkgs.stdenvNoCC.mkDerivation {
+          pname = "verifypn";
+          version = "4.4.2";
+          src = pkgs.fetchurl {
+            url = "https://download.tapaal.net/tapaal/tapaal-4.0/tapaal-4.0.4-linux64.zip";
+            hash = "sha256-gVqruXofCVyXwnktxEpWlwJLUHbVomuDqRo+kUdB2PM=";
+          };
+          nativeBuildInputs = [ pkgs.unzip ];
+          installPhase = ''
+            install -Dm755 bin/verifypn64 $out/bin/verifypn
+          '';
+          meta.platforms = [ "x86_64-linux" ];
+        };
       in {
         packages.spot = spot;
         packages.ganak = ganak;
+        packages.verifypn = verifypn;
 
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
@@ -66,7 +85,7 @@
             spot
             spin
             nuxmv
-          ] ++ pkgs.lib.optional (system == "x86_64-linux") ganak ++ (with pkgs; [
+          ] ++ pkgs.lib.optionals (system == "x86_64-linux") [ ganak verifypn ] ++ (with pkgs; [
 
             # SPIN's pan.c is compiled with gcc on every query.
             gcc
