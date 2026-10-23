@@ -81,6 +81,8 @@ From Biere, Heljanko, Junttila, Latvala and Schuppan ([README](https://fmv.jku.a
 
 nuXmv 2.1.0 rejects the files, because they use NuSMV 2.4 syntax where 0/1 stand for booleans. `-old` gives wrong verdicts on `ring`. Replacing `:= 0/1` and `1 :` with FALSE/TRUE fixes this, and the checked verdicts then match the README.
 
+Done 2026-10-23 (`bench/lmcs_fix.py`, `bench/lmcs_check.py`, `bench/results/lmcs2006-filter.csv`). The fix also renames `extend` and `K` and rewrites 0/1 module arguments, `<-> 0` and `{0,1}`. All 60 known verdicts match the README, and production-cell `p4` (unknown there) checks true. 7 of the 8 un-negated failures survive the degeneracy filter; abp4 `ptimo` is degenerate. The slowest checks on av2 were dme6 `ptimo` at 905 s and bc57 `p3` at 659 s.
+
 ### 6. Generated from SYNTCOMP (optional)
 
 For each realisable SYNTCOMP TLSF spec, synthesise a controller with `ltlsynt` and use it as M. Then strengthen the guarantees until M violates them. This set is optional now that no ground truth is needed. It is the only source that runs on PEREDUR's existing TLSF/SPOT toolchain without a model-checker front end.
@@ -94,10 +96,18 @@ For each realisable SYNTCOMP TLSF spec, synthesise a controller with `ltlsynt` a
 
 Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Challenges (LMCPS; [NASA report](https://ntrs.nasa.gov/citations/20205000433)), the ARCH-COMP falsification category ([2019 report](https://www.sosy-lab.org/research/pub/2019-ARCH.Category_Report_Falsification.pdf)), and parametric STL mining ([Jin et al.](https://people.eecs.berkeley.edu/~sseshia/pubs/b2hd-jin-tcad15.html); [Hoxha et al.](https://archive.cps-vo.org/node/50635)). All three use Simulink models with timed requirements, which fits interval weakening.
 
+## Decisions (2026-10-23)
+
+- **Language.** Standalone Rust in this repo. PEREDUR's core (formula representation, operators, model-counting similarity, NSGA-II) is rewritten in Rust, not linked.
+- **Back ends.** nuXmv and SPIN behind one oracle interface from the start, as in CEGIW.
+- **Weakening.** φ ⇒ φ' is not enforced during the search, so candidates can pass through formulas incomparable with φ. It is enforced at the output gate, one cached implication check per output, so every reported repair is a true weakening.
+- **Oracle cost.** The search is only feasible with aggressive caching of tool results, as in PEREDUR. The oracle design is in `docs/dev/oracle-performance.md`.
+
 ## Tasks
 
-- [ ] Choose the model-checker back end (nuXmv, SPIN, or both, as in CEGIW) and how a candidate φ' reaches it.
-- [ ] Decide what PEREDUR code carries over: the formula representation, operators, model-counting similarity and NSGA-II selection.
+- [ ] Port the LTL formula core to Rust (AST, parser, SPIN and nuXmv printers, simplification, syntactic similarity).
+- [ ] Design the oracle from the measurements in `docs/dev/oracle-performance.md`: tiered checks, cache keys, persistent back-end processes.
+- [ ] Port operators, model-counting similarity and NSGA-II selection.
 - [ ] Add the degeneracy filter (check ¬φ on M) to benchmark loading.
 - [ ] RERS parallel track: load the Promela files and solution CSVs, then measure how many false properties survive the filter.
 - [ ] RERS 2016/2017: check whether the correct "precedes" patterns hold, and keep the 105 affected cases as a small set with an intended weakening.
@@ -105,6 +115,6 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [ ] BEEM: translate the LTL propositions for the 96 ERROR pairs, and compute verdicts on both the correct and the erroneous variants.
 - [ ] Trace sets: add a trace-based M (check φ' on finite traces and lassos), and fix or skip the OrderedSequence formulas.
 - [ ] Baselines: ⊤ and CEGIW on the subset with intervals.
-- [ ] Investigate LMCPS, ARCH-COMP falsification and parametric STL mining.
+- [x] Investigate LMCPS, ARCH-COMP falsification and parametric STL mining (`bench/notes/simulink-sources.md`). ARCH-COMP models are continuous hybrid systems, and STL mining produces satisfied formulas, so neither is usable. LMCPS has 74 discrete-time requirements, about 23 of them violated, but its models need MATLAB and it carries no licence, so at most a few small models could be hand-translated to nuXmv.
 
 The benchmarks favour RERS for credibility and MCC for volume. The first concrete step is wiring a model checker into the fitness loop and running the degeneracy filter over the RERS parallel track.
