@@ -108,7 +108,7 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [x] Port the LTL formula core to Rust (AST, parser, SPIN and nuXmv printers, simplification, syntactic similarity).
 - [x] Oracle interface: `Verdict`, `Lasso`, `Backend` (`src/oracle/mod.rs`).
 - [x] Oracle tier 1: evaluate a candidate on stored lassos (`Lasso::satisfies`, `LassoCache`). Agrees with Spot on 300 random cases.
-- [x] Oracle tier 2, in-process half: lasso-word fingerprints and the known-truths antichain. The fingerprint refuted 208 of 212 Spot-refuted pairs and none of 188 proved ones.
+- [x] Oracle tier 2, in-process half: lasso-word fingerprints and the known-truths antichain. On 400 pairs the fingerprint refuted all 208 that Spot refuted and none of the 192 it proved.
 - [x] Tier 0 memo, tier 2 Spot implication (one batched `ltlfilt` exec, 74–80 µs per pair) and the tiered `Oracle` over any back end, with per-tier counters (`docs/dev/oracle.md`).
 - [x] Process runner with resource limits, and the nuXmv back end (batch mode, lasso from the trace). Every nuXmv lasso replays as a violation under the lasso evaluator.
 - [ ] SPIN back end: single and batched checks (at most 200 claims per build), lasso from the trail.

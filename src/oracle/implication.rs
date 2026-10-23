@@ -18,9 +18,10 @@
 //! cap, so neither does this module.
 //!
 //! On 400 fixed-seed pairs of a random formula and a one-subformula mutant
-//! of it over three atoms (`tests/fingerprint.rs`), Spot proved 188
-//! implications and refuted 212. The fingerprint ruled out none of the 188
-//! and refuted 208 of the 212 (98.1%).
+//! of it over three atoms (`tests/fingerprint.rs`), Spot proved 192
+//! implications and refuted 208. The fingerprint ruled out none of the 192
+//! and refuted all 208. An earlier count of 188 and 212 came from
+//! `ltlfilt --imply`, which rejects 4 of these implications.
 
 use std::sync::Arc;
 

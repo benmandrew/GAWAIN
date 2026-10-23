@@ -3,42 +3,25 @@
 //!
 //! Each pair is a random formula ψ and a mutant φ' of it, made by replacing
 //! one random subformula with a random formula, as a GA offspring would be.
-//! Spot decides ψ ⇒ φ' with `ltlfilt -f ψ --imply=φ'`. The test skips, with
-//! a reason on stderr, when `ltlfilt` is not on `PATH`. Every tool call runs
-//! under `timeout`.
+//! Spot decides every ψ ⇒ φ' in one batch through [`implications`], since
+//! `ltlfilt --imply` in Spot 2.15.1 wrongly rejects `false ⇒ true`. The test
+//! skips, with a reason on stderr, when `ltlfilt` is not on `PATH`.
 
 mod common;
 
 use std::io::Write;
-use std::process::{Command, Stdio};
+use std::time::Duration;
 
-use aragon::ltl::Formula;
-use aragon::oracle::Words;
+use aragon::oracle::process::Limits;
+use aragon::oracle::{implications, Words};
 use common::{formula, mutant, on_path, Rng};
 
-const TIMEOUT_SECS: &str = "60";
+const LIMITS: Limits = Limits {
+    timeout: Duration::from_secs(120),
+    memory_bytes: 2 << 30,
+};
 const PAIRS: usize = 400;
 const ATOMS: &[&str] = &["a", "b", "c"];
-
-/// Spot's verdict on `psi -> phi`, valid or not.
-fn spot_implies(psi: &Formula, phi: &Formula) -> bool {
-    let output = Command::new("timeout")
-        .arg(TIMEOUT_SECS)
-        .arg("ltlfilt")
-        .args(["-q", "-f", &psi.to_string(), &format!("--imply={phi}")])
-        .stdin(Stdio::null())
-        .output()
-        .expect("cannot run ltlfilt");
-    let code = output.status.code();
-    assert_ne!(code, Some(124), "ltlfilt timed out on {psi} => {phi}");
-    // ltlfilt -q exits 0 when the formula passes the filter, 1 otherwise.
-    assert!(
-        matches!(code, Some(0 | 1)),
-        "ltlfilt failed on {psi} => {phi}: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    code == Some(0)
-}
 
 #[test]
 fn fingerprint_is_sound_against_spot() {
@@ -51,12 +34,19 @@ fn fingerprint_is_sound_against_spot() {
     }
     let words = Words::sample(ATOMS.iter().copied(), 0);
     let mut rng = Rng(0x9E37_79B9_7F4A_7C15);
+    let pairs: Vec<_> = (0..PAIRS)
+        .map(|_| {
+            let psi = formula(&mut rng, 4, ATOMS);
+            let phi = mutant(&mut rng, &psi, 2, ATOMS);
+            (psi, phi)
+        })
+        .collect();
+    let refs: Vec<_> = pairs.iter().map(|(psi, phi)| (psi, phi)).collect();
+    let proved = implications(&refs, LIMITS).expect("ltlfilt failed");
     let (mut implied, mut refuted, mut caught) = (0, 0, 0);
-    for _ in 0..PAIRS {
-        let psi = formula(&mut rng, 4, ATOMS);
-        let phi = mutant(&mut rng, &psi, 2, ATOMS);
-        let may = words.fingerprint(&psi).may_imply(&words.fingerprint(&phi));
-        if spot_implies(&psi, &phi) {
+    for ((psi, phi), spot) in pairs.iter().zip(proved) {
+        let may = words.fingerprint(psi).may_imply(&words.fingerprint(phi));
+        if spot {
             assert!(
                 may,
                 "the fingerprint ruled out {psi} => {phi}, which Spot proves"
