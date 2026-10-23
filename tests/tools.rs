@@ -383,8 +383,16 @@ fn spin(name: &str, model: &str, limits: Limits) -> Spin {
 
 /// Checks a verdict against the expected truth, and replays every
 /// counterexample: a lasso that satisfies its formula would let tier 1
-/// cache a run that refutes nothing.
+/// cache a run that refutes nothing. SPIN must refuse a formula with `X`,
+/// whose steps are SPIN's rather than the model's.
 fn assert_verdict(verdict: &Verdict, formula: &Formula, expected: bool) {
+    if formula.to_string().contains('X') {
+        assert!(
+            matches!(verdict, Verdict::Unknown(r) if r.contains("X counts")),
+            "SPIN decided {formula}: {verdict:?}"
+        );
+        return;
+    }
     match verdict {
         Verdict::Holds => assert!(expected, "SPIN proved {formula}"),
         Verdict::Fails(lasso) => {
@@ -447,8 +455,8 @@ fn spin_splits_a_batch_over_the_claim_cap() {
     }
     let mut backend = spin("split.pml", PROMELA, LIMITS);
     assert_eq!(backend.claims_per_build(), MAX_CLAIMS - 2);
-    // X-free only: formulas with and without X are built apart, and the
-    // batch must overflow one group.
+    // X-free only, since SPIN refuses X without a build, and the batch
+    // must overflow one build.
     let cases: Vec<(Formula, bool)> = PROMELA_VERDICTS
         .iter()
         .filter(|(text, _)| !text.contains('X'))

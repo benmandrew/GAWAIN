@@ -34,10 +34,12 @@
 //! lasso, and for an `X`-free formula SPIN's verdict and the lasso agree.
 //!
 //! `X` counts SPIN steps, not positions, so on a model with unobservable
-//! steps an `X` verdict describes SPIN's run, not the model's. Such formulas
-//! are compiled with `-DNOREDUCE`, since partial-order reduction is unsound
-//! for them. Every lasso is checked with [`Lasso::satisfies`] before it is
-//! returned, and one that satisfies its formula becomes `Verdict::Unknown`.
+//! steps an `X` verdict describes SPIN's run, not the model's, and a wrong
+//! `Holds` could not be caught. A formula with `X` is therefore answered
+//! `Verdict::Unknown` without a build; the explicit Kripke back end, whose
+//! steps are the model's actions, decides those. Every lasso is still checked
+//! with [`Lasso::satisfies`] before it is returned, and one that satisfies
+//! its formula becomes `Verdict::Unknown`.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -121,29 +123,28 @@ impl Spin {
         self.claims_per_build
     }
 
-    /// Decides every formula, one verdict per formula in order. Formulas
-    /// with and without `X` are built separately, so only the former lose
-    /// partial-order reduction. Each call to a tool runs under the back
-    /// end's limits.
+    /// Decides every formula, one verdict per formula in order. A formula
+    /// with `X` or with an atom outside the interface is answered
+    /// `Verdict::Unknown`. Each call to a tool runs under the back end's
+    /// limits.
     pub fn check_all(&mut self, formulas: &[Formula]) -> Vec<Verdict> {
         let mut verdicts: Vec<Option<Verdict>> = vec![None; formulas.len()];
-        let mut groups: [Vec<usize>; 2] = Default::default();
+        let mut checked = Vec::new();
         for (i, formula) in formulas.iter().enumerate() {
-            match self.foreign_atom(formula) {
-                Some(name) => {
-                    let reason = format!("SPIN: atom {name} is not in the interface");
-                    verdicts[i] = Some(Verdict::Unknown(reason));
-                }
-                None => groups[usize::from(has_next(formula))].push(i),
+            if let Some(name) = self.foreign_atom(formula) {
+                let reason = format!("SPIN: atom {name} is not in the interface");
+                verdicts[i] = Some(Verdict::Unknown(reason));
+            } else if has_next(formula) {
+                let reason = "SPIN: X counts SPIN steps, not the model's positions".to_string();
+                verdicts[i] = Some(Verdict::Unknown(reason));
+            } else {
+                checked.push(i);
             }
         }
-        for (with_next, group) in groups.iter().enumerate() {
-            for chunk in group.chunks(self.claims_per_build) {
-                let claims: Vec<&Formula> = chunk.iter().map(|&i| &formulas[i]).collect();
-                let answers = self.check_chunk(&claims, with_next == 1);
-                for (&i, verdict) in chunk.iter().zip(answers) {
-                    verdicts[i] = Some(verdict);
-                }
+        for chunk in checked.chunks(self.claims_per_build) {
+            let claims: Vec<&Formula> = chunk.iter().map(|&i| &formulas[i]).collect();
+            for (&i, verdict) in chunk.iter().zip(self.check_chunk(&claims)) {
+                verdicts[i] = Some(verdict);
             }
         }
         verdicts
@@ -164,8 +165,8 @@ impl Spin {
         }
     }
 
-    fn check_chunk(&self, formulas: &[&Formula], no_reduce: bool) -> Vec<Verdict> {
-        match self.build(formulas, no_reduce) {
+    fn check_chunk(&self, formulas: &[&Formula]) -> Vec<Verdict> {
+        match self.build(formulas) {
             Ok(()) => formulas
                 .iter()
                 .enumerate()
@@ -177,7 +178,7 @@ impl Spin {
 
     /// Writes `claims.pml` with claim `c<k>` for `formulas[k]`, and compiles
     /// its verifier to `pan`.
-    fn build(&self, formulas: &[&Formula], no_reduce: bool) -> Result<(), String> {
+    fn build(&self, formulas: &[&Formula]) -> Result<(), String> {
         let mut ltl = self.model.clone();
         for (k, formula) in formulas.iter().enumerate() {
             let _ = writeln!(ltl, "ltl c{k} {{ {} }}", formula.to_spin());
@@ -194,11 +195,7 @@ impl Spin {
         self.tool("spin", &["-a", "claims.pml"])?;
         let memlim = (self.limits.memory_bytes >> 20).saturating_sub(PAN_HEADROOM_MB);
         let memlim = format!("-DMEMLIM={}", memlim.max(1));
-        let mut gcc = vec!["-O0", &memlim, "-o", "pan", "pan.c"];
-        if no_reduce {
-            gcc.insert(0, "-DNOREDUCE");
-        }
-        self.tool("gcc", &gcc)?;
+        self.tool("gcc", &["-O0", &memlim, "-o", "pan", "pan.c"])?;
         Ok(())
     }
 
@@ -216,8 +213,7 @@ impl Spin {
             Ok(false) => Verdict::Holds,
             Ok(true) => match self.replay() {
                 Ok(lasso) if lasso.satisfies(formula) => unknown(format!(
-                    "the counterexample satisfies {formula} over observable positions \
-                     (X counts SPIN steps)"
+                    "the counterexample satisfies {formula} over observable positions"
                 )),
                 Ok(lasso) => Verdict::Fails(lasso),
                 Err(reason) => unknown(reason),
