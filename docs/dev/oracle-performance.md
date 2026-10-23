@@ -102,6 +102,18 @@ The per-query cost was measured on av2 (32 cores, load average 15 to 18 from oth
 
 Each row covers the 20 RERS properties of the problem. On 2016/105 all 20 verdicts also match the solution file. Peak RSS for the whole run, with the largest structure loaded, was 182 MB. On problem104 the product cost is below the noise of the subtraction, so a query costs one Spot process. On the larger models, true properties cost the most, because only they explore the whole product: on 2016/105 the product cost averaged 112 ms over the 9 true properties and 36 ms over the 11 false ones. A whole query there costs about 90 ms, against 1.5–6.8 s for the `autfilt` route above, and SPIN did not finish problem105 at all.
 
+## Back end 4: TAPAAL `verifypn` on Petri nets
+
+`Tapaal` (`src/oracle/tapaal.rs`) checks Model Checking Contest P/T nets with `verifypn` 4.4.2 and replays its trace on the net to get a lasso. `bench/notes/mcc.md` gives the design, the survey of other tools and the full results. The per-query cost was measured on av3 (32 cores, 125 GB, load average about 15 from the run's own 12 jobs and other users) with `bench/mcc_run.sh`, which runs `mcc_check` on 12 instances at once, each under `systemd-run --user --scope -p MemoryMax=16G -p MemorySwapMax=0 nice -n 10`, with 60 s and 12 GB per `verifypn` call. Each time is one `Backend::check`, including every configuration tried, the confirmation of a TRUE under `-ltl -p` and the replay. The TRUE answers were timed in a second pass over the 4,756 candidates with a TRUE, at 6 instances at once next to a second 6-instance pass at similar load. Times cluster at 72 and 92 ms because `process::run` polls at up to 20 ms.
+
+| Check | n | Median | Mean | p2.5–p97.5 | Within 1 s |
+|---|---|---|---|---|---|
+| FALSE (with lasso) | 9,779 | 93 ms | 1.13 s | 8 ms–12.4 s | 91.6% |
+| TRUE, confirmed | 4,683 | 65 ms | 2.33 s | 16 ms–32.0 s | |
+| TRUE, first run only | 4,737 | 32 ms | 1.31 s | 8 ms–17.5 s | |
+
+The FALSE row covers the 9,779 of 9,942 FALSE oracle formulas on instances with at most 1e9 states that `verifypn` refuted within 60 s. The TRUE rows cover the negations of those formulas that hold. The last row is from the first pass, before the back end confirmed TRUE: there the default partial-order reduction answered TRUE on one formula that the oracle and `-ltl -p` say is FALSE. Confirmation costs a median of 33 ms per TRUE and turned 35 TRUE answers into timeouts.
+
 ## Counterexample (lasso) cache
 
 Every false verdict yields a lasso u·v^ω of M with u·v^ω ⊭ φ'. The cache stores these lassos, and a new candidate whose evaluation on any stored lasso is false is refuted without a model-checking call. This is sound, because each lasso is a real run of M. It can never prove a candidate true.

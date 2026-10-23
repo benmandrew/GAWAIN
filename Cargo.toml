@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 libc = "0.2.191"
+roxmltree = "0.21.1"
 
 # The lasso count is about 20 times slower unoptimised, which made the
 # abp4 search test take 570 s; tests build with the dev profile.
