@@ -5,6 +5,7 @@
 //! to refute later candidates without another model-checking call. See
 //! `docs/dev/oracle-performance.md` for the tiered design and its costs.
 
+mod implication;
 mod lasso;
 pub mod nuxmv;
 pub mod process;
@@ -14,6 +15,7 @@ use std::sync::Arc;
 
 use crate::ltl::Formula;
 
+pub use implication::{Fingerprint, KnownTruths, Words};
 pub use lasso::LassoCache;
 
 /// The atoms that hold at one position of a run.
