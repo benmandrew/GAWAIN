@@ -27,6 +27,7 @@ mod ganak;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::hash::{BuildHasherDefault, Hasher};
 use std::process::Command;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -354,7 +355,6 @@ impl Counter {
         }
         Ok(top + terms.iter().map(|t| (t - top).exp2()).sum::<f64>().log2())
     }
-
     /// The letters of `automaton` over the universe: the classes of
     /// valuations that enable the same edges between live states, each
     /// with its edges and its number of valuations. A class that enables
@@ -549,10 +549,12 @@ impl Hasher for WordHasher {
     }
 
     fn write(&mut self, bytes: &[u8]) {
-        for chunk in bytes.chunks(8) {
-            let mut word = [0; 8];
-            word[..chunk.len()].copy_from_slice(chunk);
+        let (words, rest) = bytes.as_chunks::<8>();
+        for &word in words {
             self.write_u64(u64::from_le_bytes(word));
+        }
+        for &byte in rest {
+            self.write_u64(byte as u64);
         }
     }
 
@@ -581,19 +583,29 @@ fn bits(set: &[u64]) -> impl Iterator<Item = usize> + '_ {
     })
 }
 
-/// The relations of the loops v met so far, interned. A relation is a
-/// stack of bit matrices, one row of `words` 64-bit words per state:
-/// plane 0 holds q in row p when some run on v leads from p to q, and
-/// plane 1 + i when some such run sees acceptance set i. A letter is a
-/// relation of length 1. Each relation's set of accepting states, a
-/// bitset, is interned too.
+/// The relations of the loops v met so far, interned. A relation has one
+/// row per state, and a row is a stack of `planes` bitsets of `words`
+/// 64-bit words: plane 0 holds q in row p when some run on v leads from p
+/// to q, and plane 1 + i when some such run sees acceptance set i. A
+/// letter is a relation of length 1.
+///
+/// Row p of v·a depends only on row p of v and on a, so rows are
+/// interned on their own, a relation is its list of row ids, and the
+/// step of a row by a letter is computed once and kept in a table. A
+/// step of a relation is then one table lookup per state. Each
+/// relation's set of accepting states, a bitset, is interned too.
 struct Monoid {
     n: usize,
     words: usize,
     planes: usize,
     letters: Vec<Vec<u64>>,
-    ids: HashMap<Vec<u64>, usize, BuildHasherDefault<WordHasher>>,
-    relations: Vec<Vec<u64>>,
+    row_ids: HashMap<Rc<[u64]>, u32, BuildHasherDefault<WordHasher>>,
+    rows: Vec<Rc<[u64]>>,
+    /// The id of row r stepped by letter a, at `r * letters + a`, or
+    /// `u32::MAX` before it is computed.
+    row_steps: Vec<u32>,
+    ids: HashMap<Rc<[u32]>, usize, BuildHasherDefault<WordHasher>>,
+    relations: Vec<Rc<[u32]>>,
     steps: Vec<Vec<usize>>,
     good_of: Vec<Option<usize>>,
     good_ids: HashMap<Vec<u64>, usize>,
@@ -604,54 +616,56 @@ impl Monoid {
     fn new(n: usize, all_marks: Marks, letters: &[Letter]) -> Self {
         let words = n.div_ceil(64).max(1);
         let planes = 1 + all_marks.count_ones() as usize;
-        let mut monoid = Monoid {
-            n,
-            words,
-            planes,
-            letters: Vec::new(),
-            ids: HashMap::default(),
-            relations: Vec::new(),
-            steps: Vec::new(),
-            good_of: Vec::new(),
-            good_ids: HashMap::new(),
-            goods: Vec::new(),
-        };
-        monoid.letters = letters
+        let letters = letters
             .iter()
             .map(|letter| {
-                let mut table = monoid.empty();
+                let mut table = vec![0; n * planes * words];
                 for (p, out) in letter.step.iter().enumerate() {
                     for &(q, marks) in out {
-                        monoid.set(&mut table, 0, p, q);
-                        for i in (0..planes - 1).filter(|i| marks >> i & 1 == 1) {
-                            monoid.set(&mut table, 1 + i, p, q);
+                        let seen = (0..planes - 1).filter(|i| marks >> i & 1 == 1);
+                        for plane in std::iter::once(0).chain(seen.map(|i| 1 + i)) {
+                            table[(p * planes + plane) * words + q / 64] |= 1 << (q % 64);
                         }
                     }
                 }
                 table
             })
             .collect();
-        monoid
+        Monoid {
+            n,
+            words,
+            planes,
+            letters,
+            row_ids: HashMap::default(),
+            rows: Vec::new(),
+            row_steps: Vec::new(),
+            ids: HashMap::default(),
+            relations: Vec::new(),
+            steps: Vec::new(),
+            good_of: Vec::new(),
+            good_ids: HashMap::new(),
+            goods: Vec::new(),
+        }
     }
 
-    fn empty(&self) -> Vec<u64> {
-        vec![0; self.planes * self.n * self.words]
-    }
-
-    fn row(&self, plane: usize, p: usize) -> std::ops::Range<usize> {
-        let start = (plane * self.n + p) * self.words;
-        start..start + self.words
-    }
-
-    fn set(&self, table: &mut [u64], plane: usize, p: usize, q: usize) {
-        let row = self.row(plane, p);
-        table[row][q / 64] |= 1 << (q % 64);
-    }
-
-    fn intern(&mut self, relation: Vec<u64>) -> usize {
-        if let Some(&id) = self.ids.get(&relation) {
+    fn intern_row(&mut self, row: &[u64]) -> u32 {
+        if let Some(&id) = self.row_ids.get(row) {
             return id;
         }
+        let row: Rc<[u64]> = row.into();
+        let id = self.rows.len() as u32;
+        self.rows.push(row.clone());
+        self.row_ids.insert(row, id);
+        self.row_steps
+            .resize(self.rows.len() * self.letters.len(), u32::MAX);
+        id
+    }
+
+    fn intern(&mut self, relation: &[u32]) -> usize {
+        if let Some(&id) = self.ids.get(relation) {
+            return id;
+        }
+        let relation: Rc<[u32]> = relation.into();
         self.relations.push(relation.clone());
         self.ids.insert(relation, self.relations.len() - 1);
         self.relations.len() - 1
@@ -659,11 +673,14 @@ impl Monoid {
 
     /// The relation of the empty word.
     fn identity(&mut self) -> usize {
-        let mut relation = self.empty();
-        for p in 0..self.n {
-            self.set(&mut relation, 0, p, p);
-        }
-        self.intern(relation)
+        let relation: Vec<u32> = (0..self.n)
+            .map(|p| {
+                let mut row = vec![0; self.planes * self.words];
+                row[p / 64] |= 1 << (p % 64);
+                self.intern_row(&row)
+            })
+            .collect();
+        self.intern(&relation)
     }
 
     /// The relation of v followed by each letter, by letter index.
@@ -672,40 +689,66 @@ impl Monoid {
             self.steps.resize(relation + 1, Vec::new());
         }
         if self.steps[relation].is_empty() {
+            let from = self.relations[relation].clone();
+            let mut next = vec![0; self.n];
             let out = (0..self.letters.len())
-                .map(|index| self.step(relation, index))
+                .map(|letter| {
+                    for (slot, &row) in next.iter_mut().zip(from.iter()) {
+                        *slot = self.row_step(row, letter);
+                    }
+                    self.intern(&next)
+                })
                 .collect();
             self.steps[relation] = out;
         }
         &self.steps[relation]
     }
 
-    /// The relation of v followed by the letter `index`: a run sees set i
-    /// when its part on v does or its last edge does.
-    fn step(&mut self, relation: usize, index: usize) -> usize {
-        let (from, letter) = (&self.relations[relation], &self.letters[index]);
-        let mut next = self.empty();
-        for p in 0..self.n {
-            for q in bits(&from[self.row(0, p)]) {
-                for plane in 0..self.planes {
-                    let (to, by) = (self.row(plane, p), self.row(plane, q));
-                    next[to]
-                        .iter_mut()
-                        .zip(&letter[by])
-                        .for_each(|(a, b)| *a |= b);
-                }
+    /// The id of row `row` of some v, stepped by the letter `index`: a
+    /// run sees set i when its part on v does or its last edge does.
+    fn row_step(&mut self, row: u32, index: usize) -> u32 {
+        let slot = row as usize * self.letters.len() + index;
+        if self.row_steps[slot] != u32::MAX {
+            return self.row_steps[slot];
+        }
+        let (words, stride) = (self.words, self.planes * self.words);
+        let (from, letter) = (&self.rows[row as usize], &self.letters[index]);
+        let mut out = vec![0; stride];
+        for (w, &word) in from[..words].iter().enumerate() {
+            let mut rest = word;
+            while rest != 0 {
+                // Every plane of the letter's row q, for each q reached on v.
+                let q = w * 64 + rest.trailing_zeros() as usize;
+                rest &= rest - 1;
+                let by = &letter[q * stride..(q + 1) * stride];
+                out.iter_mut().zip(by).for_each(|(a, b)| *a |= b);
             }
-            for plane in 1..self.planes {
-                for q in bits(&from[self.row(plane, p)]) {
-                    let (to, by) = (self.row(plane, p), self.row(0, q));
-                    next[to]
+        }
+        for plane in 1..self.planes {
+            for w in 0..words {
+                let mut rest = from[plane * words + w];
+                while rest != 0 {
+                    // Plane 0 of the letter's row q, for each q reached
+                    // seeing the set.
+                    let q = w * 64 + rest.trailing_zeros() as usize;
+                    rest &= rest - 1;
+                    let by = &letter[q * stride..q * stride + words];
+                    out[plane * words..(plane + 1) * words]
                         .iter_mut()
-                        .zip(&letter[by])
+                        .zip(by)
                         .for_each(|(a, b)| *a |= b);
                 }
             }
         }
-        self.intern(next)
+        let id = self.intern_row(&out);
+        self.row_steps[slot] = id;
+        id
+    }
+
+    /// The words of plane `plane` in row `p` of `relation`.
+    fn plane(&self, relation: usize, plane: usize, p: usize) -> &[u64] {
+        let row = &self.rows[self.relations[relation][p] as usize];
+        &row[plane * self.words..(plane + 1) * self.words]
     }
 
     /// The id, in `goods`, of the states from which v^ω is accepted: those
@@ -721,25 +764,18 @@ impl Monoid {
             return good;
         }
         let (n, words) = (self.n, self.words);
-        let table = &self.relations[relation];
         // reach[p]: the states reachable from p in one step or more.
-        let reach: Vec<Vec<u64>> = (0..n)
-            .map(|p| {
-                let mut seen = table[self.row(0, p)].to_vec();
-                let mut frontier = seen.clone();
-                while frontier.iter().any(|&w| w != 0) {
-                    let mut next = vec![0; words];
-                    for q in bits(&frontier) {
-                        let row = &table[self.row(0, q)];
-                        next.iter_mut().zip(row).for_each(|(a, b)| *a |= b);
-                    }
-                    next.iter_mut().zip(&seen).for_each(|(a, b)| *a &= !b);
-                    seen.iter_mut().zip(&next).for_each(|(a, b)| *a |= b);
-                    frontier = next;
-                }
-                seen
-            })
+        // Warshall's closure on bit rows: after round k, row p holds every
+        // state reached by a path whose inner states are below k.
+        let mut reach: Vec<Vec<u64>> = (0..n)
+            .map(|p| self.plane(relation, 0, p).to_vec())
             .collect();
+        for k in 0..n {
+            let through = reach[k].clone();
+            for row in reach.iter_mut().filter(|row| has(row, k)) {
+                row.iter_mut().zip(&through).for_each(|(a, b)| *a |= b);
+            }
+        }
         let mut on_cycle = vec![0u64; words];
         for s in (0..n).filter(|&s| has(&reach[s], s)) {
             let mut component = vec![0u64; words];
@@ -748,7 +784,7 @@ impl Monoid {
             }
             let inside = |plane: usize| {
                 bits(&component).any(|t| {
-                    table[self.row(plane, t)]
+                    self.plane(relation, plane, t)
                         .iter()
                         .zip(&component)
                         .any(|(a, b)| a & b != 0)
