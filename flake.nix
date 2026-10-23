@@ -29,8 +29,28 @@
           configureFlags = [ "--disable-python" "--disable-static" ];
           enableParallelBuilding = true;
         });
+
+        # Ganak, the model counter behind the model-counting objective, is
+        # not in nixpkgs. PEREDUR (cmake/ganak.cmake) uses the upstream
+        # release binary, so this does too, at the same version. The binary
+        # is statically linked, so it needs no patchelf. Only x86_64 Linux
+        # is pinned; elsewhere the shell has no ganak and its tests skip.
+        ganak = pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
+          pname = "ganak";
+          version = "2.5.3";
+          src = pkgs.fetchurl {
+            url = "https://github.com/meelgroup/ganak/releases/download/release/${finalAttrs.version}/ganak-linux-amd64.zip";
+            hash = "sha256-IpCDUV5X/k4lxcf2v7Cw6E+LdMJ2Rk1eLy3dDKHvcUA=";
+          };
+          nativeBuildInputs = [ pkgs.unzip ];
+          unpackPhase = "unzip $src ganak";
+          installPhase = "install -Dm755 ganak $out/bin/ganak";
+          dontStrip = true;
+          meta.platforms = [ "x86_64-linux" ];
+        });
       in {
         packages.spot = spot;
+        packages.ganak = ganak;
 
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
@@ -46,13 +66,14 @@
             spot
             spin
             nuxmv
+          ] ++ pkgs.lib.optional (system == "x86_64-linux") ganak ++ (with pkgs; [
 
             # SPIN's pan.c is compiled with gcc on every query.
             gcc
 
             # bench/*.py use the standard library only.
             python3
-          ];
+          ]);
         };
       });
 }
