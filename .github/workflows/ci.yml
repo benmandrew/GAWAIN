@@ -14,18 +14,22 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
 
+# Every tool comes from flake.nix. The Nix store is cached between runs, so
+# Spot, which the flake builds from source, is compiled only when flake.lock
+# changes. bench/data is gitignored, so the RERS and LMCS data tests skip.
 jobs:
   check:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: cachix/install-nix-action@v31
+      - uses: nix-community/cache-nix-action@v6
         with:
-          components: rustfmt, clippy
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
       - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --check
-      - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo doc --no-deps
+      - run: nix develop -c cargo fmt --check
+      - run: nix develop -c cargo clippy --all-targets -- -D warnings
+      - run: nix develop -c cargo doc --no-deps
         env:
           RUSTDOCFLAGS: -D warnings
 
@@ -33,23 +37,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: cachix/install-nix-action@v31
+      - uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
       - uses: Swatinem/rust-cache@v2
-      # Spot comes from the LRDE Debian repository. SPIN is built from source
-      # because Ubuntu's package is compiled without -DNXT, so it rejects X.
-      # nuXmv has no redistributable package, so its tests skip here, and
-      # bench/data is gitignored, so the RERS data tests skip too.
-      - name: Install Spot
-        run: |
-          sudo install -d /etc/apt/keyrings
-          curl -fsSL https://www.lrde.epita.fr/repo/debian.gpg | sudo tee /etc/apt/keyrings/lrde.gpg > /dev/null
-          echo "deb [signed-by=/etc/apt/keyrings/lrde.gpg] http://www.lrde.epita.fr/repo/debian/ stable/" | sudo tee /etc/apt/sources.list.d/lrde.list
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends spot byacc
-      - name: Build SPIN 6.5.2
-        run: |
-          git clone -q --depth 1 --branch version-6.5.2 https://github.com/nimble-code/Spin.git "$RUNNER_TEMP/spin"
-          make -C "$RUNNER_TEMP/spin/Src" -s
-          sudo install "$RUNNER_TEMP/spin/Src/spin" /usr/local/bin/spin
-          spin -V
-      - run: cargo test -- --nocapture
+      - run: nix develop -c cargo test -- --nocapture
