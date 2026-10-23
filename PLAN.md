@@ -113,8 +113,11 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [x] Process runner with resource limits, and the nuXmv back end (batch mode, lasso from the trace). Every nuXmv lasso replays as a violation under the lasso evaluator.
 - [x] SPIN back end (`src/oracle/spin.rs`): batched, at most 200 claims per build less the model's processes, lassos over observable positions. Agrees with the official verdicts on RERS 2016 problem101. Refuses formulas with `X`, since X counts SPIN steps there.
 - [x] RERS Promela front end exploring an explicit Kripke structure (model side of tier 3a). Counts match the note for 2016 101–104. On av2: 2016/105 in 0.13 s (78 MB), 2017/102 in 0.39 s (150 MB), 2016/107 at 64M states in 53.6 s (9.8 GB). 2018 models (global `state_N` guards) are rejected. See `docs/dev/rers-kripke.md`.
-- [ ] Next wave: tier 3a product of the explicit Kripke structure with the ¬φ' automaton, as a `Backend`.
-- [ ] Port operators, model-counting similarity and NSGA-II selection.
+- [x] Tier 3a: in-memory Kripke product with Spot's ¬φ' automaton (`oracle::explicit`), Couvreur emptiness. 100 of 100 RERS verdicts match (2016/101–105); 195 X formulas agree with nuXmv. On av2: Spot 11–17 ms, product 0.3 ms mean on 104, 70–89 ms on 105 and 2017/102.
+- [x] First weakening search (`weaken` binary, `src/search/`): PEREDUR's mutation, crossover and NSGA-II for one formula; objectives are the oracle status and syntactic similarity; the output gate checks φ ⇒ φ', validity and maximality. LMCS abp4 `p2false`, seed 1: 3 repairs in 10.4 s, 132 of 1,097 queries reached nuXmv.
+- [ ] Vacuity filter at the output gate: the top abp4 repair `G(s_get & s_wait -> …)` holds vacuously, as the two atoms are values of one variable.
+- [ ] Measure oracle time distributions (median, mean, 2.5–97.5%, bootstrap 95% CI) and cache hit rates on RERS (SPIN) and LMCS (nuXmv).
+- [ ] Model-counting similarity as the third objective (needs Ganak).
 - [ ] Add the degeneracy filter (check ¬φ on M) to benchmark loading.
 - [ ] RERS parallel track: load the Promela files and solution CSVs, then measure how many false properties survive the filter.
 - [ ] RERS 2016/2017: check whether the correct "precedes" patterns hold, and keep the 105 affected cases as a small set with an intended weakening.
