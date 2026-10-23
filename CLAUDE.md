@@ -12,5 +12,5 @@ Specification weakening against a model by genetic search, in Rust. The goal, be
 ## Running tools
 
 - Every tool launch, including cargo, goes through `systemd-run --user --scope -q -p MemoryMax=<n>G -p MemorySwapMax=0 nice -n 10 timeout <s> …`, so a runaway process cannot kill the terminal. Run at most 6 at once locally.
-- Expensive runs go to `ssh av2` or `ssh av3` (32 cores and 125 GB each). The home directory is not shared: rsync inputs to `~/aragon/` and copy the results back. spin and nuXmv are in `~/.local/bin` there.
+- Expensive runs go to `ssh av2` or `ssh av3` (32 cores and 125 GB each). Never use av1. The home directory is not shared: rsync inputs to `~/aragon/` and copy the results back. spin and nuXmv are in `~/.local/bin` there.
 - Atoms are tied to the model, so a cache key that renames atoms is unsound here, unlike in PEREDUR.
