@@ -109,9 +109,10 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [x] Oracle interface: `Verdict`, `Lasso`, `Backend` (`src/oracle/mod.rs`).
 - [x] Oracle tier 1: evaluate a candidate on stored lassos (`Lasso::satisfies`, `LassoCache`). Agrees with Spot on 300 random cases.
 - [ ] Oracle tier 2, in-process half: lasso-word fingerprints and the known-truths antichain.
-- [ ] Process runner with resource limits, and the nuXmv back end (batch mode, lasso from the trace).
+- [x] Process runner with resource limits, and the nuXmv back end (batch mode, lasso from the trace). Every nuXmv lasso replays as a violation under the lasso evaluator.
+- [ ] SPIN back end: single and batched checks (at most 200 claims per build), lasso from the trail.
 - [ ] RERS Promela front end exploring an explicit Kripke structure (model side of tier 3a).
-- [ ] Next wave: tier 3a product with the ¬φ' automaton, SPIN back end (batched, under 200 claims per build), tier 2 implication from known truths, tier 0 memo, and the tiered oracle composing them.
+- [ ] Next wave: tier 3a product with the ¬φ' automaton, tier 2 implication from known truths, tier 0 memo, and the tiered oracle composing them.
 - [ ] Port operators, model-counting similarity and NSGA-II selection.
 - [ ] Add the degeneracy filter (check ¬φ on M) to benchmark loading.
 - [ ] RERS parallel track: load the Promela files and solution CSVs, then measure how many false properties survive the filter.
