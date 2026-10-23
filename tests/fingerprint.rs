@@ -14,7 +14,7 @@ use std::time::Duration;
 
 use common::{formula, mutant, on_path, Rng};
 use gawain::oracle::process::Limits;
-use gawain::oracle::{implications, Words};
+use gawain::oracle::{implications, Semantics, Words};
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(120),
@@ -42,7 +42,7 @@ fn fingerprint_is_sound_against_spot() {
         })
         .collect();
     let refs: Vec<_> = pairs.iter().map(|(psi, phi)| (psi, phi)).collect();
-    let proved = implications(&refs, LIMITS).expect("ltlfilt failed");
+    let proved = implications(&refs, Semantics::Infinite, LIMITS).expect("ltlfilt failed");
     let (mut implied, mut refuted, mut caught) = (0, 0, 0);
     for ((psi, phi), spot) in pairs.iter().zip(proved) {
         let may = words.fingerprint(psi).may_imply(&words.fingerprint(phi));

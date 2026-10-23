@@ -18,7 +18,7 @@ use std::time::{Duration, Instant};
 use common::{have, mutant, parse, Rng};
 use gawain::ltl::Formula;
 use gawain::oracle::process::Limits;
-use gawain::oracle::{implications, syntactic_implications};
+use gawain::oracle::{implications, implications_each, syntactic_implications, Semantics};
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(60),
@@ -28,7 +28,7 @@ const ATOMS: &[&str] = &["a", "b", "c"];
 
 fn batch(pairs: &[(Formula, Formula)]) -> Vec<bool> {
     let refs: Vec<_> = pairs.iter().map(|(p, q)| (p, q)).collect();
-    implications(&refs, LIMITS).unwrap_or_else(|e| panic!("batch failed: {e}"))
+    implications(&refs, Semantics::Infinite, LIMITS).unwrap_or_else(|e| panic!("batch failed: {e}"))
 }
 
 /// Spot's verdict on one pair: is `ψ -> φ` valid?
@@ -92,7 +92,7 @@ fn a_timeout_proves_nothing() {
     };
     let pairs = vec![(parse("G a"), parse("F a")); 2000];
     let refs: Vec<_> = pairs.iter().map(|(p, q)| (p, q)).collect();
-    assert!(implications(&refs, limits).is_err());
+    assert!(implications(&refs, Semantics::Infinite, limits).is_err());
 }
 
 /// Random formulas and mutants, as in `tests/fingerprint.rs`.
@@ -153,7 +153,8 @@ fn the_rewriting_rules_prove_only_what_the_complete_check_proves() {
     let pairs = mutant_pairs(200, 0x9E37_79B9_7F4A_7C15);
     let refs: Vec<_> = pairs.iter().map(|(p, q)| (p, q)).collect();
     let complete = batch(&pairs);
-    let rules = syntactic_implications(&refs, LIMITS).expect("the batch answers");
+    let rules =
+        syntactic_implications(&refs, Semantics::Infinite, LIMITS).expect("the batch answers");
     for ((psi, phi), (rule, full)) in pairs.iter().zip(rules.iter().zip(&complete)) {
         assert!(
             !rule || *full,
@@ -187,11 +188,42 @@ fn the_rewriting_rules_prove_a_long_chain_at_once() {
     let strong = long_chain("(a0 & !b0)");
     let weak = long_chain("!b0");
     let start = Instant::now();
-    let proved = syntactic_implications(&[(&strong, &weak), (&weak, &strong)], LIMITS);
+    let proved = syntactic_implications(
+        &[(&strong, &weak), (&weak, &strong)],
+        Semantics::Infinite,
+        LIMITS,
+    );
     assert_eq!(proved, Ok(vec![true, false]));
     assert!(
         start.elapsed() < Duration::from_secs(5),
         "{:?}",
         start.elapsed()
     );
+}
+
+#[test]
+fn a_hard_pair_leaves_the_rest_of_its_batch_decided() {
+    if !have(
+        &["ltlfilt"],
+        "a_hard_pair_leaves_the_rest_of_its_batch_decided",
+    ) {
+        return;
+    }
+    // The complete check runs past the limit on the long chain, which
+    // fails the batch, and the retry still proves the easy pairs.
+    let limits = Limits {
+        timeout: Duration::from_secs(2),
+        ..LIMITS
+    };
+    let strong = long_chain("(a0 & !b0)");
+    let weak = long_chain("!b0");
+    let (a, a_or_b, g_a) = (parse("a"), parse("a | b"), parse("G a"));
+    let pairs = [(&a, &a_or_b), (&strong, &weak), (&a_or_b, &a), (&g_a, &a)];
+    assert!(implications(&pairs, Semantics::Infinite, limits).is_err());
+    let (proved, error) = implications_each(&pairs, Semantics::Infinite, limits);
+    assert_eq!(proved, vec![true, false, false, true]);
+    assert!(error.is_some());
+    let easy = [pairs[0], pairs[2]];
+    let (proved, error) = implications_each(&easy, Semantics::Infinite, limits);
+    assert_eq!((proved, error), (vec![true, false], None));
 }

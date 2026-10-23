@@ -17,7 +17,7 @@ use common::{formula, have, parse};
 use gawain::ltl::Formula;
 use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
-use gawain::oracle::{implications, Backend, Oracle, Verdict, Words};
+use gawain::oracle::{implications, Backend, Oracle, Semantics, Verdict, Words};
 use gawain::search::{
     gate, invariant, monotone_rewrite, vacuity, Direction, Rng, Scored, Vacuity, VacuityCounts,
 };
@@ -54,7 +54,7 @@ fn monotone_rewrites_move_the_way_they_say() {
     }
     let pairs: Vec<(Formula, Formula)> = weak.into_iter().chain(strong).collect();
     let refs: Vec<_> = pairs.iter().map(|(p, q)| (p, q)).collect();
-    let proved = implications(&refs, LIMITS).expect("the batch answers");
+    let proved = implications(&refs, Semantics::Infinite, LIMITS).expect("the batch answers");
     for ((stronger, weaker), proved) in pairs.iter().zip(&proved) {
         assert!(proved, "{stronger} does not imply {weaker}");
     }
@@ -108,7 +108,14 @@ fn the_gate_keeps_maximal_proved_weakenings() {
         scored("G (a -> X b | b)", false, &phi),
         scored("G (a -> F b)", true, &phi),
     ];
-    let outcome = gate(&phi, &population, &Formula::tt(), &mut oracle, LIMITS);
+    let outcome = gate(
+        &phi,
+        &population,
+        &Formula::tt(),
+        &mut oracle,
+        LIMITS,
+        LIMITS,
+    );
     assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
     let kept: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
     assert_eq!(kept, [parse("G (a -> X b | X X b)")]);
@@ -157,12 +164,19 @@ fn the_gate_drops_validity_modulo_the_encoding_and_flags_vacuity() {
         assert_eq!(oracle.check(&candidate.formula), Verdict::Holds);
     }
     // Without the invariant the first candidate is a repair.
-    let plain = gate(&phi, &population, &Formula::tt(), &mut oracle, LIMITS);
+    let plain = gate(
+        &phi,
+        &population,
+        &Formula::tt(),
+        &mut oracle,
+        LIMITS,
+        LIMITS,
+    );
     assert!(plain
         .repairs
         .iter()
         .any(|r| r.formula == population[0].formula));
-    let outcome = gate(&phi, &population, &invariant, &mut oracle, LIMITS);
+    let outcome = gate(&phi, &population, &invariant, &mut oracle, LIMITS, LIMITS);
     assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
     let flags: Vec<(Formula, Vec<Formula>)> = outcome
         .repairs
@@ -247,7 +261,7 @@ fn confirm(model: &Path, atoms: &str, phi: &Formula, found: &[Formula]) {
         );
     }
     let pairs: Vec<_> = found.iter().map(|r| (phi, r)).collect();
-    let proved = implications(&pairs, LIMITS).expect("the batch answers");
+    let proved = implications(&pairs, Semantics::Infinite, LIMITS).expect("the batch answers");
     for (repair, proved) in found.iter().zip(proved) {
         assert!(proved, "{phi} does not imply {repair}");
     }

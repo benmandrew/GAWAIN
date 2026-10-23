@@ -19,22 +19,97 @@
 //! Start-up dominates a single `ltlfilt` call (about 13 ms), so one exec per
 //! batch is the point; see "Implication from known truths" in
 //! `docs/dev/oracle-performance.md`.
+//!
+//! One hard pair can hold a whole batch past its time limit.
+//! [`implications_each`] retries a failed batch one pair per exec, so the
+//! hard pair reads as not proved and the rest are still decided; see "Slow
+//! implication batches" in `docs/dev/trace-sets.md`. The oracle's tier 2
+//! calls [`implications`] directly, since a failed batch there only falls
+//! through to the back end.
+//!
+//! Under [`Semantics::Finite`] each exec adds `--from-ltlf`, which rewrites
+//! each line into LTL over a fresh atom ([`ALIVE`]) that holds on a finite
+//! prefix and never after, so satisfiability, and with it implication, is
+//! decided over finite words. LTL implication is not LTLf implication:
+//! `X a -> F a` is valid over infinite words but fails on the one-position
+//! word where `a` is false, since `X` is weak there.
 
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::process::{self, Limits};
+use super::Semantics;
 use crate::ltl::Formula;
 
-/// For each pair `(ψ, φ)`, whether Spot proved ψ ⇒ φ, in one `ltlfilt`
-/// exec. `false` means only "not proved": the implication may be refuted or
-/// the line may have been skipped.
+/// The atom `--from-ltlf` adds to mark the positions of a finite word. A
+/// trace set must not use it.
+pub const ALIVE: &str = "gawain_alive";
+
+/// The `ltlfilt` execs that run at once when [`implications_each`] retries
+/// a failed batch one pair per exec.
+const RETRY_THREADS: usize = 4;
+
+/// For each pair `(ψ, φ)`, whether Spot proved ψ ⇒ φ under `semantics`, in
+/// one `ltlfilt` exec. `false` means only "not proved": the implication may
+/// be refuted or the line may have been skipped.
 ///
 /// An `Err` is "unknown" for the whole batch: a timeout, a kill, a parse
 /// error or output that cannot be read. Callers must read it as "nothing
 /// proved". An empty batch starts no process.
-pub fn implications(pairs: &[(&Formula, &Formula)], limits: Limits) -> Result<Vec<bool>, String> {
-    let stdout = ltlfilt(pairs, &["-v", "--satisfiable", "--format=%L"], limits)?;
+pub fn implications(
+    pairs: &[(&Formula, &Formula)],
+    semantics: Semantics,
+    limits: Limits,
+) -> Result<Vec<bool>, String> {
+    let stdout = ltlfilt(
+        pairs,
+        &["-v", "--satisfiable", "--format=%L"],
+        semantics,
+        limits,
+    )?;
     parse(&stdout, pairs.len(), str::is_empty)
+}
+
+/// [`implications`], but a batch that fails is retried one pair per exec,
+/// four at a time, each under the same `limits`, and a pair
+/// whose own exec fails reads as not proved. One hard pair then costs one
+/// more limit and leaves the rest decided. The error of the failed batch,
+/// if any, comes back with the answers.
+pub fn implications_each(
+    pairs: &[(&Formula, &Formula)],
+    semantics: Semantics,
+    limits: Limits,
+) -> (Vec<bool>, Option<String>) {
+    let error = match implications(pairs, semantics, limits) {
+        Ok(proved) => return (proved, None),
+        Err(error) => error,
+    };
+    let next = AtomicUsize::new(0);
+    let mut proved = vec![false; pairs.len()];
+    std::thread::scope(|scope| {
+        let workers: Vec<_> = (0..RETRY_THREADS.min(pairs.len()))
+            .map(|_| {
+                scope.spawn(|| {
+                    let mut found = Vec::new();
+                    loop {
+                        let i = next.fetch_add(1, Ordering::Relaxed);
+                        let Some(&pair) = pairs.get(i) else {
+                            return found;
+                        };
+                        if implications(&[pair], semantics, limits).is_ok_and(|p| p[0]) {
+                            found.push(i);
+                        }
+                    }
+                })
+            })
+            .collect();
+        for worker in workers {
+            for i in worker.join().expect("a retry thread") {
+                proved[i] = true;
+            }
+        }
+    });
+    (proved, Some(error))
 }
 
 /// For each pair `(ψ, φ)`, whether Spot's rewriting rules alone reduce
@@ -43,18 +118,26 @@ pub fn implications(pairs: &[(&Formula, &Formula)], limits: Limits) -> Result<Ve
 /// proved" as there.
 pub fn syntactic_implications(
     pairs: &[(&Formula, &Formula)],
+    semantics: Semantics,
     limits: Limits,
 ) -> Result<Vec<bool>, String> {
-    let stdout = ltlfilt(pairs, &["-r2", "--ap=0", "--format=%L,%f"], limits)?;
+    let stdout = ltlfilt(
+        pairs,
+        &["-r2", "--ap=0", "--format=%L,%f"],
+        semantics,
+        limits,
+    )?;
     // Each printed line is `N,0` or `N,1`: line N became a constant.
     parse(&stdout, pairs.len(), |rest| rest == ",0")
 }
 
-/// Runs `ltlfilt -F - args` with one line `(ψ) & !(φ)` per pair on stdin
-/// and returns its stdout. An empty batch starts no process.
+/// Runs `ltlfilt -F - args` with one line `(ψ) & !(φ)` per pair on stdin,
+/// under `semantics`, and returns its stdout. An empty batch starts no
+/// process.
 fn ltlfilt(
     pairs: &[(&Formula, &Formula)],
     args: &[&str],
+    semantics: Semantics,
     limits: Limits,
 ) -> Result<String, String> {
     if pairs.is_empty() {
@@ -71,6 +154,9 @@ fn ltlfilt(
         input.push_str(&line);
     }
     let mut command = Command::new("ltlfilt");
+    if semantics == Semantics::Finite {
+        command.arg(format!("--from-ltlf={ALIVE}"));
+    }
     command.args(["-F", "-"]).args(args);
     let output = process::run(&mut command, &input, limits).map_err(|e| format!("ltlfilt: {e}"))?;
     // Exit 0: some line was printed; 1: none was; 2: an error was reported.
@@ -138,7 +224,14 @@ mod tests {
             timeout: std::time::Duration::from_secs(1),
             memory_bytes: 1 << 20,
         };
-        assert_eq!(implications(&[], limits), Ok(Vec::new()));
-        assert_eq!(syntactic_implications(&[], limits), Ok(Vec::new()));
+        let none = |semantics| {
+            assert_eq!(implications(&[], semantics, limits), Ok(Vec::new()));
+            assert_eq!(
+                syntactic_implications(&[], semantics, limits),
+                Ok(Vec::new())
+            );
+        };
+        none(Semantics::Infinite);
+        none(Semantics::Finite);
     }
 }

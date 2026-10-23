@@ -5,6 +5,10 @@
 //! then the unary operators. SPIN's spellings (`[]`, `<>`, `V`, `&&`, `||`)
 //! and nuXmv's constants (`TRUE`, `FALSE`) are accepted too, so the output of
 //! every printer in this module parses back.
+//!
+//! Spot's strong next `X[!]φ` parses as `!X!φ`. Over infinite words the two
+//! nexts agree; over finite words `X` is weak (see `oracle::Semantics`), so
+//! the dual is the strong one, as Spot's `--from-ltlf` reads them.
 
 use std::fmt;
 use std::str::FromStr;
@@ -55,12 +59,15 @@ enum Token {
     False,
     Atom(String),
     Unary(UnaryOp),
+    /// Spot's strong next `X[!]`, read as `!X!φ`.
+    StrongNext,
     Binary(BinaryOp),
     LParen,
     RParen,
 }
 
 const SYMBOLS: &[(&str, Token)] = &[
+    ("X[!]", Token::StrongNext),
     ("<-->", Token::Binary(BinaryOp::Iff)),
     ("<->", Token::Binary(BinaryOp::Iff)),
     ("<=>", Token::Binary(BinaryOp::Iff)),
@@ -261,6 +268,11 @@ impl Parser {
             Token::False => Ok(Formula::ff()),
             Token::Atom(name) => Ok(Formula::atom(name)),
             Token::Unary(op) => Ok(Formula::unary(op, self.unary()?)),
+            Token::StrongNext => {
+                let not = |f| Formula::unary(UnaryOp::Not, f);
+                let operand = not(self.unary()?);
+                Ok(not(Formula::unary(UnaryOp::Next, operand)))
+            }
             Token::LParen => {
                 let inner = self.expression()?;
                 match self.peek() {
@@ -356,6 +368,13 @@ mod tests {
         assert_eq!(f("a /\\ b \\/ c => d <=> e"), f("a & b | c -> d <-> e"));
         assert_eq!(f("~a"), f("!a"));
         assert_eq!(f("TRUE -> FALSE"), f("true -> false"));
+    }
+
+    #[test]
+    fn strong_next_is_the_dual_of_next() {
+        assert_eq!(f("X[!] a"), f("!X !a"));
+        assert_eq!(f("X[!](a & X[!] b)"), f("!X !(a & !X !b)"));
+        assert_eq!(f("F(a && X[!] F b)"), f("F (a & !X !F b)"));
     }
 
     #[test]

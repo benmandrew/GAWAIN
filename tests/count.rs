@@ -1,7 +1,8 @@
 //! End-to-end tests of the model-counting similarity: `ltl2tgba` builds the
-//! automata, and Ganak counts the labels too wide for a truth table. Each
-//! expected score comes from a closed-form count of the lassos (u, v) with
-//! |u| + |v| = [`BOUND`] whose word u v^ω is in the language.
+//! automata (`ltlf2dfa` under LTLf), and Ganak counts the labels too wide
+//! for a truth table. Each expected score comes from a closed-form count of
+//! the lassos (u, v) with |u| + |v| = [`BOUND`] whose word u v^ω is in the
+//! language, or of the finite words of length 1 to [`BOUND`].
 //!
 //! Each test skips, with a reason on stderr, when a tool is not on `PATH`.
 
@@ -12,8 +13,8 @@ use std::time::Duration;
 use common::{have, parse};
 use gawain::count::{similarity_from_logs, Counter, BOUND};
 use gawain::ltl::Formula;
-use gawain::oracle::implications;
 use gawain::oracle::process::Limits;
+use gawain::oracle::{implications, Semantics};
 use gawain::search::{monotone_rewrite, Direction, Rng};
 
 const LIMITS: Limits = Limits {
@@ -40,7 +41,7 @@ fn counts_match_closed_forms_over_a_truth_table() {
     // neither atom anywhere, so it has 4^k - 1.
     let k = BOUND as i32;
     let phi = parse("G a");
-    let mut counter = Counter::new(&phi, LIMITS);
+    let mut counter = Counter::new(&phi, Semantics::Infinite, LIMITS);
     let found = counter.similarities(&[parse("G a | G b"), phi.clone(), parse("F a | F b")]);
     let ga = splits(k as f64);
     let either = splits((2f64.powi(k + 1) - 1.0).log2());
@@ -68,9 +69,9 @@ fn ganak_counts_a_label_wider_than_the_truth_table() {
     ) {
         return;
     }
-    // φ = a0 & … & a16 over 17 atoms: its label mentions all 17, past the
-    // truth table's 16. φ fixes the first letter, so each split has
-    // 2^(17 (k-1)) lassos, and the candidate a0 & … & a15, which φ
+    // φ = a0 & … & a20 over 21 atoms: its label mentions all 21, past the
+    // truth table's 20. φ fixes the first letter, so each split has
+    // 2^(21 (k-1)) lassos, and the candidate a0 & … & a19, which φ
     // implies, has twice as many.
     let all = |n: usize| -> Formula {
         let body = (0..n)
@@ -79,10 +80,10 @@ fn ganak_counts_a_label_wider_than_the_truth_table() {
             .join(" & ");
         parse(&body)
     };
-    let phi = all(17);
-    let mut counter = Counter::new(&phi, LIMITS);
-    let found = counter.similarities(&[all(16)]);
-    let narrow = splits(17.0 * (BOUND as f64 - 1.0));
+    let phi = all(21);
+    let mut counter = Counter::new(&phi, Semantics::Infinite, LIMITS);
+    let found = counter.similarities(&[all(20)]);
+    let narrow = splits(21.0 * (BOUND as f64 - 1.0));
     let expected = similarity_from_logs(narrow, narrow + 1.0, narrow);
     let counts = counter.counts();
     assert_eq!(counts.failures, 0, "{counts:?}");
@@ -102,7 +103,7 @@ fn equivalent_formulas_score_one() {
         ("a W b", "a U b | G a"),
         ("G (a -> F b)", "G (!a | F b) & G F (b | !a)"),
     ] {
-        let mut counter = Counter::new(&parse(phi), LIMITS);
+        let mut counter = Counter::new(&parse(phi), Semantics::Infinite, LIMITS);
         let found = counter.similarities(&[parse(same)]);
         assert!(
             (found[0] - 1.0).abs() < 1e-9,
@@ -122,7 +123,7 @@ fn liveness_weakenings_score_between_phi_and_top() {
     // On ack.smv, G(req -> F ack) weakens φ to liveness, and G F req ->
     // G F ack weakens it further. A finite prefix cannot tell either from ⊤,
     // but a lasso can.
-    let mut counter = Counter::new(&parse("G (req -> X ack)"), LIMITS);
+    let mut counter = Counter::new(&parse("G (req -> X ack)"), Semantics::Infinite, LIMITS);
     let found = counter.similarities(&[
         parse("G (req -> F ack)"),
         parse("G F req -> G F ack"),
@@ -134,9 +135,11 @@ fn liveness_weakenings_score_between_phi_and_top() {
 }
 
 /// 1,200 pairs (ψ, χ) with ψ ⇒ χ, from the monotone rewrite of random
-/// depth-4 formulas over three atoms, as in `tests/search.rs`, each
-/// implication proved by Spot.
-fn implied_pairs() -> Vec<(Formula, Formula)> {
+/// depth-4 formulas over three atoms, as in `tests/search.rs`. Each
+/// implication holds under LTL, as Spot must prove. Under LTLf the rewrites
+/// are not all monotone (weak `X a` does not imply `F a`), so only the
+/// pairs Spot proves under `semantics` are kept.
+fn implied_pairs(semantics: Semantics) -> Vec<(Formula, Formula)> {
     let names = ["a", "b", "c"];
     let atoms: Vec<std::sync::Arc<str>> = names.iter().map(|&n| n.into()).collect();
     let mut gen = common::Rng(0x005E_ED0F_0DD5);
@@ -153,20 +156,43 @@ fn implied_pairs() -> Vec<(Formula, Formula)> {
         }
     }
     let refs: Vec<_> = pairs.iter().map(|(p, q)| (p, q)).collect();
-    let proved = implications(&refs, LIMITS).expect("the batch answers");
+    let proved = implications(&refs, Semantics::Infinite, LIMITS).expect("the batch answers");
     assert!(proved.iter().all(|&p| p), "a rewrite moved the wrong way");
+    let proved = implications(&refs, semantics, LIMITS).expect("the batch answers");
     pairs
+        .into_iter()
+        .zip(proved)
+        .filter(|&(_, proved)| proved)
+        .map(|(pair, _)| pair)
+        .collect()
 }
 
 #[test]
 fn counts_are_monotone_under_implication() {
     let test = "counts_are_monotone_under_implication";
-    if !have(&["ltl2tgba", "ltlfilt"], test) {
-        return;
+    if have(&["ltl2tgba", "ltlfilt"], test) {
+        // ⊤ counts every lasso.
+        let every = 3.0 * BOUND as f64 + (BOUND as f64).log2();
+        assert_monotone(test, Semantics::Infinite, every);
     }
-    let pairs = implied_pairs();
+}
+
+#[test]
+fn finite_counts_are_monotone_under_ltlf_implication() {
+    let test = "finite_counts_are_monotone_under_ltlf_implication";
+    if have(&["ltlf2dfa", "ltlfilt"], test) {
+        // ⊤ counts every word of length 1 to k over three atoms.
+        let every = (1..=BOUND as i32).map(|n| 8f64.powi(n)).sum::<f64>().log2();
+        assert_monotone(test, Semantics::Finite, every);
+    }
+}
+
+/// Counts both sides of every implied pair under `semantics` and checks
+/// that none exceeds its consequence, or `every`, the count of ⊤.
+fn assert_monotone(test: &str, semantics: Semantics, every: f64) {
+    let pairs = implied_pairs(semantics);
     // φ fixes the universe at the three atoms.
-    let mut counter = Counter::new(&parse("a & b & c"), LIMITS);
+    let mut counter = Counter::new(&parse("a & b & c"), semantics, LIMITS);
     let formulas: Vec<Formula> = pairs
         .iter()
         .flat_map(|(p, q)| [p.clone(), q.clone()])
@@ -183,8 +209,7 @@ fn counts_are_monotone_under_implication() {
     let logs: Vec<f64> = logs.into_iter().map(Option::unwrap).collect();
     let (top, logs) = logs.split_last().unwrap();
     let top = *top;
-    let every = 3.0 * BOUND as f64 + (BOUND as f64).log2();
-    assert!((top - every).abs() < 1e-9, "⊤ counts every lasso: {top}");
+    assert!((top - every).abs() < 1e-9, "⊤ counts {top}, not {every}");
     let above_top = logs.iter().filter(|&&l| l > top + 1e-9).count();
     let violations: Vec<_> = pairs
         .iter()
@@ -202,4 +227,54 @@ fn counts_are_monotone_under_implication() {
     }
     assert!(violations.is_empty());
     assert_eq!(above_top, 0);
+}
+
+#[test]
+fn finite_counts_match_closed_forms_and_differ_from_lasso_counts() {
+    if !have(
+        &["ltlf2dfa", "ltl2tgba"],
+        "finite_counts_match_closed_forms",
+    ) {
+        return;
+    }
+    // Over the one atom a, with n the word length from 1 to k: every word
+    // gives 2^n per length, a gives 2^(n-1), G a one word, F a all but one,
+    // weak X a every word of length 1 and half the longer ones, strong
+    // X[!] true every word but those of length 1, and weak X false only
+    // those of length 1.
+    let k = BOUND as i32;
+    let pow = |n: i32| 2f64.powi(n);
+    let sum = |from: i32, term: &dyn Fn(i32) -> f64| (from..=k).map(term).sum::<f64>().log2();
+    let cases: [(&str, f64); 7] = [
+        ("a | !a", sum(1, &|n| pow(n))),
+        ("a", sum(1, &|n| pow(n - 1))),
+        ("G a", (k as f64).log2()),
+        ("F a", sum(1, &|n| pow(n) - 1.0)),
+        (
+            "X a",
+            (2.0 + (2..=k).map(|n| pow(n - 1)).sum::<f64>()).log2(),
+        ),
+        ("X[!] (a | !a)", sum(2, &|n| pow(n))),
+        ("X false", 1.0),
+    ];
+    let mut counter = Counter::new(&parse("a"), Semantics::Finite, LIMITS);
+    let formulas: Vec<Formula> = cases.iter().map(|(f, _)| parse(f)).collect();
+    let found = counter.log_counts(&formulas);
+    for ((text, expected), found) in cases.iter().zip(&found) {
+        let found = found.unwrap_or_else(|| panic!("no count for {text}"));
+        assert!(
+            (found - expected).abs() < 1e-9,
+            "{text}: {found} against {expected}"
+        );
+    }
+    // Under LTL, X[!] true is true, so the lasso count cannot tell them
+    // apart, and weak X false is false.
+    let mut lassos = Counter::new(&parse("a"), Semantics::Infinite, LIMITS);
+    let infinite = lassos.log_counts(&[
+        formulas[0].clone(),
+        formulas[5].clone(),
+        formulas[6].clone(),
+    ]);
+    assert_eq!(infinite[0], infinite[1]);
+    assert_eq!(infinite[2], Some(f64::NEG_INFINITY));
 }

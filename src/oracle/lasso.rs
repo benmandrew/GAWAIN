@@ -6,16 +6,23 @@
 //! distinct position, computed bottom-up. The temporal operators are
 //! fixpoints of their one-step unfolding; on the cycle the least fixpoint
 //! (`U`, `F`) starts from false and the greatest (`W`, `R`, `G`) from true.
+//!
+//! A finite word is the same computation with no cycle. The value read past
+//! its last position is the fixpoint's starting value, false for the strong
+//! operators and true for the weak ones, which is LTLf: `F` and `U` need a
+//! witness inside the word, `G`, `W` and `R` hold to its end, and `X` is weak
+//! next, true at the last position. Strong next is `!X!φ`.
 
 use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 
 use super::Lasso;
 
 impl Lasso {
-    /// Does the infinite word `prefix · cycle^ω` satisfy `formula` from its
-    /// first position? An atom holds at a position iff its name is in that
-    /// position's valuation. Takes time linear in the formula size times the
-    /// lasso length.
+    /// Does the run satisfy `formula` from its first position? A lasso is
+    /// the infinite word `prefix · cycle^ω` under LTL; a finite word is read
+    /// under LTLf with weak `X`, as Spot's `--from-ltlf` reads it. An atom
+    /// holds at a position iff its name is in that position's valuation.
+    /// Takes time linear in the formula size times the run length.
     pub fn satisfies(&self, formula: &Formula) -> bool {
         self.truth(formula)[0]
     }
@@ -49,6 +56,10 @@ impl Lasso {
                 let x = self.truth(child);
                 match op {
                     UnaryOp::Not => x.iter().map(|b| !b).collect(),
+                    // Weak next: true past the end of a finite word.
+                    UnaryOp::Next if self.is_finite() => {
+                        (0..n).map(|i| i + 1 == n || x[i + 1]).collect()
+                    }
                     UnaryOp::Next => (0..n).map(|i| x[self.succ(i)]).collect(),
                     UnaryOp::Eventually => self.fixpoint(false, |i, next| x[i] || next),
                     UnaryOp::Globally => self.fixpoint(true, |i, next| x[i] && next),
@@ -76,10 +87,13 @@ impl Lasso {
     /// which makes the cycle's first position exact: every position it can
     /// reach is in that one pass. The second pass then reads that exact
     /// value, and the prefix needs only one pass.
+    ///
+    /// A finite word has no cycle, and its last position reads `init` as
+    /// the value past the end.
     fn fixpoint(&self, init: bool, step: impl Fn(usize, bool) -> bool) -> Vec<bool> {
         let n = self.len();
         let start = self.prefix.len();
-        let mut v = vec![init; n];
+        let mut v = vec![init; n + 1];
         for _ in 0..2 {
             for i in (start..n).rev() {
                 v[i] = step(i, v[self.succ(i)]);
@@ -88,6 +102,7 @@ impl Lasso {
         for i in (0..start).rev() {
             v[i] = step(i, v[i + 1]);
         }
+        v.truncate(n);
         v
     }
 }
@@ -234,6 +249,39 @@ mod tests {
         assert!(!holds(&l, "F G !b"));
         assert!(holds(&l, "a & X G !a"));
         assert!(holds(&l, "!b U b"));
+    }
+
+    /// A finite word from strings of atom letters.
+    fn word(letters: &[&str]) -> Lasso {
+        let positions = letters
+            .iter()
+            .map(|s| s.chars().map(|c| c.to_string().into()).collect())
+            .collect();
+        Lasso::finite(positions).unwrap()
+    }
+
+    #[test]
+    fn a_finite_word_reads_ltlf_with_weak_next() {
+        let w = word(&["a", "b"]);
+        assert!(holds(&w, "X b"));
+        // Weak next holds at the last position, strong next fails there.
+        assert!(holds(&w, "X X a"));
+        assert!(holds(&w, "X X false"));
+        assert!(!holds(&w, "X !X !true"));
+        assert!(holds(&w, "!X !true"));
+        // F and U need a witness inside the word.
+        assert!(holds(&w, "F b"));
+        assert!(!holds(&w, "F c"));
+        assert!(holds(&w, "a U b"));
+        assert!(!holds(&word(&["a", "a"]), "a U b"));
+        // G, W and R hold to the end of the word.
+        assert!(holds(&word(&["a", "a"]), "G a"));
+        assert!(holds(&word(&["a", "a"]), "a W b"));
+        assert!(holds(&word(&["b", "b"]), "a R b"));
+        assert!(!holds(&word(&["b", ""]), "a R b"));
+        // G F a and F G a both mean "a at the last position".
+        assert!(holds(&word(&["", "a"]), "G F a & F G a"));
+        assert!(!holds(&word(&["a", ""]), "G F a | F G a"));
     }
 
     #[test]

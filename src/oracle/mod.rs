@@ -10,11 +10,13 @@ pub(crate) mod hoa;
 mod implication;
 mod lasso;
 pub mod nuxmv;
+mod packed;
 pub mod process;
 pub mod spin;
 mod spot;
 pub mod tapaal;
 mod tiered;
+pub mod traces;
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -23,15 +25,18 @@ use crate::ltl::Formula;
 
 pub use implication::{Fingerprint, KnownTruths, Words};
 pub use lasso::LassoCache;
-pub use spot::{implications, syntactic_implications};
+pub use spot::{implications, implications_each, syntactic_implications, ALIVE};
 pub use tiered::{Counters, Oracle};
 
 /// The atoms that hold at one position of a run.
 pub type Valuation = BTreeSet<Arc<str>>;
 
-/// An infinite run `prefix · cycle^ω` of the model.
+/// A run of the model: an infinite lasso `prefix · cycle^ω`, or a finite
+/// word, which is `prefix` alone with an empty cycle.
 ///
-/// Each valuation lists every atom of the model's interface that holds at
+/// A finite word is read under LTLf semantics (see [`Lasso::satisfies`]),
+/// so only a back end whose [`Backend::semantics`] is
+/// [`Semantics::Finite`] returns one. Each valuation lists every atom of the model's interface that holds at
 /// that position, not only the atoms of the formula that produced the run,
 /// so the run can be replayed against any later candidate.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -50,15 +55,44 @@ impl Lasso {
         Some(Lasso { prefix, cycle })
     }
 
-    /// The positions before the cycle.
+    /// A finite word, or `None` when `word` is empty, since LTLf has no
+    /// empty word.
+    pub fn finite(word: Vec<Valuation>) -> Option<Self> {
+        if word.is_empty() {
+            return None;
+        }
+        Some(Lasso {
+            prefix: word,
+            cycle: Vec::new(),
+        })
+    }
+
+    /// Whether this is a finite word rather than a lasso.
+    pub fn is_finite(&self) -> bool {
+        self.cycle.is_empty()
+    }
+
+    /// The positions before the cycle, or the whole of a finite word.
     pub fn prefix(&self) -> &[Valuation] {
         &self.prefix
     }
 
-    /// The positions that repeat forever. Never empty.
+    /// The positions that repeat forever. Empty only for a finite word.
     pub fn cycle(&self) -> &[Valuation] {
         &self.cycle
     }
+}
+
+/// Which words a formula is read over: the semantics of a back end's runs,
+/// and so of every Spot call made about them.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Semantics {
+    /// LTL over infinite words, as for a Kripke structure.
+    #[default]
+    Infinite,
+    /// LTLf over finite non-empty words, with `X` as weak next, as Spot's
+    /// `--from-ltlf` reads it.
+    Finite,
 }
 
 /// The answer to one query.
@@ -77,6 +111,12 @@ pub enum Verdict {
 pub trait Backend {
     /// Decides whether the model satisfies `formula`.
     fn check(&mut self, formula: &Formula) -> Verdict;
+
+    /// The semantics of the model's runs. A model checker reads LTL over
+    /// infinite runs; a set of finite traces reads LTLf.
+    fn semantics(&self) -> Semantics {
+        Semantics::Infinite
+    }
 }
 
 #[cfg(test)]
@@ -89,5 +129,8 @@ mod tests {
         let lasso = Lasso::new(vec![], vec![Valuation::new()]).unwrap();
         assert_eq!(lasso.cycle().len(), 1);
         assert!(lasso.prefix().is_empty());
+        assert!(!lasso.is_finite());
+        assert!(Lasso::finite(vec![]).is_none());
+        assert!(Lasso::finite(vec![Valuation::new()]).unwrap().is_finite());
     }
 }
