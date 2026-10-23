@@ -112,7 +112,7 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [ ] Spot implication (batched) and the tiered oracle: memo, lassos, known truths, then a back end, with per-tier counters.
 - [x] Process runner with resource limits, and the nuXmv back end (batch mode, lasso from the trace). Every nuXmv lasso replays as a violation under the lasso evaluator.
 - [ ] SPIN back end: single and batched checks (at most 200 claims per build), lasso from the trail.
-- [ ] RERS Promela front end exploring an explicit Kripke structure (model side of tier 3a).
+- [x] RERS Promela front end exploring an explicit Kripke structure (model side of tier 3a). Counts match the note for 2016 101–104. On av2: 2016/105 in 0.13 s (78 MB), 2017/102 in 0.39 s (150 MB), 2016/107 at 64M states in 53.6 s (9.8 GB). 2018 models (global `state_N` guards) are rejected. See `docs/dev/rers-kripke.md`.
 - [ ] Next wave: tier 3a product of the explicit Kripke structure with the ¬φ' automaton, as a `Backend`.
 - [ ] Port operators, model-counting similarity and NSGA-II selection.
 - [ ] Add the degeneracy filter (check ¬φ on M) to benchmark loading.
