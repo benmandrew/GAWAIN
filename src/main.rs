@@ -7,7 +7,8 @@
 //!
 //! `--atoms` lists the model's boolean variables or DEFINEs that formulas
 //! may mention, and must cover the atoms of φ. Each repair prints on one
-//! line as `repair<TAB>similarity<TAB>formula`, then the oracle counters.
+//! line as `repair<TAB>similarity<TAB>formula`, then the oracle counters
+//! (search and gate together) and the gate's vacuity counters.
 //! Exits 0 after a search, 1 when the model already satisfies φ, and 2 on a
 //! usage error or when φ's own verdict is unknown.
 
@@ -134,7 +135,10 @@ fn main() -> ExitCode {
     }
     let mut rng = Rng::new(args.seed);
     let population = search(&phi, &mut oracle, args.params, SPOT_LIMITS, &mut rng);
-    let outcome = gate(&phi, &population, SPOT_LIMITS);
+    let search_counters = oracle.counters();
+    let gate_start = Instant::now();
+    let outcome = gate(&phi, &population, &mut oracle, SPOT_LIMITS);
+    let gate_wall = gate_start.elapsed().as_secs_f64();
     for error in &outcome.errors {
         eprintln!("weaken: output gate: {error}");
     }
@@ -154,6 +158,17 @@ fn main() -> ExitCode {
         c.backend_calls,
         c.backend_unknowns
     );
-    println!("wall: {:.2}s", start.elapsed().as_secs_f64());
+    let v = outcome.vacuity;
+    println!(
+        "vacuity: queries={} unknowns={} dropped={} backend_calls={}",
+        v.queries,
+        v.unknowns,
+        v.dropped,
+        c.backend_calls - search_counters.backend_calls
+    );
+    println!(
+        "wall: {:.2}s gate={gate_wall:.2}s",
+        start.elapsed().as_secs_f64()
+    );
     ExitCode::SUCCESS
 }

@@ -205,16 +205,59 @@ pub struct Gate {
     /// One reason per Spot batch that failed. A failed weakening batch drops
     /// every candidate; a failed maximality batch drops none.
     pub errors: Vec<String>,
+    /// What the vacuity step cost and dropped.
+    pub vacuity: VacuityCounts,
+}
+
+/// The cost and effect of the gate's vacuity step.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct VacuityCounts {
+    /// Witnesses sent to the oracle.
+    pub queries: u64,
+    /// Witnesses the oracle answered `Unknown`, read as "not shown vacuous".
+    pub unknowns: u64,
+    /// Candidates dropped as vacuous on M.
+    pub dropped: u64,
+}
+
+/// Whether `candidate` holds vacuously on M: whether M satisfies one of its
+/// vacuity witnesses (a subformula replaced by the constant that makes the
+/// whole stronger; see `docs/dev/search.md`). Stops at the first witness M
+/// satisfies. A witness that folds to `true` is vacuous with no query, and
+/// an unknown verdict is counted and shows nothing.
+pub fn vacuous<B: Backend>(
+    candidate: &Formula,
+    oracle: &mut Oracle<B>,
+    counts: &mut VacuityCounts,
+) -> bool {
+    for witness in operators::vacuity_witnesses(candidate) {
+        if matches!(witness.node(), Node::True) {
+            return true;
+        }
+        counts.queries += 1;
+        match oracle.check(&witness) {
+            Verdict::Holds => return true,
+            Verdict::Fails(_) => {}
+            Verdict::Unknown(_) => counts.unknowns += 1,
+        }
+    }
+    false
 }
 
 /// The output gate. From `population`, keeps the distinct candidates that M
 /// satisfies, that `phi` implies and that Spot does not prove valid (one
-/// batch; if it fails, no weakening is proved and every candidate drops),
-/// then only the maximal
-/// ones: a candidate implied by another survivor is dropped (one more batch).
-/// Of two equivalent survivors the one more similar to φ stays, then the
-/// smaller in formula order. "Not proved" never counts as proved.
-pub fn gate(phi: &Formula, population: &[Scored], limits: Limits) -> Gate {
+/// batch; if it fails, no weakening is proved and every candidate drops).
+/// Then it drops the candidates that hold [`vacuous`]ly on M, through
+/// `oracle`, and keeps only the maximal rest: a candidate implied by
+/// another survivor is dropped (one more batch). Of two equivalent
+/// survivors the one more similar to φ stays, then the smaller in formula
+/// order. "Not proved" never counts as proved.
+pub fn gate<B: Backend>(
+    phi: &Formula,
+    population: &[Scored],
+    oracle: &mut Oracle<B>,
+    limits: Limits,
+) -> Gate {
     let mut gate = Gate::default();
     let mut seen = HashSet::new();
     let holding: Vec<&Scored> = population
@@ -242,6 +285,13 @@ pub fn gate(phi: &Formula, population: &[Scored], limits: Limits) -> Gate {
             similarity: s.objectives[SIMILARITY],
         })
         .collect();
+    // Before maximality, so that a vacuous candidate cannot drop a weaker,
+    // non-vacuous one that it implies.
+    let mut counts = VacuityCounts::default();
+    let before = candidates.len();
+    candidates.retain(|repair| !vacuous(&repair.formula, oracle, &mut counts));
+    counts.dropped = (before - candidates.len()) as u64;
+    gate.vacuity = counts;
     candidates.sort_by(|a, b| {
         b.similarity
             .total_cmp(&a.similarity)
@@ -282,6 +332,43 @@ pub fn gate(phi: &Formula, population: &[Scored], limits: Limits) -> Gate {
 mod tests {
     use super::*;
     use crate::ltl::tests::f;
+    use crate::oracle::{Lasso, Valuation, Words};
+
+    /// A model whose only run alternates `x` and `y` forever, so `x & y`
+    /// never holds, as two values of one state variable never do.
+    struct Alternating;
+
+    impl Backend for Alternating {
+        fn check(&mut self, formula: &Formula) -> Verdict {
+            let at = |name: &str| -> Valuation { [Arc::from(name)].into_iter().collect() };
+            let run = Lasso::new(vec![], vec![at("x"), at("y")]).unwrap();
+            if run.satisfies(formula) {
+                Verdict::Holds
+            } else {
+                Verdict::Fails(run)
+            }
+        }
+    }
+
+    #[test]
+    fn an_antecedent_unsatisfiable_on_the_model_is_vacuous() {
+        let limits = Limits {
+            timeout: std::time::Duration::from_secs(10),
+            memory_bytes: 1 << 30,
+        };
+        let mut oracle = Oracle::new(Alternating, Words::sample(["x", "y", "z"], 3), limits);
+        let mut counts = VacuityCounts::default();
+        let candidate = f("G (x & y -> X z)");
+        assert_eq!(oracle.check(&candidate), Verdict::Holds);
+        assert!(vacuous(&candidate, &mut oracle, &mut counts));
+        // G X z, G (y -> X z) and G (x -> X z) fail; G !(x & y) holds.
+        assert_eq!(counts.queries, 4);
+        // The control holds on the run and every witness fails.
+        let control = f("G (x -> X y)");
+        assert_eq!(oracle.check(&control), Verdict::Holds);
+        assert!(!vacuous(&control, &mut oracle, &mut counts));
+        assert_eq!(counts.unknowns, 0);
+    }
 
     fn scored(text: &str, status: f64, similarity: f64) -> Scored {
         Scored {

@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 use aragon::ltl::Formula;
 use aragon::oracle::nuxmv::Nuxmv;
 use aragon::oracle::process::Limits;
-use aragon::oracle::{implications, Backend, Verdict};
+use aragon::oracle::{implications, Backend, Oracle, Verdict, Words};
 use aragon::search::{gate, monotone_rewrite, Direction, Rng, Scored};
 use common::{formula, have, parse};
 
@@ -71,11 +71,26 @@ fn scored(text: &str, holds: bool, phi: &Formula) -> Scored {
     }
 }
 
+/// An oracle over the model at `name`, written from `text`.
+fn oracle_on(name: &str, text: &str, atoms: &[&str]) -> Oracle<Nuxmv> {
+    let backend = Nuxmv::new(write_model(name, text), atoms, LIMITS);
+    Oracle::new(backend, Words::sample(atoms.iter().copied(), 1), LIMITS)
+}
+
 #[test]
 fn the_gate_keeps_maximal_proved_weakenings() {
-    if !have(&["ltlfilt"], "the_gate_keeps_maximal_proved_weakenings") {
+    if !have(
+        &["nuXmv", "ltlfilt"],
+        "the_gate_keeps_maximal_proved_weakenings",
+    ) {
         return;
     }
+    // Both atoms are free, so no candidate below is vacuous on the model.
+    let mut oracle = oracle_on(
+        "free.smv",
+        "MODULE main\nVAR a : boolean; b : boolean;\n",
+        &["a", "b"],
+    );
     let phi = parse("G (a -> X b)");
     let population = [
         // Implied by the next one, so not maximal.
@@ -85,14 +100,56 @@ fn the_gate_keeps_maximal_proved_weakenings() {
         scored("G (a -> X X b | X b)", true, &phi),
         // Holds, but φ does not imply it.
         scored("F b", true, &phi),
+        // Holds and φ implies it, but it is valid.
+        scored("G (a -> X b | a)", true, &phi),
         // Implied by φ, but M does not satisfy it.
         scored("G (a -> X b | b)", false, &phi),
         scored("G (a -> F b)", true, &phi),
     ];
-    let outcome = gate(&phi, &population, LIMITS);
+    let outcome = gate(&phi, &population, &mut oracle, LIMITS);
     assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
     let kept: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
     assert_eq!(kept, [parse("G (a -> X b | X X b)")]);
+    assert_eq!(outcome.vacuity.dropped, 0);
+}
+
+/// A sender cycling through three states. `s_get & s_wait` never holds,
+/// as two values of `sender.state` never do in abp4.
+const CYCLE: &str = "MODULE main
+VAR state : { get, send, wait };
+ASSIGN
+  init(state) := get;
+  next(state) := case state = get : send; state = send : wait; TRUE : get; esac;
+DEFINE
+  s_get := state = get; s_send := state = send; s_wait := state = wait;
+";
+
+#[test]
+fn the_gate_drops_a_repair_vacuous_on_the_model() {
+    if !have(
+        &["nuXmv", "ltlfilt"],
+        "the_gate_drops_a_repair_vacuous_on_the_model",
+    ) {
+        return;
+    }
+    let mut oracle = oracle_on("cycle.smv", CYCLE, &["s_get", "s_send", "s_wait"]);
+    let phi = parse("G (s_get -> X (s_send & s_get))");
+    assert!(matches!(oracle.check(&phi), Verdict::Fails(_)));
+    let population = [
+        // Holds only because its antecedent never does.
+        scored("G (s_get & s_wait -> X s_get)", true, &phi),
+        // The control: holds, and not vacuously.
+        scored("G (s_get -> X s_send)", true, &phi),
+    ];
+    for candidate in &population {
+        assert_eq!(oracle.check(&candidate.formula), Verdict::Holds);
+    }
+    let outcome = gate(&phi, &population, &mut oracle, LIMITS);
+    assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
+    let kept: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
+    assert_eq!(kept, [parse("G (s_get -> X s_send)")]);
+    assert_eq!(outcome.vacuity.dropped, 1);
+    assert_eq!(outcome.vacuity.unknowns, 0);
 }
 
 /// A request is acknowledged one step later, or two when `slow` holds, so
@@ -264,4 +321,13 @@ fn weaken_runs_on_lmcs_abp4_p2false() {
         start.elapsed().as_secs_f64(),
         found.len()
     ));
+    // The vacuity step drops the repair whose antecedent never holds on M.
+    // It drops the one that weakens U to X F too: M satisfies
+    // G X F (s_wait & ...), so that repair says nothing about s_get.
+    let vacuous = parse(
+        "G (s_get & s_wait -> X (!s_get U (s_wait & ((!s_abp & r_ack0) | (s_abp & r_ack1)))))",
+    );
+    let eventual = parse("G (s_get -> X F (s_wait & ((!s_abp & r_ack0) | (s_abp & r_ack1))))");
+    assert!(!found.contains(&vacuous), "{stdout}");
+    assert!(!found.contains(&eventual), "{stdout}");
 }

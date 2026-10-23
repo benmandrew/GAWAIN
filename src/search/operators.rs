@@ -107,6 +107,66 @@ pub fn monotone_rewrite(
     site.rewrite(formula, Polarity::Positive, &mut next, rng)
 }
 
+/// The vacuity witnesses of `formula`: for each subformula occurrence ψ of
+/// determinate polarity, other than the whole formula and the constants,
+/// `formula[ψ ← false]` where ψ is positive and `formula[ψ ← true]` where it
+/// is negative, simplified, in pre-order and without repeats up to
+/// [`Formula::canonical`]. Each witness implies `formula`, so a model that
+/// satisfies one satisfies `formula` whatever ψ says (Beer, Ben-David,
+/// Eisner and Rodeh; Kupferman and Vardi). A witness that folds to `false`
+/// is left out, since no model with a run satisfies it.
+pub fn vacuity_witnesses(formula: &Formula) -> Vec<Formula> {
+    let mut polarities = Vec::new();
+    collect_polarities(formula, Polarity::Positive, &mut polarities);
+    let mut seen = std::collections::HashSet::new();
+    let mut witnesses = Vec::new();
+    for (target, &polarity) in polarities.iter().enumerate().skip(1) {
+        let constant = match polarity {
+            Polarity::Positive => Formula::ff(),
+            Polarity::Negative => Formula::tt(),
+            Polarity::Indeterminate => continue,
+        };
+        let mut next = 0;
+        let Some(witness) = replace_at(formula, target, &constant, &mut next) else {
+            continue;
+        };
+        let witness = witness.simplify();
+        if !matches!(witness.node(), Node::False) && seen.insert(witness.canonical()) {
+            witnesses.push(witness);
+        }
+    }
+    witnesses
+}
+
+/// `formula` with the node at pre-order index `target` replaced by `with`,
+/// or `None` when that node is a constant.
+fn replace_at(
+    formula: &Formula,
+    target: usize,
+    with: &Formula,
+    next: &mut usize,
+) -> Option<Formula> {
+    let index = *next;
+    *next += 1;
+    if index == target {
+        return match formula.node() {
+            Node::True | Node::False => None,
+            _ => Some(with.clone()),
+        };
+    }
+    match formula.node() {
+        Node::True | Node::False | Node::Atom(_) => Some(formula.clone()),
+        Node::Unary(op, child) => {
+            replace_at(child, target, with, next).map(|c| Formula::unary(*op, c))
+        }
+        Node::Binary(op, lhs, rhs) => {
+            let left = replace_at(lhs, target, with, next)?;
+            let right = replace_at(rhs, target, with, next)?;
+            Some(Formula::binary(*op, left, right))
+        }
+    }
+}
+
 fn is_temporal(formula: &Formula) -> bool {
     matches!(
         formula.node(),
@@ -796,6 +856,25 @@ mod tests {
             ];
             assert!(at_root.contains(&child), "{child}");
         }
+    }
+
+    #[test]
+    fn vacuity_witnesses_replace_each_determinate_site() {
+        // `a & b`, `a` and `b` are negative and become true; `X c` and `c`
+        // are positive and become false, both giving `G !(a & b)`. The
+        // implication itself gives `G false`, which is left out.
+        assert_eq!(
+            vacuity_witnesses(&f("G (a & b -> X c)")),
+            [
+                f("G X c"),
+                f("G (b -> X c)"),
+                f("G (a -> X c)"),
+                f("G !(a & b)")
+            ]
+        );
+        // Under <-> nothing is a site but the root, which is skipped.
+        assert!(vacuity_witnesses(&f("a <-> b")).is_empty());
+        assert!(vacuity_witnesses(&f("G true")).is_empty());
     }
 
     #[test]

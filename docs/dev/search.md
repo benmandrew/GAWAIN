@@ -40,9 +40,20 @@ The gate (`search::gate`) runs once, on the final population.
 
 1. Keep the distinct candidates with status 1.
 2. In one `ltlfilt` batch, ask for each candidate whether φ implies it and whether it is valid. Keep the ones proved implied and not proved valid. A failed batch proves nothing, so every candidate drops.
-3. In a second batch, ask every ordered pair of survivors whether one implies the other. Drop a candidate that a strictly stronger survivor implies. Of two equivalent survivors, keep the one more similar to φ, then the smaller in formula order. A failed batch proves no implication, so every candidate stays.
+3. Drop the candidates that are vacuous on M (see below). This step asks the oracle, not Spot.
+4. In a second batch, ask every ordered pair of survivors whether one implies the other. Drop a candidate that a strictly stronger survivor implies. Of two equivalent survivors, keep the one more similar to φ, then the smaller in formula order. A failed batch proves no implication, so every candidate stays.
 
-So every reported repair φ' has M ⊨ φ' proved by the oracle and φ ⇒ φ' proved by Spot, and Spot does not prove any other reported repair stronger than it.
+So every reported repair φ' has M ⊨ φ' proved by the oracle and φ ⇒ φ' proved by Spot. The oracle shows none of its vacuity witnesses to hold on M, and Spot does not prove any other reported repair stronger than it.
+
+Vacuity runs before maximality. A vacuous candidate can imply a weaker one that is not vacuous. If maximality ran first, the vacuous candidate would drop the weaker one and then be dropped itself.
+
+## The vacuity filter
+
+A candidate that holds on M can still hold for a trivial reason. On abp4, `G(s_get & s_wait -> X(…))` holds only because `s_get` and `s_wait` are two values of one enumerated variable and never hold together. Spot cannot see this, since it does not know the model, so the validity check lets it through.
+
+The filter uses the standard test of vacuity (Beer, Ben-David, Eisner and Rodeh; Kupferman and Vardi). φ' is vacuous on M in an occurrence ψ when M also satisfies φ' with ψ replaced by the constant that makes φ' stronger: false where ψ has positive polarity, true where it has negative polarity. That stronger formula is a *witness*. `operators::vacuity_witnesses` builds one witness per subformula occurrence, simplified and without repeats. It uses the polarity rules of the monotone rewrite, so it skips both children of `<->` and everything under them. It also skips the whole formula and the constants. A witness that simplifies to false is left out, because it cannot hold on a model with a run. A witness that simplifies to true needs no query.
+
+`search::vacuous` sends the witnesses to the same oracle as the search, one at a time, and stops at the first that holds. The cheap tiers answer most of them. A witness is stronger than the candidate, so a lasso that refutes the candidate refutes the witness too, and a model with few runs is soon covered. An `Unknown` verdict shows nothing, so the candidate stays, and the gate counts it. The `weaken` binary prints the counts as `vacuity: queries=… unknowns=… dropped=… backend_calls=…`, and the gate's own time on the `wall` line.
 
 ## The validity filter
 
@@ -54,16 +65,18 @@ Both runs below come from `cargo test --test search -- --nocapture` (debug build
 
 | Model | φ | G × P, seed | Repairs | Wall | Queries | Back-end calls | Lasso hits | Implication hits | Memo hits | Spot execs |
 |---|---|---|---|---|---|---|---|---|---|---|
-| `ack.smv` (in the test) | `G (req -> X ack)` | 30 × 40, 4 | 2 | 2.97 s | 836 | 27 | 428 | 97 | 284 | 102 |
-| LMCS-2006 abp4 | `p2false` | 30 × 40, 1 | 3 | 12.1 s | 1097 | 132 | 695 | 178 | 92 | 205 |
+| `ack.smv` (in the test) | `G (req -> X ack)` | 30 × 40, 4 | 2 | 2.30 s | 858 | 28 | 432 | 98 | 300 | 104 |
+| LMCS-2006 abp4 | `p2false` | 30 × 40, 1 | 0 | 12.1 s | 1106 | 133 | 696 | 180 | 97 | 208 |
 
-On `ack.smv` the repairs are `req -> F X ack` and `G(req -> F ack)`. On abp4 the propositions of `p2false` are DEFINEs appended to `main` (`s_get` for `sender.state = get`, and so on), and the repairs are as follows.
+The counts include the vacuity filter. On `ack.smv` the filter sent 22 witnesses, made 1 back-end call and dropped 3 candidates. The repairs are `req -> F X ack` and `G(req -> F ack)`, the same as before the filter.
 
-- `G(s_get -> X F(s_wait & (…)))`, the `U` of φ weakened to an eventuality.
-- `G(s_get & s_wait -> X(…))`, which holds only because `s_get` and `s_wait` are two values of one enumerated variable and never hold together.
-- A third with a rewritten, partly contradictory antecedent.
+On abp4 the propositions of `p2false` are DEFINEs appended to `main` (`s_get` for `sender.state = get`, and so on). Without the filter the gate reported three repairs. The filter sent 9 witnesses, made 1 back-end call and took 0.11 s. It dropped all three repairs, and one more candidate that maximality would have dropped.
 
-The second repair is *vacuous on M*: valid on no word in general, but trivial on every run of this model. Spot cannot see that, since it does not know the model. Detecting it needs a model check of the antecedent, which is not in this round.
+- `G(s_get & s_wait -> X(…))`, whose antecedent never holds. Its witness `G X(…)`, with the antecedent replaced by true, holds.
+- A second repair with a rewritten, partly contradictory antecedent.
+- `G(s_get -> X F(s_wait & (…)))`, the `U` of φ weakened to an eventuality. This one is vacuous too. M satisfies `G X F(s_wait & (…))`, so the repair says nothing about `s_get`. It is also vacuous in the disjunct `!s_abp & r_ack0`, because the protocol reaches both acknowledgements infinitely often.
+
+So on this model and seed, every candidate that the search found holds for a trivial reason.
 
 Seed 2 on abp4, with the same budget, ended with no repair after 237 back-end calls and 20.8 s. A run that finds nothing is a normal outcome at this budget.
 
