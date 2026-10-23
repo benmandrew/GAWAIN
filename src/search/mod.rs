@@ -23,7 +23,7 @@ pub use rng::Rng;
 use crate::count::Counter;
 use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 use crate::oracle::process::Limits;
-use crate::oracle::{implications, Backend, Oracle, Verdict};
+use crate::oracle::{implications, Backend, Oracle, Semantics, Verdict};
 
 /// The chance that an offspring is crossed with a parent, PEREDUR's
 /// `crossover_rate` default.
@@ -126,7 +126,7 @@ pub fn search<B: Backend>(
     let mut population = select(seed, params.population);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
-        let offspring = drop_valid(offspring, invariant, spot_limits);
+        let offspring = drop_valid(offspring, invariant, oracle.semantics(), spot_limits);
         population.extend(score(offspring, phi, oracle, counter));
         population = select(population, params.population);
     }
@@ -177,10 +177,15 @@ pub fn filter(offspring: Vec<Formula>, phi: &Formula) -> Vec<Formula> {
 /// and a valid candidate holds on every model, so it crowds the front. With
 /// no exclusive groups the invariant is `true` and this is plain validity.
 /// A batch with no answer drops nothing, so the verdict never depends on
-/// machine load.
-pub fn drop_valid(offspring: Vec<Formula>, invariant: &Formula, limits: Limits) -> Vec<Formula> {
+/// machine load. Validity is under `semantics`, the model's.
+pub fn drop_valid(
+    offspring: Vec<Formula>,
+    invariant: &Formula,
+    semantics: Semantics,
+    limits: Limits,
+) -> Vec<Formula> {
     let pairs: Vec<(&Formula, &Formula)> = offspring.iter().map(|c| (invariant, c)).collect();
-    let Ok(valid) = implications(&pairs, limits) else {
+    let Ok(valid) = implications(&pairs, semantics, limits) else {
         return offspring;
     };
     offspring
@@ -329,6 +334,7 @@ pub fn vacuity<B: Backend>(
 /// two equivalent survivors the one more similar to φ stays, then the
 /// smaller in formula order. "Not proved" never counts as proved. Last, it
 /// flags where each repair is [`vacuity`]-vacuous on M, through `oracle`.
+/// Every implication is decided under the oracle's [`Semantics`].
 pub fn gate<B: Backend>(
     phi: &Formula,
     population: &[Scored],
@@ -337,6 +343,7 @@ pub fn gate<B: Backend>(
     limits: Limits,
 ) -> Gate {
     let mut gate = Gate::default();
+    let semantics = oracle.semantics();
     let mut seen = HashSet::new();
     let holding: Vec<&Scored> = population
         .iter()
@@ -349,7 +356,7 @@ pub fn gate<B: Backend>(
         .iter()
         .flat_map(|s| [(phi, &s.formula), (invariant, &s.formula)])
         .collect();
-    let proved = implications(&pairs, limits).unwrap_or_else(|e| {
+    let proved = implications(&pairs, semantics, limits).unwrap_or_else(|e| {
         gate.errors.push(e);
         vec![false; pairs.len()]
     });
@@ -378,7 +385,7 @@ pub fn gate<B: Backend>(
         .iter()
         .map(|&(i, j)| (&candidates[i].formula, &candidates[j].formula))
         .collect();
-    let proved = implications(&pairs, limits).unwrap_or_else(|e| {
+    let proved = implications(&pairs, semantics, limits).unwrap_or_else(|e| {
         gate.errors.push(e);
         vec![false; pairs.len()]
     });

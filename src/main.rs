@@ -1,27 +1,34 @@
-//! `weaken`: searches for weakenings of an LTL property that a nuXmv model
-//! satisfies.
+//! `weaken`: searches for weakenings of an LTL property that a nuXmv model,
+//! or a set of traces, satisfies.
 //!
 //! ```text
 //! weaken --model m.smv --atoms a,b,... --ltl 'φ' --seed N --generations G --population P
 //!        [--exclusive a,b,...]...
+//! weaken --traces t.trace --ltl 'φ' --seed N --generations G --population P
+//!        [--exclusive a,b,...]...
 //! ```
 //!
 //! `--atoms` lists the model's boolean variables or DEFINEs that formulas
-//! may mention, and must cover the atoms of φ. Groups of mutually exclusive
-//! atoms come from the model's DEFINEs (`p := v = c`) and from each
-//! `--exclusive`, and print at start-up; a candidate valid modulo them is
-//! trivial and drops. Each repair prints on one line as
+//! may mention, and must cover the atoms of φ. With `--traces` in place of
+//! `--model`, M is the file's positive traces (`oracle::traces`), the atoms
+//! are the file's, and formulas read under the file's semantics, LTLf for
+//! finite traces. Groups of mutually exclusive atoms come from the model's
+//! DEFINEs (`p := v = c`) and from each `--exclusive`, and print at
+//! start-up; a candidate valid modulo them is trivial and drops. Each
+//! repair prints on one line as
 //! `repair<TAB>similarity<TAB>semantic<TAB>vacuity<TAB>formula`, where
-//! similarity is syntactic, semantic is the model-counting similarity, and
-//! vacuity names the subformulae in which the repair is vacuous on M,
-//! separated by `; `, `?` for an unknown verdict, or `-`. Then come the oracle counters (search
-//! and gate together), the cost of the model counts and the cost of the
-//! vacuity flags.
-//! Before searching, `instance::classify` checks φ and ¬φ on the model.
-//! Exits 0 after a search, 1 when the model already satisfies φ, 2 on a
-//! usage error, and 3 when the instance is degenerate (the model satisfies
-//! ¬φ). If either check has no verdict, a warning goes to stderr and the
-//! search runs.
+//! similarity is syntactic, semantic is the model-counting similarity
+//! (over finite words under LTLf), and vacuity names the subformulae in
+//! which the repair is vacuous on M, separated by `; `, `?` for an unknown
+//! verdict, or `-`. With `--traces`, a line
+//! `negatives<TAB>rejected/total<TAB>formula` follows each repair. Then come
+//! the oracle counters (search and gate together), the cost of the model
+//! counts and the cost of the vacuity flags.
+//! Before searching, `instance::classify` checks φ and ¬φ on M.
+//! Exits 0 after a search, 1 when M already satisfies φ, 2 on a usage
+//! error, and 3 when the instance is degenerate (M satisfies ¬φ). If
+//! either check has no verdict, a warning goes to stderr and the search
+//! runs.
 
 use std::process::ExitCode;
 use std::sync::Arc;
@@ -32,11 +39,11 @@ use gawain::instance::{classify, Instance};
 use gawain::ltl::Formula;
 use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
-use gawain::oracle::{Oracle, Words};
+use gawain::oracle::traces::TraceSet;
+use gawain::oracle::{Backend, Oracle, Words};
 use gawain::search::{gate, invariant, search, Params, Rng};
 
-const USAGE: &str =
-    "usage: weaken --model m.smv --atoms a,b,... --ltl 'φ' --seed N --generations G --population P [--exclusive a,b,...]...";
+const USAGE: &str = "usage: weaken (--model m.smv --atoms a,b,... | --traces t.trace) --ltl 'φ' --seed N --generations G --population P [--exclusive a,b,...]...";
 
 /// Each nuXmv check.
 const NUXMV_LIMITS: Limits = Limits {
@@ -49,9 +56,16 @@ const SPOT_LIMITS: Limits = Limits {
     memory_bytes: 4 << 30,
 };
 
+/// What M is.
+enum Model {
+    /// A nuXmv file and the atoms formulas may mention.
+    Smv { path: String, atoms: Vec<String> },
+    /// A trace-set file.
+    Traces(String),
+}
+
 struct Args {
-    model: String,
-    atoms: Vec<String>,
+    model: Model,
     exclusive: Vec<Vec<String>>,
     ltl: Formula,
     seed: u64,
@@ -60,6 +74,7 @@ struct Args {
 
 fn parse_args() -> Result<Args, String> {
     let mut model = None;
+    let mut traces = None;
     let mut atoms = None;
     let mut ltl = None;
     let mut seed = None;
@@ -84,6 +99,7 @@ fn parse_args() -> Result<Args, String> {
         };
         match flag.as_str() {
             "--model" => model = Some(value.clone()),
+            "--traces" => traces = Some(value.clone()),
             "--atoms" => atoms = Some(list()),
             "--exclusive" => exclusive.push(list()),
             "--ltl" => {
@@ -97,9 +113,16 @@ fn parse_args() -> Result<Args, String> {
         }
     }
     let missing = |name: &str| format!("missing {name}");
+    let model = match (model, traces, atoms) {
+        (Some(path), None, Some(atoms)) => Model::Smv { path, atoms },
+        (Some(_), None, None) => return Err(missing("--atoms")),
+        (None, Some(path), None) => Model::Traces(path),
+        (None, Some(_), Some(_)) => return Err("--traces takes its atoms from the file".into()),
+        (Some(_), Some(_), _) => return Err("give --model or --traces, not both".into()),
+        (None, None, _) => return Err(missing("--model or --traces")),
+    };
     let args = Args {
-        model: model.ok_or_else(|| missing("--model"))?,
-        atoms: atoms.ok_or_else(|| missing("--atoms"))?,
+        model,
         exclusive,
         ltl: ltl.ok_or_else(|| missing("--ltl"))?,
         seed: seed.ok_or_else(|| missing("--seed"))?,
@@ -111,19 +134,23 @@ fn parse_args() -> Result<Args, String> {
     if args.params.population == 0 {
         return Err("--population must be at least 1".into());
     }
-    // A lasso records only the listed atoms, and reads any other as false,
-    // so an unlisted atom would make the lasso tier unsound.
-    let unlisted: Vec<String> = args
-        .ltl
+    Ok(args)
+}
+
+/// A lasso records only the listed atoms, and reads any other as false, so
+/// an unlisted atom would make the lasso tier unsound.
+fn check_atoms(phi: &Formula, atoms: &[String]) -> Result<(), String> {
+    let unlisted: Vec<String> = phi
         .atoms()
         .iter()
-        .filter(|a| !args.atoms.iter().any(|b| b == &***a))
+        .filter(|a| !atoms.iter().any(|b| b == &***a))
         .map(|a| a.to_string())
         .collect();
-    if !unlisted.is_empty() {
-        return Err(format!("--atoms lacks {}", unlisted.join(", ")));
+    if unlisted.is_empty() {
+        Ok(())
+    } else {
+        Err(format!("the atoms lack {}", unlisted.join(", ")))
     }
-    Ok(args)
 }
 
 fn main() -> ExitCode {
@@ -135,16 +162,41 @@ fn main() -> ExitCode {
         }
     };
     let start = Instant::now();
-    let source = match std::fs::read_to_string(&args.model) {
-        Ok(source) => source,
-        Err(e) => {
-            eprintln!("weaken: {}: {e}", args.model);
-            return ExitCode::from(2);
+    let read = |path: &str| {
+        std::fs::read_to_string(path).map_err(|e| {
+            eprintln!("weaken: {path}: {e}");
+            ExitCode::from(2)
+        })
+    };
+    let (atoms, groups, backend) = match &args.model {
+        Model::Smv { path, atoms } => {
+            let source = match read(path) {
+                Ok(source) => source,
+                Err(code) => return code,
+            };
+            let backend = Nuxmv::new(path, atoms, NUXMV_LIMITS);
+            (atoms.clone(), exclusive_groups(&source), Run::Smv(backend))
+        }
+        Model::Traces(path) => {
+            let set = match read(path).map(|text| TraceSet::parse(&text)) {
+                Ok(Ok(set)) => set,
+                Ok(Err(e)) => {
+                    eprintln!("weaken: {path}: {e}");
+                    return ExitCode::from(2);
+                }
+                Err(code) => return code,
+            };
+            let atoms = set.atoms().iter().map(|a| a.to_string()).collect();
+            (atoms, Vec::new(), Run::Traces(set))
         }
     };
+    if let Err(e) = check_atoms(&args.ltl, &atoms) {
+        eprintln!("weaken: {e}\n{USAGE}");
+        return ExitCode::from(2);
+    }
     // Only listed atoms can appear in a candidate, so a group keeps those.
-    let listed = |name: &str| args.atoms.iter().any(|a| a == name);
-    let groups: Vec<Vec<Arc<str>>> = exclusive_groups(&source)
+    let listed = |name: &str| atoms.iter().any(|a| a == name);
+    let groups: Vec<Vec<Arc<str>>> = groups
         .into_iter()
         .chain(
             args.exclusive
@@ -157,13 +209,44 @@ fn main() -> ExitCode {
     for group in &groups {
         println!("exclusive: {}", group.join(", "));
     }
-    let invariant = invariant(&groups);
-    let backend = Nuxmv::new(&args.model, &args.atoms, NUXMV_LIMITS);
-    let words = Words::sample(args.atoms.iter().map(String::as_str), args.seed);
-    let mut oracle = Oracle::new(backend, words, SPOT_LIMITS);
-    let phi = args.ltl;
+    let words = Words::sample(atoms.iter().map(String::as_str), args.seed);
+    match backend {
+        Run::Smv(backend) => run(
+            &args,
+            Oracle::new(backend, words, SPOT_LIMITS),
+            &groups,
+            None,
+            start,
+        ),
+        Run::Traces(set) => {
+            // A trace set answers in microseconds, faster than tiers 1 and 2
+            // (docs/dev/oracle.md, "Trace sets").
+            let negatives = set.clone();
+            let oracle = Oracle::memo_only(set);
+            run(&args, oracle, &groups, Some(&negatives), start)
+        }
+    }
+}
+
+/// The back end chosen by the flags.
+enum Run {
+    Smv(Nuxmv),
+    Traces(TraceSet),
+}
+
+/// Checks φ, searches, gates and prints. `traces`, when given, counts the
+/// negative traces each repair rejects.
+fn run<B: Backend>(
+    args: &Args,
+    mut oracle: Oracle<B>,
+    groups: &[Vec<Arc<str>>],
+    traces: Option<&TraceSet>,
+    start: Instant,
+) -> ExitCode {
+    let invariant = invariant(groups);
+    let phi = &args.ltl;
     let check_start = Instant::now();
-    let instance = classify(&phi, &mut oracle);
+    let instance = classify(phi, &mut oracle);
     let check_wall = check_start.elapsed().as_secs_f64();
     match instance {
         Instance::Satisfied => {
@@ -183,9 +266,9 @@ fn main() -> ExitCode {
     println!("input: {phi}");
     println!("instance: proper time={check_wall:.2}s");
     let mut rng = Rng::new(args.seed);
-    let mut counter = Counter::new(&phi, SPOT_LIMITS);
+    let mut counter = Counter::new(phi, SPOT_LIMITS);
     let population = search(
-        &phi,
+        phi,
         &mut oracle,
         &mut counter,
         &invariant,
@@ -195,7 +278,7 @@ fn main() -> ExitCode {
     );
     let search_counters = oracle.counters();
     let gate_start = Instant::now();
-    let outcome = gate(&phi, &population, &invariant, &mut oracle, SPOT_LIMITS);
+    let outcome = gate(phi, &population, &invariant, &mut oracle, SPOT_LIMITS);
     let gate_wall = gate_start.elapsed().as_secs_f64();
     for error in &outcome.errors {
         eprintln!("weaken: output gate: {error}");
@@ -219,6 +302,14 @@ fn main() -> ExitCode {
             "repair\t{:.4}\t{:.4}\t{flags}\t{}",
             repair.similarity, repair.semantic, repair.formula
         );
+        if let Some(traces) = traces {
+            println!(
+                "negatives\t{}/{}\t{}",
+                traces.rejected(&repair.formula),
+                traces.negatives().len(),
+                repair.formula
+            );
+        }
     }
     let c = oracle.counters();
     println!("repairs: {}", outcome.repairs.len());

@@ -19,13 +19,18 @@
 //! never memoised. See "Recommended oracle" in
 //! `docs/dev/oracle-performance.md`, `docs/dev/oracle.md` and the eviction
 //! measurements in `docs/dev/oracle-measurements.md`.
+//!
+//! [`Oracle::memo_only`] keeps tier 0 and the back end and drops tiers 1
+//! and 2, for a back end that answers in process faster than they do: a
+//! trace set answers in microseconds, and one Spot exec costs milliseconds
+//! (see "Trace sets" in `docs/dev/oracle.md`).
 
 use std::collections::HashMap;
 use std::time::Duration;
 
 use super::process::Limits;
 use super::spot::{implications, syntactic_implications};
-use super::{Backend, KnownTruths, LassoCache, Verdict, Words};
+use super::{Backend, KnownTruths, LassoCache, Semantics, Verdict, Words};
 use crate::ltl::Formula;
 
 /// How many queries each tier answered, and what the slow tiers cost.
@@ -57,6 +62,8 @@ pub struct Oracle<B> {
     truths: KnownTruths,
     spot_limits: Limits,
     counters: Counters,
+    /// Whether tiers 1 and 2 run.
+    cheap_tiers: bool,
 }
 
 impl<B: Backend> Oracle<B> {
@@ -70,12 +77,33 @@ impl<B: Backend> Oracle<B> {
             truths: KnownTruths::new(words),
             spot_limits,
             counters: Counters::default(),
+            cheap_tiers: true,
+        }
+    }
+
+    /// An oracle whose only cheap tier is the memo. Tiers 1 and 2 never
+    /// answer and are never fed, so no query starts Spot.
+    pub fn memo_only(backend: B) -> Self {
+        let unused = Limits {
+            timeout: std::time::Duration::ZERO,
+            memory_bytes: 0,
+        };
+        let words = Words::sample(std::iter::empty::<&str>(), 0);
+        Oracle {
+            cheap_tiers: false,
+            ..Oracle::new(backend, words, unused)
         }
     }
 
     /// The counters so far.
     pub fn counters(&self) -> Counters {
         self.counters
+    }
+
+    /// The semantics of the back end's runs, which every Spot call about
+    /// this model must use.
+    pub fn semantics(&self) -> Semantics {
+        self.backend.semantics()
     }
 
     /// Decides whether the model satisfies `formula`, cheapest tier first.
@@ -86,21 +114,29 @@ impl<B: Backend> Oracle<B> {
             self.counters.memo_hits += 1;
             return verdict.clone();
         }
-        let verdict = if let Some(lasso) = self.lassos.refutes(formula) {
+        let refuted = match self.cheap_tiers {
+            true => self.lassos.refutes(formula).cloned(),
+            false => None,
+        };
+        let verdict = if let Some(lasso) = refuted {
             self.counters.lasso_hits += 1;
-            Verdict::Fails(lasso.clone())
-        } else if self.implied_by_a_truth(formula) {
+            Verdict::Fails(lasso)
+        } else if self.cheap_tiers && self.implied_by_a_truth(formula) {
             self.counters.implication_hits += 1;
             Verdict::Holds
         } else {
             self.counters.backend_calls += 1;
             match self.backend.check(formula) {
                 Verdict::Holds => {
-                    self.learn_truth(formula);
+                    if self.cheap_tiers {
+                        self.learn_truth(formula);
+                    }
                     Verdict::Holds
                 }
                 Verdict::Fails(lasso) => {
-                    self.lassos.insert(lasso.clone());
+                    if self.cheap_tiers {
+                        self.lassos.insert(lasso.clone());
+                    }
                     Verdict::Fails(lasso)
                 }
                 Verdict::Unknown(reason) => {
@@ -155,7 +191,8 @@ impl<B: Backend> Oracle<B> {
             return Vec::new();
         }
         self.counters.spot_calls += 1;
-        check(pairs, limits).unwrap_or_else(|_| {
+        let semantics = self.backend.semantics();
+        check(pairs, semantics, limits).unwrap_or_else(|_| {
             self.counters.spot_errors += 1;
             vec![false; pairs.len()]
         })
@@ -163,7 +200,7 @@ impl<B: Backend> Oracle<B> {
 }
 
 /// [`implications`] or [`syntactic_implications`].
-type Check = fn(&[(&Formula, &Formula)], Limits) -> Result<Vec<bool>, String>;
+type Check = fn(&[(&Formula, &Formula)], Semantics, Limits) -> Result<Vec<bool>, String>;
 
 /// The longest a tier 2 lookup waits on Spot's complete check. On the LMCS
 /// and RERS candidate streams every proof it found that the rewriting rules
@@ -282,6 +319,24 @@ mod tests {
         assert_eq!(counters.spot_calls, 0);
         assert_eq!(counters.implication_hits, 0);
         assert_eq!(counters.backend_calls, 2);
+    }
+
+    #[test]
+    fn memo_only_sends_every_new_query_to_the_back_end() {
+        let mut oracle = Oracle::memo_only(Fake { calls: 0 });
+        assert!(matches!(oracle.check(&f("G a")), Verdict::Fails(_)));
+        // Tier 1 would refute this one from the stored run.
+        assert!(matches!(oracle.check(&f("G (a | b)")), Verdict::Fails(_)));
+        assert_eq!(oracle.check(&f("a | b")), Verdict::Holds);
+        // Tier 2 would ask Spot about this one.
+        assert_eq!(oracle.check(&f("a | X b")), Verdict::Holds);
+        assert_eq!(oracle.check(&f("b | a")), Verdict::Holds);
+        let counters = oracle.counters();
+        assert_eq!(counters.queries, 5);
+        assert_eq!(counters.memo_hits, 1);
+        assert_eq!(counters.backend_calls, 4);
+        assert_eq!(counters.lasso_hits + counters.implication_hits, 0);
+        assert_eq!(counters.spot_calls, 0);
     }
 
     /// Every stored truth: each one may imply `true`.

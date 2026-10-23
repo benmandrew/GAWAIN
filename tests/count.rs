@@ -12,8 +12,8 @@ use std::time::Duration;
 use common::{have, parse};
 use gawain::count::{similarity_from_logs, Counter, BOUND};
 use gawain::ltl::Formula;
-use gawain::oracle::implications;
 use gawain::oracle::process::Limits;
+use gawain::oracle::{implications, Semantics};
 use gawain::search::{monotone_rewrite, Direction, Rng};
 
 const LIMITS: Limits = Limits {
@@ -153,7 +153,7 @@ fn implied_pairs() -> Vec<(Formula, Formula)> {
         }
     }
     let refs: Vec<_> = pairs.iter().map(|(p, q)| (p, q)).collect();
-    let proved = implications(&refs, LIMITS).expect("the batch answers");
+    let proved = implications(&refs, Semantics::Infinite, LIMITS).expect("the batch answers");
     assert!(proved.iter().all(|&p| p), "a rewrite moved the wrong way");
     pairs
 }

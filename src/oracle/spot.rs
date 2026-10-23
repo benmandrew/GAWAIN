@@ -19,21 +19,42 @@
 //! Start-up dominates a single `ltlfilt` call (about 13 ms), so one exec per
 //! batch is the point; see "Implication from known truths" in
 //! `docs/dev/oracle-performance.md`.
+//!
+//! Under [`Semantics::Finite`] each exec adds `--from-ltlf`, which rewrites
+//! each line into LTL over a fresh atom ([`ALIVE`]) that holds on a finite
+//! prefix and never after, so satisfiability, and with it implication, is
+//! decided over finite words. LTL implication is not LTLf implication:
+//! `X a -> F a` is valid over infinite words but fails on the one-position
+//! word where `a` is false, since `X` is weak there.
 
 use std::process::Command;
 
 use super::process::{self, Limits};
+use super::Semantics;
 use crate::ltl::Formula;
 
-/// For each pair `(ψ, φ)`, whether Spot proved ψ ⇒ φ, in one `ltlfilt`
-/// exec. `false` means only "not proved": the implication may be refuted or
-/// the line may have been skipped.
+/// The atom `--from-ltlf` adds to mark the positions of a finite word. A
+/// trace set must not use it.
+pub const ALIVE: &str = "gawain_alive";
+
+/// For each pair `(ψ, φ)`, whether Spot proved ψ ⇒ φ under `semantics`, in
+/// one `ltlfilt` exec. `false` means only "not proved": the implication may
+/// be refuted or the line may have been skipped.
 ///
 /// An `Err` is "unknown" for the whole batch: a timeout, a kill, a parse
 /// error or output that cannot be read. Callers must read it as "nothing
 /// proved". An empty batch starts no process.
-pub fn implications(pairs: &[(&Formula, &Formula)], limits: Limits) -> Result<Vec<bool>, String> {
-    let stdout = ltlfilt(pairs, &["-v", "--satisfiable", "--format=%L"], limits)?;
+pub fn implications(
+    pairs: &[(&Formula, &Formula)],
+    semantics: Semantics,
+    limits: Limits,
+) -> Result<Vec<bool>, String> {
+    let stdout = ltlfilt(
+        pairs,
+        &["-v", "--satisfiable", "--format=%L"],
+        semantics,
+        limits,
+    )?;
     parse(&stdout, pairs.len(), str::is_empty)
 }
 
@@ -43,18 +64,26 @@ pub fn implications(pairs: &[(&Formula, &Formula)], limits: Limits) -> Result<Ve
 /// proved" as there.
 pub fn syntactic_implications(
     pairs: &[(&Formula, &Formula)],
+    semantics: Semantics,
     limits: Limits,
 ) -> Result<Vec<bool>, String> {
-    let stdout = ltlfilt(pairs, &["-r2", "--ap=0", "--format=%L,%f"], limits)?;
+    let stdout = ltlfilt(
+        pairs,
+        &["-r2", "--ap=0", "--format=%L,%f"],
+        semantics,
+        limits,
+    )?;
     // Each printed line is `N,0` or `N,1`: line N became a constant.
     parse(&stdout, pairs.len(), |rest| rest == ",0")
 }
 
-/// Runs `ltlfilt -F - args` with one line `(ψ) & !(φ)` per pair on stdin
-/// and returns its stdout. An empty batch starts no process.
+/// Runs `ltlfilt -F - args` with one line `(ψ) & !(φ)` per pair on stdin,
+/// under `semantics`, and returns its stdout. An empty batch starts no
+/// process.
 fn ltlfilt(
     pairs: &[(&Formula, &Formula)],
     args: &[&str],
+    semantics: Semantics,
     limits: Limits,
 ) -> Result<String, String> {
     if pairs.is_empty() {
@@ -71,6 +100,9 @@ fn ltlfilt(
         input.push_str(&line);
     }
     let mut command = Command::new("ltlfilt");
+    if semantics == Semantics::Finite {
+        command.arg(format!("--from-ltlf={ALIVE}"));
+    }
     command.args(["-F", "-"]).args(args);
     let output = process::run(&mut command, &input, limits).map_err(|e| format!("ltlfilt: {e}"))?;
     // Exit 0: some line was printed; 1: none was; 2: an error was reported.
@@ -138,7 +170,14 @@ mod tests {
             timeout: std::time::Duration::from_secs(1),
             memory_bytes: 1 << 20,
         };
-        assert_eq!(implications(&[], limits), Ok(Vec::new()));
-        assert_eq!(syntactic_implications(&[], limits), Ok(Vec::new()));
+        let none = |semantics| {
+            assert_eq!(implications(&[], semantics, limits), Ok(Vec::new()));
+            assert_eq!(
+                syntactic_implications(&[], semantics, limits),
+                Ok(Vec::new())
+            );
+        };
+        none(Semantics::Infinite);
+        none(Semantics::Finite);
     }
 }
