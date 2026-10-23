@@ -17,18 +17,22 @@
 //! separated by `; `, `?` for an unknown verdict, or `-`. Then come the oracle counters (search
 //! and gate together), the cost of the model counts and the cost of the
 //! vacuity flags.
-//! Exits 0 after a search, 1 when the model already satisfies φ, and 2 on a
-//! usage error or when φ's own verdict is unknown.
+//! Before searching, `instance::classify` checks φ and ¬φ on the model.
+//! Exits 0 after a search, 1 when the model already satisfies φ, 2 on a
+//! usage error, and 3 when the instance is degenerate (the model satisfies
+//! ¬φ). If either check has no verdict, a warning goes to stderr and the
+//! search runs.
 
 use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use gawain::count::Counter;
+use gawain::instance::{classify, Instance};
 use gawain::ltl::Formula;
 use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
-use gawain::oracle::{Oracle, Verdict, Words};
+use gawain::oracle::{Oracle, Words};
 use gawain::search::{gate, invariant, search, Params, Rng};
 
 const USAGE: &str =
@@ -158,17 +162,26 @@ fn main() -> ExitCode {
     let words = Words::sample(args.atoms.iter().map(String::as_str), args.seed);
     let mut oracle = Oracle::new(backend, words, SPOT_LIMITS);
     let phi = args.ltl;
-    match oracle.check(&phi) {
-        Verdict::Holds => {
+    let check_start = Instant::now();
+    let instance = classify(&phi, &mut oracle);
+    let check_wall = check_start.elapsed().as_secs_f64();
+    match instance {
+        Instance::Satisfied => {
             eprintln!("weaken: the model already satisfies {phi}");
             return ExitCode::from(1);
         }
-        Verdict::Unknown(reason) => {
-            eprintln!("weaken: no verdict for {phi}: {reason}");
-            return ExitCode::from(2);
+        Instance::Degenerate => {
+            eprintln!("weaken: degenerate: {phi} fails on every run of the model");
+            return ExitCode::from(3);
         }
-        Verdict::Fails(_) => println!("input fails: {phi}"),
+        Instance::Proper { unknown } => {
+            for reason in unknown {
+                eprintln!("weaken: warning: no verdict for {reason}; searching anyway");
+            }
+        }
     }
+    println!("input: {phi}");
+    println!("instance: proper time={check_wall:.2}s");
     let mut rng = Rng::new(args.seed);
     let mut counter = Counter::new(&phi, SPOT_LIMITS);
     let population = search(
