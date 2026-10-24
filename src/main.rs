@@ -361,14 +361,6 @@ fn run<B: Backend>(
         k.tool_time.as_secs_f64(),
         k.wait.as_secs_f64()
     );
-    println!(
-        "grade: rescores={} evaluations={} lassos={} refuting={} time={:.2}s",
-        grading.rescores,
-        grading.evaluations,
-        grading.lassos,
-        grading.refuting,
-        grading.time.as_secs_f64()
-    );
     let v = outcome.vacuity;
     println!(
         "vacuity: queries={} unknowns={} backend_calls={}",

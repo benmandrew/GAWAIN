@@ -38,6 +38,7 @@ use super::{Backend, Lasso, Valuation, Verdict};
 use crate::kripke::{Kripke, StateId};
 use crate::ltl::Formula;
 use crate::rers::KeyHasher;
+use crate::search::Rng;
 
 /// A [`Backend`] that checks candidates against one Kripke structure held
 /// in memory. Only the Spot translation runs as a child process.
@@ -53,26 +54,162 @@ impl Explicit {
     }
 }
 
-impl Backend for Explicit {
-    fn check(&mut self, formula: &Formula) -> Verdict {
+impl Explicit {
+    /// Spot's automaton for `!(formula)`.
+    fn negation(&self, formula: &Formula) -> Result<Automaton, String> {
         let negated = format!("!({formula})\n");
         let mut command = Command::new("ltl2tgba");
         command.arg("-H");
-        let output = match process::run(&mut command, &negated, self.limits) {
-            Ok(output) => output,
-            Err(error) => return Verdict::Unknown(format!("ltl2tgba: {error}")),
-        };
+        let output = process::run(&mut command, &negated, self.limits)
+            .map_err(|error| format!("ltl2tgba: {error}"))?;
         if !output.status.success() {
-            return Verdict::Unknown(format!("ltl2tgba: {}", output.stderr.trim()));
+            return Err(format!("ltl2tgba: {}", output.stderr.trim()));
         }
-        match hoa::parse(&output.stdout) {
+        hoa::parse(&output.stdout).map_err(|reason| format!("ltl2tgba output: {reason}"))
+    }
+
+    /// Up to `count` random runs of the structure, each a walk from state 0
+    /// that picks a uniform successor until it revisits a state, within
+    /// `max_length` steps. A walk that does not close in time is dropped.
+    pub fn random_lassos(&self, count: usize, max_length: usize, rng: &mut Rng) -> Vec<Lasso> {
+        let valuation =
+            |s: StateId| -> Valuation { self.kripke.atom(s).into_iter().cloned().collect() };
+        let mut out = Vec::new();
+        for _ in 0..count {
+            let mut seen: HashMap<StateId, usize> = HashMap::new();
+            let mut path = vec![0];
+            seen.insert(0, 0);
+            while path.len() <= max_length {
+                let successors = self.kripke.successors(*path.last().expect("non-empty"));
+                if successors.is_empty() {
+                    break;
+                }
+                let next = successors[rng.below(successors.len())];
+                if let Some(&at) = seen.get(&next) {
+                    let prefix = path[..at].iter().map(|&s| valuation(s)).collect();
+                    let cycle = path[at..].iter().map(|&s| valuation(s)).collect();
+                    out.push(Lasso::new(prefix, cycle).expect("the cycle has a state"));
+                    break;
+                }
+                seen.insert(next, path.len());
+                path.push(next);
+            }
+        }
+        out
+    }
+}
+
+impl Backend for Explicit {
+    fn check(&mut self, formula: &Formula) -> Verdict {
+        match self.negation(formula) {
             Ok(automaton) => match accepting_run(&self.kripke, &automaton) {
                 Some(lasso) => Verdict::Fails(lasso),
                 None => Verdict::Holds,
             },
-            Err(reason) => Verdict::Unknown(format!("ltl2tgba output: {reason}")),
+            Err(reason) => Verdict::Unknown(reason),
         }
     }
+
+    fn holding_states(&mut self, formula: &Formula) -> Option<(usize, usize)> {
+        let automaton = self.negation(formula).ok()?;
+        Some((
+            holding_states(&self.kripke, &automaton),
+            self.kripke.state_count(),
+        ))
+    }
+}
+
+/// The number of states s of `kripke` from which every run satisfies the
+/// formula whose negation `automaton` accepts: those where (s, start) of
+/// the full product reaches no accepting SCC. Tarjan's algorithm finishes
+/// each SCC after every SCC it reaches, so badness is known for every
+/// successor when an SCC is closed.
+fn holding_states(kripke: &Kripke, automaton: &Automaton) -> usize {
+    let ap_index: HashMap<&str, u32> = (automaton.aps.iter().enumerate())
+        .map(|(i, ap)| (ap.as_str(), i as u32))
+        .collect();
+    let none = automaton.aps.len() as u32;
+    let letters = (kripke.atoms().iter())
+        .map(|atom| ap_index.get(&**atom).copied().unwrap_or(none))
+        .collect();
+    let product = Product {
+        kripke,
+        automaton,
+        letters,
+    };
+    let all = automaton.all_marks;
+    // index[v] is v's DFS number from 0; low, on_stack and scc by number.
+    let mut index: HashMap<State, u32, BuildHasherDefault<KeyHasher>> = HashMap::default();
+    let mut low: Vec<u32> = Vec::new();
+    let mut on_stack: Vec<bool> = Vec::new();
+    let mut scc: Vec<u32> = Vec::new();
+    let mut bad: Vec<bool> = Vec::new();
+    let mut stack: Vec<State> = Vec::new();
+    let mut dfs: Vec<Frame> = Vec::new();
+    let unset = u32::MAX;
+    for s in 0..kripke.state_count() as StateId {
+        let root = pack(s, automaton.start);
+        if index.contains_key(&root) {
+            continue;
+        }
+        let mut next = Some(root);
+        loop {
+            if let Some(v) = next.take() {
+                let n = low.len() as u32;
+                index.insert(v, n);
+                low.push(n);
+                on_stack.push(true);
+                scc.push(unset);
+                stack.push(v);
+                dfs.push(product.frame(v));
+            }
+            let Some(frame) = dfs.last_mut() else { break };
+            let v = index[&frame.state] as usize;
+            if let Some((t, _)) = product.next(frame) {
+                match index.get(&t) {
+                    None => next = Some(t),
+                    Some(&m) if on_stack[m as usize] => low[v] = low[v].min(m),
+                    Some(_) => {}
+                }
+                continue;
+            }
+            let state = frame.state;
+            dfs.pop();
+            if let Some(parent) = dfs.last() {
+                let p = index[&parent.state] as usize;
+                low[p] = low[p].min(low[v]);
+            }
+            if low[v] != v as u32 {
+                continue;
+            }
+            // v roots an SCC: its members are the stack from v up.
+            let id = bad.len() as u32;
+            let at = stack.iter().rposition(|&u| u == state).expect("on stack");
+            let members = stack.split_off(at);
+            for u in &members {
+                let n = index[u] as usize;
+                on_stack[n] = false;
+                scc[n] = id;
+            }
+            let (mut marks, mut internal, mut reaches_bad) = (0, false, false);
+            for &u in &members {
+                let mut f = product.frame(u);
+                while let Some((t, m)) = product.next(&mut f) {
+                    let other = scc[index[&t] as usize];
+                    if other == id {
+                        internal = true;
+                        marks |= m;
+                    } else if bad[other as usize] {
+                        reaches_bad = true;
+                    }
+                }
+            }
+            bad.push(reaches_bad || (internal && marks & all == all));
+        }
+    }
+    (0..kripke.state_count() as StateId)
+        .filter(|&s| !bad[scc[index[&pack(s, automaton.start)] as usize] as usize])
+        .count()
 }
 
 /// A product state: the Kripke state in the low half, the automaton state
@@ -360,6 +497,38 @@ mod tests {
         assert_eq!(lasso.prefix(), word(&["a"]));
         assert_eq!(lasso.cycle(), word(&[""]));
         assert!(!lasso.satisfies(&"!a".parse().unwrap()));
+    }
+
+    #[test]
+    fn holding_states_counts_the_states_a_formula_holds_from() {
+        // a, then b forever: state 0 is a, state 1 is b with a self-loop.
+        let k = kripke(&[(Some(0), &[1]), (Some(1), &[1])]);
+        // !a: holds from neither... `a` holds from state 0 only.
+        let not_a = automaton(FIRST_NOT_A, "1 \"a\"", "0 t");
+        assert_eq!(holding_states(&k, &not_a), 1);
+        // G !a as the negation of F a: F a holds from state 0 only.
+        let never_a = automaton("State: 0 {0}\n[!0] 0\n", "1 \"a\"", "1 Inf(0)");
+        assert_eq!(holding_states(&k, &never_a), 1);
+        // The negation of `true` accepts nothing, so it holds from both.
+        let empty = automaton("State: 0\n", "1 \"a\"", "1 Inf(0)");
+        assert_eq!(holding_states(&k, &empty), 2);
+        // b loops back to a: F a now holds from both.
+        let k = kripke(&[(Some(0), &[1]), (Some(1), &[0])]);
+        assert_eq!(holding_states(&k, &never_a), 2);
+    }
+
+    #[test]
+    fn a_random_lasso_is_a_run_of_the_structure() {
+        // a, then b and c in either order forever.
+        let k = kripke(&[(Some(0), &[1, 2]), (Some(1), &[2, 1]), (Some(2), &[1])]);
+        let limits = Limits { timeout: std::time::Duration::from_secs(1), memory_bytes: 1 << 30 };
+        let backend = Explicit::new(k, limits);
+        let runs = backend.random_lassos(20, 10, &mut Rng::new(1));
+        assert_eq!(runs.len(), 20);
+        for run in &runs {
+            assert_eq!(run.prefix().first(), Some(&word(&["a"])[0]));
+            assert!(run.satisfies(&"a & X G (b | c)".parse().unwrap()), "{run:?}");
+        }
     }
 
     /// `G F a & G F b` with one acceptance set per conjunct.

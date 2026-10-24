@@ -8,13 +8,21 @@ it prints no JSON line (a timeout or a crash). A run whose JSON exists is
 skipped, so the script resumes. Runs are ordered seed-major with the arms
 interleaved, so a partial sweep stays paired.
 
-The budget is fixed for every instance: 30 generations of 40, 120 s and
-4 GB per back-end call, and 3600 s and 8 GB per run. Each run sits in its
+The budget is fixed for every instance: by default 30 generations of 40
+(`--budget GxP` sets another), 120 s and 4 GB per back-end call, and
+3600 s and 8 GB per run (`--memory-gb` sets another cap, for a rerun of
+the runs the cap killed). `--out` names the directory under DIR that
+takes the results (default `runs`). Each run sits in its
 own systemd scope when `systemd-run --user` works, and under `ulimit -v`
 otherwise.
 
+The arms are `binary` and `graded` (option B), `random` (B with 64
+random runs of M stored before the search, explicit back end only) and
+`states` (option C, explicit back end only); see ARMS.
+
 usage: graded_run.py DIR JOBS --seeds 1-10 --arms binary,graded
-                     [--bin PATH] [--filter REGEX]
+                     [--budget 30x40] [--out runs] [--memory-gb 8] [--bin PATH]
+                     [--filter REGEX]
 """
 import argparse
 import concurrent.futures as cf
@@ -26,6 +34,13 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 RUN_TIMEOUT = 3600
+# The search_bench flags of each arm.
+ARMS = {
+    'binary': ['--status', 'binary'],
+    'graded': ['--status', 'graded'],
+    'random': ['--status', 'graded', '--random-runs', '64'],
+    'states': ['--status', 'states'],
+}
 
 
 def seeds(text):
@@ -33,7 +48,7 @@ def seeds(text):
     return list(range(int(lo), int(hi or lo) + 1))
 
 
-def scoped():
+def scoped(gb):
     """The prefix that caps a run's memory."""
     try:
         ok = subprocess.run(['systemd-run', '--user', '--scope', '-q', '-p', 'MemoryMax=1G',
@@ -41,20 +56,20 @@ def scoped():
     except (OSError, subprocess.TimeoutExpired):
         ok = False
     if ok:
-        return ['systemd-run', '--user', '--scope', '-q', '-p', 'MemoryMax=8G',
+        return ['systemd-run', '--user', '--scope', '-q', '-p', f'MemoryMax={gb}G',
                 '-p', 'MemorySwapMax=0']
-    return ['prlimit', f'--as={8 << 30}']
+    return ['prlimit', f'--as={gb << 30}']
 
 
-def run(job, d, binary, prefix):
+def run(job, d, out, budget, binary, prefix):
     row, seed, arm = job
     base = f"{row['name']}-{arm}-{seed}"
-    json_path, err_path = d / 'runs' / f'{base}.json', d / 'runs' / f'{base}.err'
+    json_path, err_path = out / f'{base}.json', out / f'{base}.err'
     if json_path.exists():
         return 'skip'
     args = [binary, '--backend', row['backend'], '--model', str(d / row['model']),
-            '--seed', str(seed), '--generations', '30', '--population', '40',
-            '--status', arm, '--timeout', '120', '--memory-mb', '4096']
+            '--seed', str(seed), '--generations', budget[0], '--population', budget[1],
+            '--timeout', '120', '--memory-mb', '4096'] + ARMS[arm]
     for flag, key in (('--atoms', 'atoms'), ('--ltl', 'phi'), ('--property', 'property')):
         if row[key]:
             args += [flag, row[key]]
@@ -68,6 +83,7 @@ def run(job, d, binary, prefix):
     line = stdout.strip().splitlines()[-1] if stdout.strip() else ''
     if line.startswith('{'):
         json_path.write_text(line + '\n')
+        err_path.unlink(missing_ok=True)
         return 'ok'
     err_path.write_text(f'{stderr}\nno result after {time.time() - start:.0f} s\n')
     return 'error'
@@ -81,16 +97,21 @@ def main():
     p.add_argument('--arms', default='binary,graded')
     p.add_argument('--bin', default=str(HERE.parent / 'target/release/search_bench'))
     p.add_argument('--filter', default='.')
+    p.add_argument('--budget', default='30x40')
+    p.add_argument('--out', default='runs')
+    p.add_argument('--memory-gb', type=int, default=8)
     a = p.parse_args()
     d = Path(a.dir).resolve()
-    (d / 'runs').mkdir(exist_ok=True)
+    out = d / a.out
+    out.mkdir(exist_ok=True)
+    budget = a.budget.split('x')
     rows = [r for r in csv.DictReader(open(d / 'instances.tsv'), delimiter='\t')
             if re.search(a.filter, r['name'])]
     jobs = [(r, s, arm) for s in seeds(a.seeds) for r in rows for arm in a.arms.split(',')]
-    prefix = scoped()
+    prefix = scoped(a.memory_gb)
     done = {}
     with cf.ThreadPoolExecutor(a.jobs) as pool:
-        for status in pool.map(lambda j: run(j, d, a.bin, prefix), jobs):
+        for status in pool.map(lambda j: run(j, d, out, budget, a.bin, prefix), jobs):
             done[status] = done.get(status, 0) + 1
     print(done)
 

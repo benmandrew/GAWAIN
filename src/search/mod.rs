@@ -131,13 +131,15 @@ pub fn search<B: Backend>(
     let mut grader = Grader::new(phi);
     // The stored lassos only grow, so the whole pool is regraded against
     // one set before it is ranked.
-    let mut regrade = |pool: &mut Vec<Scored>, oracle: &Oracle<B>| {
-        if params.status == Status::Graded {
-            grader.rescore(pool, oracle.lassos());
+    let mut regrade = |pool: &mut Vec<Scored>, oracle: &mut Oracle<B>| match params.status {
+        Status::Graded => grader.rescore(pool, oracle.lassos()),
+        Status::States => {
+            grader.rescore_states(pool, |f| oracle.backend_mut().holding_states(f))
         }
+        Status::Binary => {}
     };
     let mut population = score(vec![phi.clone()], phi, oracle, counter);
-    regrade(&mut population, oracle);
+    regrade(&mut population, &mut *oracle);
     population = select(population, params.population);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
@@ -148,7 +150,7 @@ pub fn search<B: Backend>(
             oracle.semantics(),
             spot_limits,
         ));
-        regrade(&mut population, oracle);
+        regrade(&mut population, &mut *oracle);
         population = select(population, params.population);
     }
     (population, grader.counts())

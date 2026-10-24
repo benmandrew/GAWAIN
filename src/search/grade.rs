@@ -1,14 +1,15 @@
-//! The graded status objective: how close a candidate that M is not proved
-//! to satisfy comes to holding, measured on the runs of M that the oracle
-//! has stored.
+//! The graded status objective, an alternative to the binary status that
+//! the ablation in `docs/dev/search.md` ("Graded status") did not adopt.
 //!
-//! A candidate the oracle proves scores 1. Any other candidate φ' scores
-//! k / (n + 1), where n is the number of stored lassos that violate φ and k
-//! the number of those that φ' satisfies. φ scores 0, and for a fixed set
-//! of lassos the score is monotone under implication. The set grows during
-//! a run, so the whole pool is rescored before each selection. See
-//! "Objectives" in `docs/dev/search.md`.
+//! A candidate the oracle proves scores 1. Under [`Status::Graded`] any
+//! other candidate φ' scores k / (n + 1), where n is the number of stored
+//! lassos that violate φ and k the number of those that φ' satisfies. φ
+//! scores 0, and for a fixed set of lassos the score is monotone under
+//! implication. The set grows during a run, so the whole pool is rescored
+//! before each selection. The default, [`Status::Binary`], scores every
+//! such candidate 0.
 
+use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
 use super::{Scored, STATUS};
@@ -18,13 +19,16 @@ use crate::oracle::Lasso;
 /// How the status objective scores a candidate the oracle does not prove.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Status {
-    /// The fraction of the stored lassos that violate φ which the
-    /// candidate satisfies, kept below 1 ([`Grader`]).
+    /// 0, whatever the verdict.
     #[default]
-    Graded,
-    /// 0, whatever the verdict. Kept for the ablation in
-    /// `docs/dev/search.md`.
     Binary,
+    /// The fraction of the stored lassos that violate φ which the
+    /// candidate satisfies, kept below 1 ([`Grader`]). Kept for the
+    /// ablation in `docs/dev/search.md`.
+    Graded,
+    /// The share of M's states from which the candidate holds, h / (N + 1)
+    /// for N states, where the back end counts them, and 0 elsewhere.
+    States,
 }
 
 /// What rescoring cost over one run.
@@ -51,6 +55,8 @@ pub struct Grader {
     /// How many of the oracle's lassos have been sorted into `refuting`.
     scanned: usize,
     counts: GradeCounts,
+    /// The state share of each candidate graded by [`Grader::rescore_states`].
+    shares: HashMap<Formula, f64>,
 }
 
 impl Grader {
@@ -61,6 +67,7 @@ impl Grader {
             refuting: Vec::new(),
             scanned: 0,
             counts: GradeCounts::default(),
+            shares: HashMap::new(),
         }
     }
 
@@ -93,6 +100,25 @@ impl Grader {
         self.counts.rescores += 1;
         self.counts.lassos = lassos.len();
         self.counts.refuting = self.refuting.len();
+        self.counts.time += start.elapsed();
+    }
+
+    /// Sets the status of every member of `pool` that does not hold to
+    /// h / (N + 1), with (h, N) from `count`, once per formula.
+    pub fn rescore_states(
+        &mut self,
+        pool: &mut [Scored],
+        mut count: impl FnMut(&Formula) -> Option<(usize, usize)>,
+    ) {
+        let start = Instant::now();
+        for scored in pool.iter_mut().filter(|s| !s.holds()) {
+            let share = *self.shares.entry(scored.formula.clone()).or_insert_with(|| {
+                self.counts.evaluations += 1;
+                count(&scored.formula).map_or(0.0, |(h, n)| h as f64 / (n + 1) as f64)
+            });
+            scored.objectives[STATUS] = share;
+        }
+        self.counts.rescores += 1;
         self.counts.time += start.elapsed();
     }
 }
@@ -185,5 +211,21 @@ mod tests {
         assert!(s.windows(2).all(|w| w[0] <= w[1]), "{s:?}");
         assert_eq!(s[0], 0.0);
         assert!(s[4] < 1.0);
+    }
+
+    #[test]
+    fn the_state_share_is_asked_once_per_formula() {
+        let mut grader = Grader::new(&f("G a"));
+        let mut pool = vec![scored("F a", 0.0), scored("b", 1.0), scored("G b", 0.0)];
+        let mut asked = Vec::new();
+        let mut count = |g: &Formula| {
+            asked.push(g.to_string());
+            (g == &f("F a")).then_some((3, 4))
+        };
+        grader.rescore_states(&mut pool, &mut count);
+        grader.rescore_states(&mut pool, &mut count);
+        // h / (N + 1) for F a; no count reads as 0; a holder keeps its 1.
+        assert_eq!(statuses(&pool), [0.6, 1.0, 0.0]);
+        assert_eq!(asked, ["F a", "G b"]);
     }
 }

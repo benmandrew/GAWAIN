@@ -112,6 +112,16 @@ impl<B: Backend> Oracle<B> {
         self.lassos.lassos()
     }
 
+    /// Stores `lasso`, which must be a run of the model, for tier 1.
+    pub fn store(&mut self, lasso: Lasso) {
+        self.lassos.insert(lasso);
+    }
+
+    /// The back end, for queries other than a verdict.
+    pub fn backend_mut(&mut self) -> &mut B {
+        &mut self.backend
+    }
+
     /// Decides whether the model satisfies `formula`, cheapest tier first.
     pub fn check(&mut self, formula: &Formula) -> Verdict {
         self.counters.queries += 1;

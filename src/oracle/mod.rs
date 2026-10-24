@@ -117,6 +117,12 @@ pub trait Backend {
     fn semantics(&self) -> Semantics {
         Semantics::Infinite
     }
+
+    /// The number of states of the model from which `formula` holds, and
+    /// the number of states, where the back end can count them.
+    fn holding_states(&mut self, _formula: &Formula) -> Option<(usize, usize)> {
+        None
+    }
 }
 
 #[cfg(test)]

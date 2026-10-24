@@ -41,7 +41,7 @@ use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::spin::Spin;
 use gawain::oracle::tapaal::Tapaal;
-use gawain::oracle::{Backend, Oracle, Words};
+use gawain::oracle::{Backend, Lasso, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, search, Params, Rng, Status};
 
@@ -66,6 +66,7 @@ struct Args {
     status: Option<Status>,
     timeout: u64,
     memory_mb: u64,
+    random_runs: usize,
 }
 
 fn parse_args() -> Result<Args, String> {
@@ -102,11 +103,13 @@ fn parse_args() -> Result<Args, String> {
                 args.status = Some(match value.as_str() {
                     "graded" => Status::Graded,
                     "binary" => Status::Binary,
-                    _ => return Err(format!("--status {value}: graded or binary")),
+                    "states" => Status::States,
+                    _ => return Err(format!("--status {value}: graded, binary or states")),
                 })
             }
             "--timeout" => args.timeout = number()?,
             "--memory-mb" => args.memory_mb = number()?,
+            "--random-runs" => args.random_runs = number()? as usize,
             _ => return Err(format!("unknown flag {flag}")),
         }
     }
@@ -140,7 +143,7 @@ fn run() -> Result<(), String> {
             let phi = need_phi()?;
             let groups = exclusive_groups(&read(&args.model)?);
             let backend = Nuxmv::new(&args.model, &args.atoms, limits);
-            search_on(&args, backend, phi, &args.atoms, groups, start)
+            search_on(&args, backend, phi, &args.atoms, groups, Vec::new(), start)
         }
         "explicit" => {
             let phi = need_phi()?;
@@ -149,12 +152,14 @@ fn run() -> Result<(), String> {
             let atoms: Vec<String> = kripke.atoms().iter().map(|a| a.to_string()).collect();
             let groups = vec![kripke.atoms().to_vec()];
             let backend = Explicit::new(kripke, limits);
-            search_on(&args, backend, phi, &atoms, groups, start)
+            let mut rng = Rng::new(args.seed ^ 0x5eed);
+            let runs = backend.random_lassos(args.random_runs, 10_000, &mut rng);
+            search_on(&args, backend, phi, &atoms, groups, runs, start)
         }
         "spin" => {
             let phi = need_phi()?;
             let backend = Spin::stepwise(&args.model, &args.atoms, limits)?;
-            search_on(&args, backend, phi, &args.atoms, Vec::new(), start)
+            search_on(&args, backend, phi, &args.atoms, Vec::new(), Vec::new(), start)
         }
         "tapaal" => {
             let dir = PathBuf::from(&args.model);
@@ -169,7 +174,7 @@ fn run() -> Result<(), String> {
                 .ok_or(format!("{id}: not in {exam}.xml"))?;
             let atoms: Vec<String> = property.atoms.iter().map(|(a, _)| a.to_string()).collect();
             let backend = Tapaal::new(&pnml, net, property.atoms, limits);
-            search_on(&args, backend, property.formula, &atoms, Vec::new(), start)
+            search_on(&args, backend, property.formula, &atoms, Vec::new(), Vec::new(), start)
         }
         other => Err(format!("unknown back end {other}")),
     }
@@ -182,6 +187,7 @@ fn search_on<B: Backend>(
     phi: Formula,
     atoms: &[String],
     groups: Vec<Vec<Arc<str>>>,
+    runs: Vec<Lasso>,
     start: Instant,
 ) -> Result<(), String> {
     let used = phi.atoms();
@@ -196,14 +202,20 @@ fn search_on<B: Backend>(
     let invariant = invariant(&groups);
     let words = Words::sample(atoms.iter().map(String::as_str), args.seed);
     let mut oracle = Oracle::new(backend, words, SPOT_LIMITS);
+    let random_runs = runs.len();
+    for run in runs {
+        oracle.store(run);
+    }
     let mut out = String::from("{");
     field(&mut out, "phi", &json(&phi.to_string()));
     field(&mut out, "seed", &args.seed.to_string());
     let status = match args.status {
         Some(Status::Binary) => "binary",
+        Some(Status::States) => "states",
         _ => "graded",
     };
     field(&mut out, "status", &json(status));
+    field(&mut out, "random_runs", &random_runs.to_string());
     let class = match classify(&phi, &mut oracle) {
         Instance::Satisfied => "satisfied".to_string(),
         Instance::Degenerate => "degenerate".to_string(),

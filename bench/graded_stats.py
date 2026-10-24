@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""Summarise the binary-against-graded ablation of bench/graded_run.py.
+"""Summarise the status ablation of bench/graded_run.py.
 
 Reads DIR/instances.tsv and DIR/runs/*.json (one search_bench line each) and
-writes three CSVs into OUT:
+writes two CSVs into OUT:
 
 - graded-runs.csv: one row per run (instance, family, arm, seed, found, the
   number of repairs, the best semantic similarity, wall time, back-end
   calls and the grading counters).
-- graded-instances.csv: one row per instance and arm, with the found-repair
-  rate over seeds and the medians of the other measures.
-- graded-strength.csv: one row per instance and arm against binary, with
-  the sizes of the two pooled maximal sets and the net subsumption share.
+- graded-instances.csv: one row per instance and arm against the baseline,
+  over the seeds both have run: the found-repair rate and the medians of
+  the other measures for both, the sizes of the two pooled maximal sets and
+  the net subsumption share.
 
-It then prints, for each arm against binary, over all instances and per
-family: the median of each measure (bootstrap 95% CI), the median paired
-difference (bootstrap 95% CI) and the Wilcoxon signed-rank p-value.
+It then prints, for each arm against the baseline, over all instances and
+per family: the median of each measure for both arms (bootstrap 95% CI), the
+median paired difference (bootstrap 95% CI), the Wilcoxon signed-rank
+p-value, and the number of instances where the arm is higher, lower and
+equal.
 
 Strength follows PEREDUR. Each arm's repairs of an instance are pooled over
 its seeds and reduced to a maximal set: the strongest repairs, those that no
@@ -26,7 +28,7 @@ repairs are the stronger. Implication is plain LTL implication, decided by
 where both arms found a repair on some seed; the found-repair rate covers
 the rest.
 
-usage: graded_stats.py DIR OUT [--baseline binary]
+usage: graded_stats.py DIR OUT [--baseline binary] [--runs runs]
 """
 import csv
 import json
@@ -40,6 +42,9 @@ from pathlib import Path
 
 BOOT = 10000
 SEED = 20261024
+MEASURES = [('found rate', 'found_rate'), ('best semantic', 'best_semantic'),
+            ('repairs', 'repairs'), ('holding', 'holding'), ('wall (s)', 'wall'),
+            ('back-end calls', 'backend_calls')]
 
 
 def implications(pairs):
@@ -77,21 +82,29 @@ def net_share(a, b, imp):
     return ab - ba
 
 
-def strength(pools, arms, baseline):
-    """Per (instance, arm): the maximal set and its net share against baseline."""
-    rows = []
-    for name, by_arm in sorted(pools.items()):
-        formulas = sorted({f for arm in arms for f in by_arm.get(arm, ())})
-        pairs = [(x, y) for x in formulas for y in formulas if x != y]
-        imp = dict(zip(pairs, implications(pairs)))
-        sets = {arm: maximal(sorted(set(by_arm.get(arm, ()))), imp) for arm in arms}
-        for arm in arms:
-            if arm == baseline:
-                continue
-            rows.append({'instance': name, 'arm': arm, 'maximal': len(sets[arm]),
-                         'baseline_maximal': len(sets[baseline]),
-                         'net_share': net_share(sets[arm], sets[baseline], imp)})
-    return rows
+def strength(a, b):
+    """The sizes of the maximal sets of repair lists a and b, and a's net share."""
+    formulas = sorted(set(a) | set(b))
+    pairs = [(x, y) for x in formulas for y in formulas if x != y]
+    imp = dict(zip(pairs, implications(pairs)))
+    ma, mb = maximal(sorted(set(a)), imp), maximal(sorted(set(b)), imp)
+    return len(ma), len(mb), net_share(ma, mb, imp)
+
+
+def summarise(rs):
+    """The measures of one instance and arm over the runs rs."""
+    sem = [r['best_semantic'] for r in rs if r['best_semantic'] is not None]
+    return {'found_rate': sum(r['found'] for r in rs) / len(rs),
+            'best_semantic': statistics.median(sem) if sem else None,
+            'repairs': statistics.median(r['repairs'] for r in rs),
+            'holding': statistics.median(r['holding'] for r in rs),
+            'wall': statistics.median(r['wall'] for r in rs),
+            'backend_calls': statistics.median(r['backend_calls'] for r in rs),
+            'backend_unknowns': statistics.median(r['backend_unknowns'] for r in rs),
+            'refuting': statistics.median(r['refuting'] for r in rs),
+            'grade_share': statistics.median(r['grade_time'] / r['search_wall']
+                                             for r in rs if r['search_wall'] > 0)
+            if any(r['search_wall'] > 0 for r in rs) else None}
 
 
 def bootstrap_median(xs, rng):
@@ -144,49 +157,38 @@ def fmt(x, digits=3):
     return f'{x:.{digits}f}'
 
 
-def report(title, instances, arms, baseline, shares, rng):
-    """Print one block: per measure, the arm medians and the paired test."""
-    print(f'\n## {title} ({len(instances)} instances)')
-    measures = [('found rate', 'found_rate'), ('best semantic', 'best_semantic'),
-                ('wall (s)', 'wall'), ('back-end calls', 'backend_calls')]
-    for arm in arms:
-        if arm == baseline:
+def report(title, arm, baseline, pairs, rng):
+    """One block: per measure, both medians and the paired difference."""
+    print(f'\n## {arm} against {baseline}: {title} ({len(pairs)} instances)')
+    print(f'{"measure":16} {baseline:>26} {arm:>26} {"difference":>26} {"p":>7} {"+/-/0":>9}')
+    for label, key in MEASURES + [('net subsumption', 'net_share')]:
+        if key == 'net_share':
+            got = [(0.0, p['net_share']) for p in pairs if p['net_share'] is not None]
+        else:
+            got = [(p['b'][key], p['a'][key]) for p in pairs
+                   if p['b'][key] is not None and p['a'][key] is not None]
+        if not got:
             continue
-        print(f'\n{arm} against {baseline}')
-        print(f'{"measure":16} {baseline:>24} {arm:>24} {"difference":>24} {"p":>7} {"+/-/0":>9}')
-        for label, key in measures:
-            pairs = [(rows[baseline][key], rows[arm][key]) for rows in instances.values()
-                     if rows[baseline][key] is not None and rows[arm][key] is not None]
-            if not pairs:
-                continue
-            b = [p[0] for p in pairs]
-            a = [p[1] for p in pairs]
-            d = [y - x for x, y in pairs]
-            cells = []
-            for xs in (b, a, d):
-                lo, hi = bootstrap_median(xs, rng)
-                cells.append(f'{fmt(statistics.median(xs))} [{fmt(lo)}, {fmt(hi)}]')
-            signs = f'{sum(x > 0 for x in d)}/{sum(x < 0 for x in d)}/{sum(x == 0 for x in d)}'
-            print(f'{label:16} {cells[0]:>24} {cells[1]:>24} {cells[2]:>24} '
-                  f'{wilcoxon(d):7.4f} {signs:>9}')
-        s = [r['net_share'] for r in shares if r['arm'] == arm and r['instance'] in instances
-             and r['net_share'] is not None]
-        if s:
-            lo, hi = bootstrap_median(s, rng)
-            signs = f'{sum(x > 0 for x in s)}/{sum(x < 0 for x in s)}/{sum(x == 0 for x in s)}'
-            print(f'{"net subsumption":16} {"":>24} {"":>24} '
-                  f'{fmt(statistics.median(s)) + f" [{fmt(lo)}, {fmt(hi)}]":>24} '
-                  f'{wilcoxon(s):7.4f} {signs:>9}  mean {fmt(statistics.mean(s))}')
+        d = [y - x for x, y in got]
+        cells = []
+        for xs in ([g[0] for g in got], [g[1] for g in got], d):
+            lo, hi = bootstrap_median(xs, rng)
+            cells.append(f'{fmt(statistics.median(xs))} [{fmt(lo)}, {fmt(hi)}]')
+        if key == 'net_share':
+            cells[0] = cells[1] = ''
+        signs = f'{sum(x > 0 for x in d)}/{sum(x < 0 for x in d)}/{sum(x == 0 for x in d)}'
+        print(f'{label:16} {cells[0]:>26} {cells[1]:>26} {cells[2]:>26} '
+              f'{wilcoxon(d):7.4f} {signs:>9}  mean {fmt(statistics.mean(d))}')
 
 
 def main(argv):
     d, out = Path(argv[0]), Path(argv[1])
     baseline = argv[argv.index('--baseline') + 1] if '--baseline' in argv else 'binary'
+    runs_dir = d / (argv[argv.index('--runs') + 1] if '--runs' in argv else 'runs')
     family = {r['name']: r['family']
               for r in csv.DictReader(open(d / 'instances.tsv'), delimiter='\t')}
     runs = []
-    pools = defaultdict(lambda: defaultdict(list))
-    for path in sorted((d / 'runs').glob('*.json')):
+    for path in sorted(runs_dir.glob('*.json')):
         r = json.loads(path.read_text())
         name, arm, seed = path.stem.rsplit('-', 2)
         repairs = r['repairs']
@@ -197,58 +199,57 @@ def main(argv):
                      'backend_calls': r['backend_calls'],
                      'backend_unknowns': r['backend_unknowns'], 'holding': r['holding'],
                      'lassos': r['lassos'], 'refuting': r['refuting'],
-                     'grade_time': r['grade_time'], 'gate_errors': len(r['gate_errors'])})
-        pools[name][arm].extend(x['formula'] for x in repairs)
-    errors = sorted(p.stem for p in (d / 'runs').glob('*.err'))
-    arms = sorted({r['arm'] for r in runs}, key=lambda a: (a != baseline, a))
-
-    by = defaultdict(list)
+                     'grade_time': r['grade_time'], 'gate_errors': len(r['gate_errors']),
+                     'formulas': [x['formula'] for x in repairs]})
+    errors = sorted(p.stem for p in runs_dir.glob('*.err') if not p.with_suffix('.json').exists())
+    arms = sorted({r['arm'] for r in runs} - {baseline})
+    by = defaultdict(dict)
     for r in runs:
-        by[(r['instance'], r['arm'])].append(r)
-    instances = defaultdict(dict)
-    rows = []
-    for (name, arm), rs in sorted(by.items()):
-        sem = [r['best_semantic'] for r in rs if r['best_semantic'] is not None]
-        row = {'instance': name, 'family': family[name], 'arm': arm, 'runs': len(rs),
-               'found_rate': sum(r['found'] for r in rs) / len(rs),
-               'best_semantic': statistics.median(sem) if sem else None,
-               'repairs': statistics.median(r['repairs'] for r in rs),
-               'wall': statistics.median(r['wall'] for r in rs),
-               'backend_calls': statistics.median(r['backend_calls'] for r in rs),
-               'backend_unknowns': statistics.median(r['backend_unknowns'] for r in rs),
-               'refuting': statistics.median(r['refuting'] for r in rs),
-               'grade_share': statistics.median(r['grade_time'] / r['search_wall']
-                                                for r in rs if r['search_wall'] > 0)}
-        rows.append(row)
-        instances[name][arm] = row
-    # Keep only instances with every arm, so every comparison is paired.
-    complete = {n: v for n, v in instances.items() if all(a in v for a in arms)}
-    shares = strength({n: pools[n] for n in complete}, arms, baseline)
+        by[(r['instance'], r['arm'])][r['seed']] = r
+
+    # Each arm meets the baseline on the seeds both have run, so a partial
+    # sweep stays paired.
+    rows, compared = [], defaultdict(list)
+    for arm in arms:
+        for name in sorted({n for n, a in by if a == arm}):
+            seeds = sorted(set(by[(name, arm)]) & set(by.get((name, baseline), {})))
+            if not seeds:
+                continue
+            a = summarise([by[(name, arm)][s] for s in seeds])
+            b = summarise([by[(name, baseline)][s] for s in seeds])
+            ma, mb, share = strength(
+                [f for s in seeds for f in by[(name, arm)][s]['formulas']],
+                [f for s in seeds for f in by[(name, baseline)][s]['formulas']])
+            rows.append({'instance': name, 'family': family[name], 'arm': arm,
+                         'seeds': len(seeds), 'maximal': ma, 'baseline_maximal': mb,
+                         'net_share': share, **a,
+                         **{f'baseline_{k}': v for k, v in b.items()}})
+            compared[arm].append({'name': name, 'a': a, 'b': b, 'net_share': share})
 
     out.mkdir(parents=True, exist_ok=True)
-    for fname, data in (('graded-runs.csv', runs), ('graded-instances.csv', rows),
-                        ('graded-strength.csv', shares)):
+    for fname, data in (('graded-runs.csv', [{k: v for k, v in r.items() if k != 'formulas'}
+                                             for r in runs]),
+                        ('graded-instances.csv', rows)):
         with open(out / fname, 'w', newline='') as f:
             w = csv.DictWriter(f, fieldnames=list(data[0]))
             w.writeheader()
             w.writerows(data)
 
-    print(f'{len(runs)} runs, {len(errors)} without a result, '
-          f'{len(complete)} of {len(instances)} instances with every arm')
+    print(f'{len(runs)} runs, {len(errors)} without a result')
     for e in errors:
         print(f'  no result: {e}')
     rng = random.Random(SEED)
-    report('all', complete, arms, baseline, shares, rng)
-    for fam in sorted(set(family[n] for n in complete)):
-        report(fam, {n: v for n, v in complete.items() if family[n] == fam}, arms, baseline,
-               shares, rng)
-    graded = [r for r in runs if r['arm'] != baseline]
-    if graded:
-        share = [r['grade_time'] / r['search_wall'] for r in graded if r['search_wall'] > 0]
-        print(f'\nrescoring time / search wall over {len(share)} non-baseline runs: '
-              f'median {statistics.median(share):.5f}, max {max(share):.5f}')
-        print(f'refuting lassos per run: median {statistics.median(r["refuting"] for r in graded)}, '
-              f'max {max(r["refuting"] for r in graded)}')
+    for arm in arms:
+        pairs = compared[arm]
+        report('all', arm, baseline, pairs, rng)
+        for fam in sorted({family[p['name']] for p in pairs}):
+            report(fam, arm, baseline, [p for p in pairs if family[p['name']] == fam], rng)
+        mine = [r for r in runs if r['arm'] == arm and r['search_wall'] > 0]
+        share = [r['grade_time'] / r['search_wall'] for r in mine]
+        print(f'\n{arm}: grading time / search wall over {len(share)} runs: '
+              f'median {statistics.median(share):.5f}, max {max(share):.5f}; '
+              f'refuting lassos per run: median {statistics.median(r["refuting"] for r in mine)}, '
+              f'max {max(r["refuting"] for r in mine)}')
 
 
 if __name__ == '__main__':
