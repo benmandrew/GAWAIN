@@ -1,0 +1,27 @@
+# year=2017 problem=4 engine=ic3 timeout=10800 sessions=3 build_s=0.9 1.0 1.0
+prop	formula	official	verdict	seconds
+-1	bounds	holds	holds	114.0
+5	phi	fails	fails	521.9
+5	negphi		holds	56.0
+5	fix		fails	1337.9
+5	negfix		fails	361.5
+7	phi	fails	fails	991.4
+7	negphi		holds	25.4
+7	fix		unknown (timeout)	nan
+7	negfix		fails	1164.3
+21	phi	fails	fails	349.2
+21	negphi		unknown (timeout)	nan
+21	fix		unknown (timeout)	nan
+21	negfix		fails	356.7
+60	phi	fails	unknown (timeout)	nan
+60	negphi		unknown (timeout)	nan
+60	fix		holds	6317.8
+60	negfix		unknown (timeout)	nan
+77	phi	fails	unknown (timeout)	nan
+77	negphi		holds	41.4
+77	fix		unknown (timeout)	nan
+77	negfix		unknown (timeout)	nan
+89	phi	fails	fails	716.4
+89	negphi		unknown (timeout)	nan
+89	fix		unknown (timeout)	nan
+89	negfix		fails	681.2

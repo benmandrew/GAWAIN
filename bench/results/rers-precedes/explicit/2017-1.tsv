@@ -1,0 +1,102 @@
+# year=2017 problem=1 complete=True program_states=493 automaton_states=2121 lassos=52 real_lassos=52 explore_s=0.3 total_s=11.0 invalid=end
+prop	official	phi	phi_sat	phi_sat_spot	fix	fix_sat	fix_official	fix_sat_official
+0	holds	holds						
+1	holds	holds						
+2	fails	fails						
+3	fails	fails						
+4	fails	fails						
+5	fails	fails	no	no	fails	no	unknown	unknown
+6	holds	holds						
+7	holds	holds						
+8	holds	holds						
+9	holds	holds						
+10	holds	holds						
+11	holds	holds						
+12	fails	fails						
+13	holds	holds						
+14	holds	holds						
+15	fails	fails						
+16	holds	holds						
+17	fails	fails						
+18	fails	fails						
+19	fails	fails						
+20	fails	fails						
+21	holds	holds						
+22	holds	holds						
+23	fails	fails						
+24	holds	holds						
+25	fails	fails	no	no	holds	yes	unknown	unknown
+26	fails	fails	no	no	holds	yes	unknown	unknown
+27	fails	fails						
+28	holds	holds						
+29	fails	fails	no	no	fails	yes	unknown	unknown
+30	holds	holds						
+31	fails	fails						
+32	fails	fails						
+33	fails	fails						
+34	fails	fails						
+35	holds	holds						
+36	holds	holds						
+37	fails	fails						
+38	fails	fails	no	no	fails	yes	unknown	unknown
+39	fails	fails						
+40	holds	holds						
+41	holds	holds						
+42	fails	fails						
+43	holds	holds						
+44	fails	fails						
+45	holds	holds						
+46	holds	holds						
+47	fails	fails						
+48	fails	fails						
+49	fails	fails						
+50	fails	fails	no	no	fails	yes	unknown	unknown
+51	holds	holds						
+52	holds	holds						
+53	fails	fails	no	no	fails	yes	unknown	unknown
+54	fails	fails						
+55	holds	holds						
+56	fails	fails						
+57	fails	fails						
+58	fails	fails						
+59	fails	fails						
+60	holds	holds						
+61	fails	fails						
+62	fails	fails						
+63	fails	fails						
+64	fails	fails						
+65	fails	fails						
+66	fails	fails						
+67	holds	holds						
+68	holds	holds						
+69	holds	holds						
+70	holds	holds						
+71	holds	holds						
+72	holds	holds						
+73	fails	fails						
+74	holds	holds						
+75	fails	fails						
+76	holds	holds						
+77	holds	holds						
+78	holds	holds						
+79	holds	holds						
+80	holds	holds						
+81	fails	fails						
+82	holds	holds						
+83	holds	holds						
+84	fails	fails						
+85	holds	holds						
+86	holds	holds						
+87	fails	fails						
+88	fails	fails						
+89	fails	fails						
+90	fails	fails						
+91	fails	fails						
+92	holds	holds						
+93	fails	fails						
+94	fails	fails						
+95	holds	holds						
+96	holds	holds						
+97	holds	holds						
+98	fails	fails						
+99	holds	holds						
