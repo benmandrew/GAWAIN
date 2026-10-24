@@ -1,0 +1,5 @@
+run,build,count_time,count_wait,count_failures,queries,backend_calls,wall,repairs
+AutoFlight-PT-02a-LTLFireability-02 seed 2,before,372.8,345.46,3,1179,127,373.892,4
+AutoFlight-PT-02a-LTLFireability-02 seed 2,after,192.139,159.317,3,1179,127,193.585,4
+CircadianClock-PT-000010-LTLFireability-02 seed 1,before,333.883,328.026,2,1064,39,410.119,0
+CircadianClock-PT-000010-LTLFireability-02 seed 1,after,27.954,20.305,2,1064,39,126.188,0

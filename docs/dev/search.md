@@ -221,7 +221,57 @@ After the change no run ran out of memory, and the search's peak resident set fe
 
 MedleyA-PT-09 now keeps its search under 1,119 MB, and its scope under 1,475 MB, but at this budget it still gives no result within 3600 s, on any seed. A separate run of seed 1 that logged every `verifypn` call spent 3,508 s in 269 calls, 3,362 s of it in 28 calls that reached the 120 s limit. The instance has 2.3 × 10⁸ reachable markings, and `bench/graded_prep.py` chose it because φ and ¬φ each take under 1 s; its mutants do not. That cost is the back end's, and the 120 s limit already reports it as unknown.
 
-The bound limits memory, not time. A count that stays under 1 GiB can still be slow, and on AutoFlight seed 2 the search waited 507 s of its 538 s on the counter. The slowest case is CircadianClock's 2,144-state automaton: each relation's accepting states come from Warshall's closure, which costs n³/64 word operations per relation, so the count took 361 s to reach loop length 10. A deterministic bound on work, or a closure by strongly connected components in time linear in the relation's edges, would remove that cost; neither was built.
+The bound limits memory, not time. A count that stays under 1 GiB can still be slow, and on AutoFlight seed 2 the search waited 507 s of its 538 s on the counter. The slowest case was CircadianClock's 2,144-state automaton: each relation's accepting states came from Warshall's closure, which costs n³/64 word operations per relation, so the count took 361 s to reach loop length 10. "Lasso count time" below removes that cost and adds a bound on work.
+
+### Lasso count time
+
+The lasso count spent most of its time in two places, and "Bounded monoid" left both in place. Each relation's accepting states came from Warshall's closure, at n³/64 word operations per relation, and each step of a relation was one table lookup and one intern per state. Four changes cut the count's time in process by 3.0× over the replayed corpus below, and every count is the same f64 as before.
+
+**Replays.** A search's counts depend on the candidates it meets, so timing whole searches mixes the count with the oracle and with the load. `bench/notes/count-dump.patch` makes `Counter::similarities` write each call's candidates to a file (with `GAWAIN_COUNT_DUMP` set), and adds a timer per phase and a line per automaton (with `GAWAIN_COUNT_PROFILE` set). The `count_bench` binary replays one such dump on a fresh counter, call by call, and prints every log2 count exactly, so two builds can be compared with `cmp`. `bench/count_replay.sh` runs several builds over many dumps, rotating the order of the builds, and `bench/count_replay_stats.py` compares the counts and totals the times. The corpus is the search of seed 1 of every instance of `bench/data/graded/instances.tsv` in the binary arm, at the ablation's budget, plus AutoFlight-PT-02a seed 2, the run that waited 507 s: 93 dumps, from 20 MCC, 52 RERS, 20 BEEM and 1 abp4 searches, with a median of 1,789 formulas each. MedleyA-PT-09 is missing, since its search had not reached its 3600 s cap when the replays ran.
+
+**Where the time went.** The profile of the first 85 dumps, on the build before these changes, put AutoFlight seed 2 at 470.6 s in process, of which 269.1 s was in the closures and 140.3 s in the steps of relations. CircadianClock seed 1 spent 413.7 s in process, and 332 s of it in two counts over its 2,144-state automaton, which the monoid bound cut after the closures of every relation met so far. The prefix subsets, the letters and the dot products took under 3 s in every dump.
+
+**Closure by components.** A relation's accepting states are those that reach a *strongly connected component* (SCC) with a cycle and an edge inside it on every acceptance plane. Tarjan's algorithm finds the components in time linear in the states and edges, and it closes each component after every component it reaches, so one pass also marks the states that reach an accepting one. `Components` keeps its buffers between relations and copies plane 0 of each row into one contiguous array before the search. A unit test compares it with the old closure on 600 random graphs of 1 to 150 states and 1 to 3 planes.
+
+**Blocks of rows.** Rows p to p + 7 of v·a depend only on the same rows of v and on a, so 8 consecutive row ids are interned as a *block*, with a table of block steps, and a relation is its list of block ids. A step of a relation is then one lookup per 8 states. On the AutoFlight profile the steps took 4.11 s at 4 rows a block, 4.48 s at 8 and 5.03 s at 16, and on CircadianClock 1.52 s at 8, 1.60 s at 16 and 2.02 s at 32 (local machine, one run each); 8 balances the two.
+
+**Flat interning.** Blocks and relations are stored end to end in one `Vec<u32>` each and interned by open addressing, so a list costs no allocation and no `Rc` of its own. The successor table is one flat `Vec<u32>`.
+
+**Two passes.** The loop weights of each length need only the monoid, so a first pass steps every length to build it and check the bound, and a second pass computes the closures. A count that the monoid bound cuts now fails before any closure. CircadianClock's failed 2,144-state count fell from 11.6 s, with the closure by components, to 0.29 s.
+
+Each change was measured on the local machine (20 cores, load 3 to 4, release build, one run each), on a dump of three calls from AutoFlight seed 2 whose automata have 54 to 71 states and up to 843,720 relations. The closure by components brought the count to 14.6 s, blocks to 13.3 s, the contiguous plane 0 to 11.7 s and flat interning to 10.2 s. Callgrind on the same dump counted 176 × 10⁹ instructions before blocks and 142 × 10⁹ after. The build before all four took 25.3 s and peaked at 431 MB resident (`/usr/bin/time`), and the final build took 11.3 s and peaked at 199 MB.
+
+The full corpus ran on av2 (release builds, the before and after builds of each dump run at the same time, 6 jobs, other users' jobs keeping the load average between 12 and 21 on 32 cores, `bench/count_replay.sh r3 6 "before final"`). Count time includes `ltl2tgba`, and in process excludes it. Every row is in `bench/results/count-time-corpus.csv`, whose `work` arm is the final build with the work bound below, run alone at 12 jobs.
+
+| Dump | Before: count time | Before: in process | After: count time | After: in process |
+|---|---|---|---|---|
+| AutoFlight-PT-02a seed 2 | 490.1 s | 470.6 s | 197.1 s | 177.0 s |
+| CircadianClock-PT-000010 seed 1 | 428.3 s | 413.7 s | 29.6 s | 15.5 s |
+| Railroad-PT-010 seed 1 | 328.9 s | 258.7 s | 158.2 s | 90.4 s |
+| AutoFlight-PT-02a seed 1 | 264.9 s | 252.8 s | 124.9 s | 112.0 s |
+| RERS 2016 106 p16 seed 1 | 111.0 s | 101.7 s | 53.9 s | 44.3 s |
+| All 85 dumps | 2,370.8 s | 2,067.6 s | 988.9 s | 684.8 s |
+
+Over the 20 dumps whose count took more than 5 s in process, the speed-up ranged from 1.4× to 26.7×, with a median of 2.3×. The 60 dumps under 5 s took 108.9 s before and 106.0 s after, nearly all of it `ltl2tgba`. The counts of 84 dumps were identical. In Railroad seed 1, one formula's translation timed out at the replay's 2 s limit in one arm and not in the other; at a 30 s limit the two builds printed identical counts for all 1,925 formulas. The last 8 dumps, from 7 slow BEEM searches and SieveSingleMsgMbox, ran later against the final build with the work bound, at a load of 8 to 15: their counts were identical, at 6.2 s of count time in each build, nearly all of it `ltl2tgba`.
+
+**Full searches.** The two slowest searches ran again on av2 at the ablation's budget (`search_bench`, 30 × 40, 120 s and 4 GB per back-end call), the build before these changes and the final build at the same time, four runs in all in 8 GB scopes, at a load of 8 to 15 on 32 cores, one run each (`bench/results/count-time-searches.csv`). Both builds gave the same repairs, the same 3 and 2 failed counts, and the same queries and back-end calls.
+
+| Run | Build | Count time | Wait | Wall |
+|---|---|---|---|---|
+| AutoFlight-PT-02a seed 2 | before | 372.8 s | 345.5 s | 373.9 s |
+| AutoFlight-PT-02a seed 2 | after | 192.1 s | 159.3 s | 193.6 s |
+| CircadianClock-PT-000010 seed 1 | before | 333.9 s | 328.0 s | 410.1 s |
+| CircadianClock-PT-000010 seed 1 | after | 28.0 s | 20.3 s | 126.2 s |
+
+AutoFlight's wall time halved, and the search still waits on the counter for 82% of it. CircadianClock now waits 20.3 s, and the rest of its 126.2 s is the oracle.
+
+**Work bound.** A count under the monoid bound can still be slow, so each count also counts its *steps*: per prefix subset and letter, per relation interned and per block id stepped, per row of a block stepped and per word combined into a row, and per state, word and edge of each closure. A count past `COUNT_WORK`, 2³² steps, fails as one past `MONOID_BYTES` does, and the check runs in both passes. Steps make the bound deterministic, so a seeded search makes the same choices under any load. On av2 a step took 4 to 19 ns, 7 ns in the median, over the 120 counts of the corpus with more than 10⁸ steps, so the bound is about 30 s of count. The largest count of the corpus took 1.28 × 10⁹ steps, 3.4× under the bound, and no count of the corpus reached it.
+
+`MONOID_BYTES` keeps its formula, 4 bytes per state for each relation as when a relation was its list of row ids, so the same counts stop at the same point. With blocks a relation holds 4 bytes per 8 states, so the estimate now overstates the monoid's memory.
+
+Three ideas were measured and left out. A cache keyed on the whole automaton would have saved 0.27 s of 55.7 s on a partial AutoFlight replay, as "Interned rows" found on abp4. Pruning the states that reach no accepting cycle saves nothing, since in every profiled count over 1 s every state was live, and `letters()` already drops edges into dead states. Blocks of 16 or 32 rows were slower than 8, as above.
+
+What remains is the steps of relations and the closures, in about equal parts, on monoids of up to 2,233,707 relations in the corpus. A smaller monoid needs a smaller automaton or fewer letters, which is a change to the count rather than to its implementation.
 
 ## The output gate
 

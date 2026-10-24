@@ -1,0 +1,117 @@
+--- a/src/count/mod.rs
++++ b/src/count/mod.rs
+@@ -188,6 +188,21 @@
+     /// [`Formula::canonical`] with no renaming, since the score is relative
+     /// to the fixed φ.
+     pub fn similarities(&mut self, candidates: &[Formula]) -> Vec<f64> {
++        if let Some(dir) = std::env::var_os("GAWAIN_COUNT_DUMP") {
++            use std::io::Write as _;
++            let path = std::path::Path::new(&dir).join(format!("count-{}.txt", std::process::id()));
++            let fresh = !path.exists();
++            let mut file = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
++            if fresh {
++                let args: Vec<String> = std::env::args().collect();
++                writeln!(file, "# {}", args.join(" ").replace('\n', " ")).unwrap();
++                writeln!(file, "{}", self.phi).unwrap();
++            }
++            for c in candidates {
++                writeln!(file, "{c}").unwrap();
++            }
++            writeln!(file, "---").unwrap();
++        }
+         let start = Instant::now();
+         let keys: Vec<Formula> = candidates.iter().map(Formula::canonical).collect();
+         // Each formula to count once, with its universe.
+@@ -329,7 +344,21 @@
+     /// rescaled to a maximum of 1 after each step, the scale kept as a
+     /// logarithm, so no product overflows.
+     fn log_count(&mut self, automaton: &Raw, universe: usize) -> Result<f64, String> {
+-        self.log_count_within(automaton, universe, Budget::FULL)
++        let t = Instant::now();
++        let r = self.log_count_within(automaton, universe, Budget::FULL);
++        if std::env::var_os("GAWAIN_COUNT_PROFILE").is_some() {
++            use std::hash::{DefaultHasher, Hash};
++            let mut h = DefaultHasher::new();
++            format!("{automaton:?}").hash(&mut h);
++            eprintln!(
++                "HASH {:016x} n={} ok={} t={:.4}",
++                h.finish(),
++                automaton.edges.len(),
++                r.is_ok(),
++                t.elapsed().as_secs_f64()
++            );
++        }
++        r
+     }
+ 
+     /// [`Counter::log_count`] within `budget`.
+@@ -346,7 +375,10 @@
+         if !live[start] {
+             return Ok(f64::NEG_INFINITY);
+         }
++        let t0 = Instant::now();
+         let letters = self.letters(automaton, &live, universe)?;
++        let t_letters = t0.elapsed().as_secs_f64();
++        let (mut t_succ, mut t_good, mut t_dot) = (0.0, 0.0, 0.0);
+         // Ordered maps throughout, so the sums run in the same order on
+         // every run.
+         let mut prefixes: Vec<(BTreeMap<Vec<u32>, f64>, f64)> = Vec::with_capacity(BOUND);
+@@ -376,6 +408,8 @@
+             prefixes.push((std::mem::replace(&mut weights, next), scale));
+             scale += top;
+         }
++        let t_prefix = t0.elapsed().as_secs_f64() - t_letters;
++        let nsub = prefixes.iter().map(|p| p.0.len()).max().unwrap_or(0);
+         let mut monoid = Monoid::new(n, automaton.all_marks, &letters, budget);
+         monoid.work = work;
+         // The loops of each length by relation id. The monoid is finite,
+@@ -385,22 +419,25 @@
+         // computed. It visits the relations in the same order as the second
+         // pass, so the same counts fail at the same point.
+         let identity = monoid.identity();
+-        let empty_word = |identity: usize| {
++        let first = |identity: usize| {
+             let mut loops = vec![0.0; identity + 1];
+             loops[identity] = 1.0;
+             loops
+         };
+-        let mut loops = empty_word(identity);
++        let mut loops = first(identity);
++        let ts = Instant::now();
+         for length in 1..=BOUND {
+             loops = monoid.step(&loops, &letters, length)?.0;
+         }
+-        let mut loops = empty_word(identity);
++        t_succ += ts.elapsed().as_secs_f64();
++        let mut loops = first(identity);
+         let mut scale = 0.0;
+         let mut terms = Vec::with_capacity(BOUND);
+         for length in 1..=BOUND {
+             let top;
+             (loops, top) = monoid.step(&loops, &letters, length)?;
+             scale += top;
++            let ts = Instant::now();
+             // The loops by the states that accept their ω-power.
+             let mut by_good = vec![0.0; monoid.goods.len()];
+             for (relation, &weight) in loops.iter().enumerate() {
+@@ -415,6 +452,8 @@
+                     by_good[good] += weight;
+                 }
+             }
++            t_good += ts.elapsed().as_secs_f64();
++            let ts = Instant::now();
+             let (subsets, prefix_scale) = &prefixes[BOUND - length];
+             let mut dot = 0.0;
+             for (subset, prefix) in subsets {
+@@ -428,6 +467,11 @@
+             if dot > 0.0 {
+                 terms.push(dot.log2() + prefix_scale + scale);
+             }
++            t_dot += ts.elapsed().as_secs_f64();
++        }
++        if std::env::var_os("GAWAIN_COUNT_PROFILE").is_some() {
++            let nlive = live.iter().filter(|&&l| l).count();
++            eprintln!("PROFILE n={n} live={nlive} work={} letters={} subsets={nsub} relations={} rows={} goods={} t_letters={t_letters:.4} t_prefix={t_prefix:.4} t_succ={t_succ:.4} t_good={t_good:.4} t_dot={t_dot:.4} total={:.4}", monoid.work, letters.len(), monoid.relations.len(), monoid.rows.len(), monoid.goods.len(), t0.elapsed().as_secs_f64());
+         }
+         let top = terms.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+         if top == f64::NEG_INFINITY {

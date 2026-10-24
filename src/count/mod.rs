@@ -70,6 +70,34 @@ pub const LABEL_TABLE_ATOMS: usize = 20;
 /// `docs/dev/search.md`.
 pub const MONOID_BYTES: usize = 1 << 30;
 
+/// The most work one lasso count may do, in steps: one per state of a
+/// prefix subset stepped by a letter; per relation, 32 to intern it and
+/// one per block id stepped by a letter; one per row of a block stepped;
+/// one per word combined into a stepped row; and per relation's closure,
+/// one per state, per word of its rows and per edge. A count that would
+/// pass it fails, as one past [`MONOID_BYTES`] does. The count is of steps
+/// and not of time, so a seeded search makes the same choices under any
+/// load. A step took 4 to 19 ns on av2, 7 ns in the median, so the bound
+/// is about 30 s, and 3.4 times the largest count of the replayed corpus;
+/// see "Lasso count time" in `docs/dev/search.md`.
+pub const COUNT_WORK: u64 = 1 << 32;
+
+/// What one lasso count may spend before it fails.
+#[derive(Clone, Copy, Debug)]
+struct Budget {
+    /// The estimated bytes of the transition monoid.
+    bytes: usize,
+    /// Steps, as in [`COUNT_WORK`].
+    work: u64,
+}
+
+impl Budget {
+    const FULL: Budget = Budget {
+        bytes: MONOID_BYTES,
+        work: COUNT_WORK,
+    };
+}
+
 /// What a [`Counter`] has spent.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Counts {
@@ -302,15 +330,15 @@ impl Counter {
     /// rescaled to a maximum of 1 after each step, the scale kept as a
     /// logarithm, so no product overflows.
     fn log_count(&mut self, automaton: &Raw, universe: usize) -> Result<f64, String> {
-        self.log_count_within(automaton, universe, MONOID_BYTES)
+        self.log_count_within(automaton, universe, Budget::FULL)
     }
 
-    /// [`Counter::log_count`] with the monoid limited to `budget` bytes.
+    /// [`Counter::log_count`] within `budget`.
     fn log_count_within(
         &mut self,
         automaton: &Raw,
         universe: usize,
-        budget: usize,
+        budget: Budget,
     ) -> Result<f64, String> {
         let n = automaton.edges.len();
         let graph = edge_graph(automaton);
@@ -325,9 +353,14 @@ impl Counter {
         let mut prefixes: Vec<(BTreeMap<Vec<u32>, f64>, f64)> = Vec::with_capacity(BOUND);
         let mut weights = BTreeMap::from([(vec![start as u32], 1.0)]);
         let mut scale = 0.0;
+        let mut work = 0;
         for _ in 0..BOUND {
             let mut next: BTreeMap<Vec<u32>, f64> = BTreeMap::new();
             for (subset, weight) in &weights {
+                work += (subset.len() * letters.len()) as u64;
+                if work > budget.work {
+                    return Err(over_work(budget));
+                }
                 for letter in &letters {
                     let mut post: Vec<u32> = subset
                         .iter()
@@ -344,46 +377,39 @@ impl Counter {
             prefixes.push((std::mem::replace(&mut weights, next), scale));
             scale += top;
         }
-        let mut monoid = Monoid::new(n, automaton.all_marks, &letters);
+        let mut monoid = Monoid::new(n, automaton.all_marks, &letters, budget);
+        monoid.work = work;
         // The loops of each length by relation id. The monoid is finite,
         // so the ids stop growing and each step is a sparse product over
-        // a fixed table, in id order.
+        // a fixed table, in id order. A first pass builds the monoid alone,
+        // so that a count past the budget fails before any closure is
+        // computed. It visits the relations in the same order as the second
+        // pass, so the same counts fail at the same point.
         let identity = monoid.identity();
-        let mut loops = vec![0.0; identity + 1];
-        loops[identity] = 1.0;
+        let empty_word = |identity: usize| {
+            let mut loops = vec![0.0; identity + 1];
+            loops[identity] = 1.0;
+            loops
+        };
+        let mut loops = empty_word(identity);
+        for length in 1..=BOUND {
+            loops = monoid.step(&loops, &letters, length)?.0;
+        }
+        let mut loops = empty_word(identity);
         let mut scale = 0.0;
         let mut terms = Vec::with_capacity(BOUND);
         for length in 1..=BOUND {
-            let mut next = vec![0.0; monoid.relations.len()];
-            for (relation, &weight) in loops.iter().enumerate() {
-                if weight == 0.0 {
-                    continue;
-                }
-                for (letter, &to) in letters.iter().zip(monoid.successors(relation)) {
-                    if to >= next.len() {
-                        next.resize(to + 1, 0.0);
-                    }
-                    next[to] += weight * letter.models;
-                }
-                if monoid.bytes > budget {
-                    return Err(format!(
-                        "the transition monoid passed {} MiB at {} relations, loop length {length}",
-                        budget >> 20,
-                        monoid.relations.len()
-                    ));
-                }
-            }
-            let top = next.iter().copied().fold(0.0, f64::max);
-            if top > 0.0 {
-                next.iter_mut().for_each(|w| *w /= top);
-                scale += top.log2();
-            }
-            loops = next;
+            let top;
+            (loops, top) = monoid.step(&loops, &letters, length)?;
+            scale += top;
             // The loops by the states that accept their ω-power.
             let mut by_good = vec![0.0; monoid.goods.len()];
             for (relation, &weight) in loops.iter().enumerate() {
                 if weight != 0.0 {
                     let good = monoid.good(relation);
+                    if monoid.work > budget.work {
+                        return Err(over_work(budget));
+                    }
                     if good >= by_good.len() {
                         by_good.resize(good + 1, 0.0);
                     }
@@ -668,21 +694,6 @@ fn has(set: &[u64], i: usize) -> bool {
     set[i / 64] >> (i % 64) & 1 == 1
 }
 
-/// The on bits of the bitset `set`, in order.
-fn bits(set: &[u64]) -> impl Iterator<Item = usize> + '_ {
-    set.iter().enumerate().flat_map(|(w, &word)| {
-        let mut rest = word;
-        std::iter::from_fn(move || {
-            if rest == 0 {
-                return None;
-            }
-            let b = rest.trailing_zeros() as usize;
-            rest &= rest - 1;
-            Some(w * 64 + b)
-        })
-    })
-}
-
 /// The relations of the loops v met so far, interned. A relation has one
 /// row per state, and a row is a stack of `planes` bitsets of `words`
 /// 64-bit words: plane 0 holds q in row p when some run on v leads from p
@@ -690,13 +701,18 @@ fn bits(set: &[u64]) -> impl Iterator<Item = usize> + '_ {
 /// letter is a relation of length 1.
 ///
 /// Row p of v·a depends only on row p of v and on a, so rows are
-/// interned on their own, a relation is its list of row ids, and the
-/// step of a row by a letter is computed once and kept in a table. A
-/// step of a relation is then one table lookup per state. Each
-/// relation's set of accepting states, a bitset, is interned too.
+/// interned on their own and the step of a row by a letter is computed
+/// once and kept in a table. The same holds for a block of [`BLOCK`]
+/// consecutive rows, so blocks of row ids are interned too, with a table
+/// of their steps, and a relation is its list of block ids. A step of a
+/// relation is then one table lookup per block. Each relation's set of
+/// accepting states, a bitset, is interned too.
 ///
-/// `bytes` estimates the memory held, so that a count can stop before a
-/// monoid that grows without bound exhausts the process.
+/// `bytes` estimates the memory the monoid held when a relation was its
+/// list of row ids, so that a count can stop before a monoid that grows
+/// without bound exhausts the process. Blocks take less, but the estimate
+/// is kept so that the same counts stop; see "Lasso count time" in
+/// `docs/dev/search.md`.
 struct Monoid {
     n: usize,
     words: usize,
@@ -707,13 +723,107 @@ struct Monoid {
     /// The id of row r stepped by letter a, at `r * letters + a`, or
     /// `u32::MAX` before it is computed.
     row_steps: Vec<u32>,
-    ids: HashMap<Rc<[u32]>, usize, BuildHasherDefault<WordHasher>>,
-    relations: Vec<Rc<[u32]>>,
-    steps: Vec<Vec<usize>>,
+    /// Blocks of row ids, the last block of a relation padded with
+    /// [`PAD`].
+    blocks: Lists,
+    /// The id of block b stepped by letter a, at `b * letters + a`, or
+    /// `u32::MAX` before it is computed.
+    block_steps: Vec<u32>,
+    /// Relations as lists of block ids.
+    relations: Lists,
+    /// The id of relation r followed by letter a, at `r * letters + a`, or
+    /// `u32::MAX` before it is computed.
+    steps: Vec<u32>,
     good_of: Vec<Option<usize>>,
     good_ids: HashMap<Vec<u64>, usize>,
     goods: Vec<Vec<u64>>,
+    components: Components,
     bytes: usize,
+    /// Steps so far, as in [`COUNT_WORK`].
+    work: u64,
+    budget: Budget,
+}
+
+/// The states in one block of a relation.
+const BLOCK: usize = 8;
+
+/// The row id that pads the last block of a relation past the last state.
+const PAD: u32 = u32::MAX;
+
+/// Lists of `width` ids, interned and stored end to end, so that a list
+/// costs no allocation of its own. The table is open addressing with
+/// linear probing, and each slot keeps the high half of its list's hash,
+/// which settles most probes without reading the list.
+struct Lists {
+    width: usize,
+    data: Vec<u32>,
+    /// Per slot, 0 when empty, else the high 32 bits of the hash above the
+    /// id plus one.
+    slots: Vec<u64>,
+}
+
+impl Lists {
+    fn new(width: usize) -> Self {
+        Lists {
+            width,
+            data: Vec::new(),
+            slots: vec![0; 16],
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.data.len() / self.width
+    }
+
+    fn get(&self, id: u32) -> &[u32] {
+        let at = id as usize * self.width;
+        &self.data[at..at + self.width]
+    }
+
+    fn hash(list: &[u32]) -> u64 {
+        let mut hasher = WordHasher::default();
+        for pair in list.chunks(2) {
+            hasher.write_u64(pair[0] as u64 | (*pair.get(1).unwrap_or(&0) as u64) << 32);
+        }
+        hasher.finish()
+    }
+
+    /// The slot of the hash `hash` for `list`: the one holding it, or the
+    /// empty one where it belongs.
+    fn find(&self, list: &[u32], hash: u64) -> usize {
+        let mask = self.slots.len() - 1;
+        let tag = hash >> 32;
+        let mut i = (hash >> 32) as usize & mask;
+        loop {
+            let slot = self.slots[i];
+            if slot == 0 || (slot >> 32 == tag && self.get((slot as u32) - 1) == list) {
+                return i;
+            }
+            i = (i + 1) & mask;
+        }
+    }
+
+    /// The id of `list`, and whether it is new.
+    fn intern(&mut self, list: &[u32]) -> (u32, bool) {
+        let hash = Self::hash(list);
+        let i = self.find(list, hash);
+        if self.slots[i] != 0 {
+            return ((self.slots[i] as u32) - 1, false);
+        }
+        let id = self.len() as u32;
+        self.data.extend_from_slice(list);
+        self.slots[i] = (hash >> 32) << 32 | (id as u64 + 1);
+        if 2 * self.len() > self.slots.len() {
+            let grown = vec![0; 2 * self.slots.len()];
+            let old = std::mem::replace(&mut self.slots, grown);
+            for slot in old.into_iter().filter(|&slot| slot != 0) {
+                let list = self.get((slot as u32) - 1);
+                let i = self.find(list, Self::hash(list));
+                self.slots[i] = slot;
+            }
+        }
+        (id, true)
+    }
 }
 
 /// The estimated bytes per interned row or relation besides its payload:
@@ -722,7 +832,7 @@ struct Monoid {
 const ENTRY_BYTES: usize = 160;
 
 impl Monoid {
-    fn new(n: usize, all_marks: Marks, letters: &[Letter]) -> Self {
+    fn new(n: usize, all_marks: Marks, letters: &[Letter], budget: Budget) -> Self {
         let words = n.div_ceil(64).max(1);
         let planes = 1 + all_marks.count_ones() as usize;
         let letters = letters
@@ -748,13 +858,17 @@ impl Monoid {
             row_ids: HashMap::default(),
             rows: Vec::new(),
             row_steps: Vec::new(),
-            ids: HashMap::default(),
-            relations: Vec::new(),
+            blocks: Lists::new(BLOCK),
+            block_steps: Vec::new(),
+            relations: Lists::new(n.div_ceil(BLOCK)),
             steps: Vec::new(),
             good_of: Vec::new(),
             good_ids: HashMap::new(),
             goods: Vec::new(),
+            components: Components::default(),
             bytes: 0,
+            work: 0,
+            budget,
         }
     }
 
@@ -772,48 +886,124 @@ impl Monoid {
         id
     }
 
-    fn intern(&mut self, relation: &[u32]) -> usize {
-        if let Some(&id) = self.ids.get(relation) {
-            return id;
+    fn intern_block(&mut self, block: &[u32]) -> u32 {
+        let (id, new) = self.blocks.intern(block);
+        if new {
+            self.block_steps
+                .resize(self.blocks.len() * self.letters.len(), u32::MAX);
         }
-        self.bytes += 4 * relation.len() + 8 * self.letters.len() + ENTRY_BYTES;
-        let relation: Rc<[u32]> = relation.into();
-        self.relations.push(relation.clone());
-        self.ids.insert(relation, self.relations.len() - 1);
-        self.relations.len() - 1
+        id
+    }
+
+    fn intern(&mut self, relation: &[u32]) -> usize {
+        let (id, new) = self.relations.intern(relation);
+        if new {
+            self.bytes += 4 * self.n + 8 * self.letters.len() + ENTRY_BYTES;
+            self.work += 32;
+            self.steps
+                .resize(self.relations.len() * self.letters.len(), u32::MAX);
+        }
+        id as usize
     }
 
     /// The relation of the empty word.
     fn identity(&mut self) -> usize {
-        let relation: Vec<u32> = (0..self.n)
+        let mut rows: Vec<u32> = (0..self.n)
             .map(|p| {
                 let mut row = vec![0; self.planes * self.words];
                 row[p / 64] |= 1 << (p % 64);
                 self.intern_row(&row)
             })
             .collect();
+        rows.resize(self.n.next_multiple_of(BLOCK), PAD);
+        let relation: Vec<u32> = rows
+            .chunks(BLOCK)
+            .map(|block| self.intern_block(block))
+            .collect();
         self.intern(&relation)
     }
 
+    /// The loops of length `length` by relation id, from those of length
+    /// `length - 1`, rescaled to a maximum of 1, and the log2 of the scale.
+    /// The relations are stepped in id order, and the step fails once the
+    /// monoid passes its budget.
+    fn step(
+        &mut self,
+        loops: &[f64],
+        letters: &[Letter],
+        length: usize,
+    ) -> Result<(Vec<f64>, f64), String> {
+        let mut next = vec![0.0; self.relations.len()];
+        for (relation, &weight) in loops.iter().enumerate() {
+            if weight == 0.0 {
+                continue;
+            }
+            for (letter, &to) in letters.iter().zip(self.successors(relation)) {
+                let to = to as usize;
+                if to >= next.len() {
+                    next.resize(to + 1, 0.0);
+                }
+                next[to] += weight * letter.models;
+            }
+            if self.bytes > self.budget.bytes {
+                return Err(format!(
+                    "the transition monoid passed {} MiB at {} relations, loop length {length}",
+                    self.budget.bytes >> 20,
+                    self.relations.len()
+                ));
+            }
+            if self.work > self.budget.work {
+                return Err(over_work(self.budget));
+            }
+        }
+        let top = next.iter().copied().fold(0.0, f64::max);
+        if top == 0.0 {
+            return Ok((next, 0.0));
+        }
+        next.iter_mut().for_each(|w| *w /= top);
+        Ok((next, top.log2()))
+    }
+
     /// The relation of v followed by each letter, by letter index.
-    fn successors(&mut self, relation: usize) -> &[usize] {
-        if self.steps.len() <= relation {
-            self.steps.resize(relation + 1, Vec::new());
+    fn successors(&mut self, relation: usize) -> &[u32] {
+        let letters = self.letters.len();
+        let at = relation * letters;
+        if letters > 0 && self.steps[at] == u32::MAX {
+            let from = self.relations.get(relation as u32).to_vec();
+            self.work += (letters * from.len()) as u64;
+            let mut next = vec![0; from.len()];
+            for letter in 0..letters {
+                for (slot, &block) in next.iter_mut().zip(&from) {
+                    *slot = self.block_step(block, letter);
+                }
+                let to = self.intern(&next);
+                self.steps[at + letter] = to as u32;
+            }
         }
-        if self.steps[relation].is_empty() {
-            let from = self.relations[relation].clone();
-            let mut next = vec![0; self.n];
-            let out = (0..self.letters.len())
-                .map(|letter| {
-                    for (slot, &row) in next.iter_mut().zip(from.iter()) {
-                        *slot = self.row_step(row, letter);
-                    }
-                    self.intern(&next)
-                })
-                .collect();
-            self.steps[relation] = out;
+        &self.steps[at..at + letters]
+    }
+
+    /// The id of block `block` of some v, stepped by the letter `index`.
+    fn block_step(&mut self, block: u32, index: usize) -> u32 {
+        let slot = block as usize * self.letters.len() + index;
+        if self.block_steps[slot] != u32::MAX {
+            return self.block_steps[slot];
         }
-        &self.steps[relation]
+        let rows = self.blocks.get(block).to_vec();
+        self.work += BLOCK as u64;
+        let next: Vec<u32> = rows
+            .iter()
+            .map(|&row| {
+                if row == PAD {
+                    PAD
+                } else {
+                    self.row_step(row, index)
+                }
+            })
+            .collect();
+        let id = self.intern_block(&next);
+        self.block_steps[slot] = id;
+        id
     }
 
     /// The id of row `row` of some v, stepped by the letter `index`: a
@@ -834,6 +1024,7 @@ impl Monoid {
                 rest &= rest - 1;
                 let by = &letter[q * stride..(q + 1) * stride];
                 out.iter_mut().zip(by).for_each(|(a, b)| *a |= b);
+                self.work += stride as u64;
             }
         }
         for plane in 1..self.planes {
@@ -845,6 +1036,7 @@ impl Monoid {
                     let q = w * 64 + rest.trailing_zeros() as usize;
                     rest &= rest - 1;
                     let by = &letter[q * stride..q * stride + words];
+                    self.work += words as u64;
                     out[plane * words..(plane + 1) * words]
                         .iter_mut()
                         .zip(by)
@@ -855,12 +1047,6 @@ impl Monoid {
         let id = self.intern_row(&out);
         self.row_steps[slot] = id;
         id
-    }
-
-    /// The words of plane `plane` in row `p` of `relation`.
-    fn plane(&self, relation: usize, plane: usize, p: usize) -> &[u64] {
-        let row = &self.rows[self.relations[relation][p] as usize];
-        &row[plane * self.words..(plane + 1) * self.words]
     }
 
     /// The id, in `goods`, of the states from which v^ω is accepted: those
@@ -875,54 +1061,185 @@ impl Monoid {
         if let Some(good) = self.good_of[relation] {
             return good;
         }
-        let (n, words) = (self.n, self.words);
-        // reach[p]: the states reachable from p in one step or more.
-        // Warshall's closure on bit rows: after round k, row p holds every
-        // state reached by a path whose inner states are below k.
-        let mut reach: Vec<Vec<u64>> = (0..n)
-            .map(|p| self.plane(relation, 0, p).to_vec())
-            .collect();
-        for k in 0..n {
-            let through = reach[k].clone();
-            for row in reach.iter_mut().filter(|row| has(row, k)) {
-                row.iter_mut().zip(&through).for_each(|(a, b)| *a |= b);
+        let (ids, buffer) = (&mut self.components.ids, &mut self.components.rows);
+        ids.clear();
+        buffer.clear();
+        for &block in self.relations.get(relation as u32) {
+            for &row in self.blocks.get(block).iter().take_while(|&&row| row != PAD) {
+                ids.push(row);
+                buffer.extend_from_slice(&self.rows[row as usize][..self.words]);
             }
         }
-        let mut on_cycle = vec![0u64; words];
-        for s in (0..n).filter(|&s| has(&reach[s], s)) {
-            let mut component = vec![0u64; words];
-            for t in bits(&reach[s]).filter(|&t| has(&reach[t], s)) {
-                component[t / 64] |= 1 << (t % 64);
-            }
-            let inside = |plane: usize| {
-                bits(&component).any(|t| {
-                    self.plane(relation, plane, t)
-                        .iter()
-                        .zip(&component)
-                        .any(|(a, b)| a & b != 0)
-                })
-            };
-            if (1..self.planes).all(inside) {
-                on_cycle[s / 64] |= 1 << (s % 64);
-            }
-        }
-        let mut states = on_cycle.clone();
-        for (p, row) in reach.iter().enumerate() {
-            if row.iter().zip(&on_cycle).any(|(a, b)| a & b != 0) {
-                states[p / 64] |= 1 << (p % 64);
-            }
-        }
-        let good = match self.good_ids.get(&states) {
+        let states = self
+            .components
+            .accepting(self.n, self.words, self.planes, &self.rows);
+        let good = match self.good_ids.get(states) {
             Some(&good) => good,
             None => {
-                self.goods.push(states.clone());
-                self.good_ids.insert(states, self.goods.len() - 1);
+                self.goods.push(states.to_vec());
+                self.good_ids.insert(states.to_vec(), self.goods.len() - 1);
                 self.goods.len() - 1
             }
         };
+        self.work += self.components.work;
         self.good_of[relation] = Some(good);
         good
     }
+}
+
+/// The buffers of [`Components::accepting`], kept between calls, since the
+/// monoid asks once per relation.
+#[derive(Default)]
+struct Components {
+    /// The row id of each state, in the table passed to `accepting`.
+    ids: Vec<u32>,
+    /// Plane 0 of the rows of the graph, one after another.
+    rows: Vec<u64>,
+    index: Vec<u32>,
+    low: Vec<u32>,
+    on_stack: Vec<u64>,
+    stack: Vec<u32>,
+    /// The depth-first path: a state, the word of its row being scanned
+    /// and the bits of that word not yet followed.
+    path: Vec<(u32, u32, u64)>,
+    component: Vec<u64>,
+    members: Vec<u32>,
+    states: Vec<u64>,
+    /// The steps of the last call: a state visited, a word scanned or an
+    /// edge followed.
+    work: u64,
+}
+
+impl Components {
+    /// The states from which a run can visit, infinitely often, every
+    /// acceptance set, in the graph of `n` states whose row p is
+    /// `table[ids[p]]`, with its plane 0 copied into `rows`: `planes`
+    /// bitsets of `words` words, plane 0 the successors of p, and plane
+    /// 1 + i those reached by an edge in set i, a subset of plane 0.
+    /// Those are the states that reach, in plane 0, a strongly connected
+    /// component with a cycle and an edge inside it on every other plane.
+    ///
+    /// Tarjan's algorithm closes each component after every component it
+    /// reaches, so whether a component reaches an accepting one is known
+    /// from the states already marked. The cost is linear in the states
+    /// and the edges, where a transitive closure costs n³/64 word
+    /// operations; see "Lasso count time" in `docs/dev/search.md`.
+    fn accepting<R: AsRef<[u64]>>(
+        &mut self,
+        n: usize,
+        words: usize,
+        planes: usize,
+        table: &[R],
+    ) -> &[u64] {
+        const NONE: u32 = u32::MAX;
+        let Components {
+            ids,
+            rows,
+            index,
+            low,
+            on_stack,
+            stack,
+            path,
+            component,
+            members,
+            states,
+            work,
+        } = self;
+        *work = (n * (words + 1)) as u64;
+        let rows = &rows[..n * words];
+        let succ = |p: usize| &rows[p * words..(p + 1) * words];
+        let meets = |set: &[u64], other: &[u64]| set.iter().zip(other).any(|(a, b)| a & b != 0);
+        index.clear();
+        index.resize(n, NONE);
+        low.clear();
+        low.resize(n, 0);
+        for set in [&mut *on_stack, &mut *component, &mut *states] {
+            set.clear();
+            set.resize(words, 0);
+        }
+        stack.clear();
+        path.clear();
+        let mut next_index = 0u32;
+        for root in 0..n {
+            if index[root] != NONE {
+                continue;
+            }
+            macro_rules! visit {
+                ($u:expr) => {{
+                    let u: usize = $u;
+                    index[u] = next_index;
+                    low[u] = next_index;
+                    next_index += 1;
+                    stack.push(u as u32);
+                    on_stack[u / 64] |= 1 << (u % 64);
+                    path.push((u as u32, 0, succ(u)[0]));
+                }};
+            }
+            visit!(root);
+            while let Some((v, w, rest)) = path.last_mut() {
+                let v = *v as usize;
+                if *rest != 0 {
+                    let u = *w as usize * 64 + rest.trailing_zeros() as usize;
+                    *rest &= *rest - 1;
+                    *work += 1;
+                    if index[u] == NONE {
+                        visit!(u);
+                    } else if has(on_stack, u) {
+                        low[v] = low[v].min(index[u]);
+                    }
+                    continue;
+                }
+                *w += 1;
+                if (*w as usize) < words {
+                    *rest = succ(v)[*w as usize];
+                    continue;
+                }
+                // Every successor of v is done: v closes a component when
+                // it is the first of it visited.
+                path.pop();
+                if let Some(&(parent, _, _)) = path.last() {
+                    let parent = parent as usize;
+                    low[parent] = low[parent].min(low[v]);
+                }
+                if low[v] != index[v] {
+                    continue;
+                }
+                members.clear();
+                loop {
+                    let t = stack.pop().expect("v is on the stack") as usize;
+                    on_stack[t / 64] &= !(1 << (t % 64));
+                    component[t / 64] |= 1 << (t % 64);
+                    members.push(t as u32);
+                    if t == v {
+                        break;
+                    }
+                }
+                let cyclic = members.len() > 1 || has(succ(v), v);
+                let accepting = cyclic
+                    && (1..planes).all(|plane| {
+                        members.iter().any(|&t| {
+                            let row = table[ids[t as usize] as usize].as_ref();
+                            meets(&row[plane * words..(plane + 1) * words], component)
+                        })
+                    });
+                if accepting || members.iter().any(|&t| meets(succ(t as usize), states)) {
+                    states
+                        .iter_mut()
+                        .zip(&*component)
+                        .for_each(|(a, b)| *a |= b);
+                }
+                for &t in &*members {
+                    component[t as usize / 64] = 0;
+                }
+            }
+        }
+        states
+    }
+}
+
+/// The error of a count past its work budget.
+fn over_work(budget: Budget) -> String {
+    format!("the lasso count passed {} steps", budget.work)
 }
 
 /// `weights` divided by their maximum, and the log2 of that maximum (0
@@ -1189,11 +1506,22 @@ mod tests {
         // Far past f64's range the logarithm is still finite: k 2^(100 k).
         close(count(&marked, 100), 100.0 * k + k.log2());
         // A monoid past its budget is a failed count, not a wrong one.
+        let within = |bytes, work| Budget { bytes, work };
         let error = counter
-            .log_count_within(&infinitely, 1, ENTRY_BYTES)
+            .log_count_within(&infinitely, 1, within(ENTRY_BYTES, COUNT_WORK))
             .unwrap_err();
         assert!(error.contains("transition monoid"), "{error}");
-        assert!(counter.log_count_within(&infinitely, 1, 4096).is_ok());
+        assert!(counter
+            .log_count_within(&infinitely, 1, within(4096, COUNT_WORK))
+            .is_ok());
+        // So is a count past its work budget.
+        let error = counter
+            .log_count_within(&infinitely, 1, within(MONOID_BYTES, 10))
+            .unwrap_err();
+        assert!(error.contains("steps"), "{error}");
+        assert!(counter
+            .log_count_within(&infinitely, 1, within(MONOID_BYTES, 1000))
+            .is_ok());
     }
 
     #[test]
@@ -1252,6 +1580,104 @@ mod tests {
         close(count(&split, 2), sum(&|n| 4f64.powi(n)));
         let none = automaton(vec![vec![edge(Guard::True, 0, 0)]]);
         assert_eq!(count(&none, 1), f64::NEG_INFINITY);
+    }
+
+    /// The on bits of the bitset `set`, in order.
+    fn bits(set: &[u64]) -> impl Iterator<Item = usize> + '_ {
+        set.iter().enumerate().flat_map(|(w, &word)| {
+            let mut rest = word;
+            std::iter::from_fn(move || {
+                if rest == 0 {
+                    return None;
+                }
+                let b = rest.trailing_zeros() as usize;
+                rest &= rest - 1;
+                Some(w * 64 + b)
+            })
+        })
+    }
+
+    /// [`Components::accepting`] by Warshall's closure, as the count first
+    /// computed it.
+    fn accepting_by_closure(rows: &[Vec<u64>], words: usize, planes: usize) -> Vec<u64> {
+        let n = rows.len();
+        let mut reach: Vec<Vec<u64>> = rows.iter().map(|r| r[..words].to_vec()).collect();
+        for k in 0..n {
+            let through = reach[k].clone();
+            for row in reach.iter_mut().filter(|row| has(row, k)) {
+                row.iter_mut().zip(&through).for_each(|(a, b)| *a |= b);
+            }
+        }
+        let mut on_cycle = vec![0u64; words];
+        for s in (0..n).filter(|&s| has(&reach[s], s)) {
+            let mut component = vec![0u64; words];
+            for t in bits(&reach[s]).filter(|&t| has(&reach[t], s)) {
+                component[t / 64] |= 1 << (t % 64);
+            }
+            let inside = |plane: usize| {
+                bits(&component).any(|t| {
+                    rows[t][plane * words..(plane + 1) * words]
+                        .iter()
+                        .zip(&component)
+                        .any(|(a, b)| a & b != 0)
+                })
+            };
+            if (1..planes).all(inside) {
+                on_cycle[s / 64] |= 1 << (s % 64);
+            }
+        }
+        let mut states = on_cycle.clone();
+        for (p, row) in reach.iter().enumerate() {
+            if row.iter().zip(&on_cycle).any(|(a, b)| a & b != 0) {
+                states[p / 64] |= 1 << (p % 64);
+            }
+        }
+        states
+    }
+
+    #[test]
+    fn components_find_the_states_of_a_closure() {
+        // Random graphs of 1 to 150 states, sparse and dense, with up to
+        // two acceptance planes, each plane a subset of plane 0.
+        let mut seed = 0x9E37_79B9_7F4A_7C15u64;
+        let mut random = move || {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            seed
+        };
+        for case in 0..600 {
+            let n = 1 + (random() % 150) as usize;
+            let words = n.div_ceil(64);
+            let planes = 1 + case % 3;
+            let density = [2, 8, 64, 400][case % 4];
+            let rows: Vec<Vec<u64>> = (0..n)
+                .map(|_| {
+                    let mut row = vec![0u64; planes * words];
+                    for q in 0..n {
+                        if random() % 1000 < density {
+                            row[q / 64] |= 1 << (q % 64);
+                            for plane in 1..planes {
+                                if random() % 2 == 0 {
+                                    row[plane * words + q / 64] |= 1 << (q % 64);
+                                }
+                            }
+                        }
+                    }
+                    row
+                })
+                .collect();
+            let mut components = Components {
+                ids: (0..n as u32).collect(),
+                rows: rows.iter().flat_map(|r| r[..words].to_vec()).collect(),
+                ..Components::default()
+            };
+            assert_eq!(
+                components.accepting(n, words, planes, &rows),
+                accepting_by_closure(&rows, words, planes),
+                "case {case}: {n} states, {planes} planes"
+            );
+        }
     }
 
     #[test]
