@@ -16,7 +16,8 @@ takes the results (default `runs`). Each run sits in its
 own systemd scope when `systemd-run --user` works, and under `ulimit -v`
 otherwise.
 
-The arms are `binary`, `graded` (option B) and `forced` (binary, searching
+The arms are `binary`, `graded` (option B), `feasible` (B with every
+proved candidate ranked first) and `forced` (binary, searching
 degenerate instances too, for the CEGIW case studies); see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (branch `exp/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
@@ -42,6 +43,7 @@ ARMS = {
     # The binary arm searching degenerate instances too, for the CEGIW
     # case studies (bench/baselines_cegiw.py).
     'forced': ['--status', 'binary', '--degenerate', 'search'],
+    'feasible': ['--status', 'graded-feasible'],
 }
 
 

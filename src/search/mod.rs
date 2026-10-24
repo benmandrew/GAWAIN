@@ -129,16 +129,17 @@ pub fn search<B: Backend>(
     assert!(params.population >= 1, "the population needs a member");
     let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
     let mut grader = Grader::new(phi);
+    let feasible_first = params.status.feasible_first();
     // The stored lassos only grow, so the whole pool is regraded against
     // one set before it is ranked.
     let mut regrade = |pool: &mut Vec<Scored>, oracle: &Oracle<B>| {
-        if params.status == Status::Graded {
+        if params.status.graded() {
             grader.rescore(pool, oracle.lassos());
         }
     };
     let mut population = score(vec![phi.clone()], phi, oracle, counter);
     regrade(&mut population, oracle);
-    population = select(population, params.population);
+    population = select(population, params.population, feasible_first);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
         let scored = score(offspring, phi, oracle, counter);
@@ -149,7 +150,7 @@ pub fn search<B: Backend>(
             spot_limits,
         ));
         regrade(&mut population, oracle);
-        population = select(population, params.population);
+        population = select(population, params.population, feasible_first);
     }
     (population, grader.counts())
 }
@@ -255,15 +256,21 @@ pub fn invariant(groups: &[Vec<Arc<str>>]) -> Formula {
 
 /// PEREDUR's `nsga2-apportion` survivor step: drop repeats up to
 /// [`Formula::canonical`], sort by the crowded-comparison order, then keep
-/// the best `size` or replicate the distinct ones up to `size`.
-pub fn select(pool: Vec<Scored>, size: usize) -> Vec<Scored> {
+/// the best `size` or replicate the distinct ones up to `size`. With
+/// `feasible_first`, a candidate that holds is feasible and every other is
+/// not, so every holder ranks above every other candidate (see
+/// [`nsga2::constrained_dominates`]); without it all are feasible.
+pub fn select(pool: Vec<Scored>, size: usize, feasible_first: bool) -> Vec<Scored> {
     let mut seen = HashSet::new();
     let distinct: Vec<Scored> = pool
         .into_iter()
         .filter(|s| seen.insert(s.formula.canonical()))
         .collect();
     let objectives: Vec<Vec<f64>> = distinct.iter().map(|s| s.objectives.clone()).collect();
-    let (order, ranks) = nsga2::crowded_order(&objectives);
+    let feasible: Vec<bool> = (distinct.iter())
+        .map(|s| !feasible_first || s.holds())
+        .collect();
+    let (order, ranks) = nsga2::crowded_order(&objectives, &feasible);
     if order.len() >= size {
         return order
             .into_iter()
@@ -532,7 +539,7 @@ mod tests {
             scored("!!a", 0.0, 1.0),
             scored("c", 0.0, 0.1),
         ];
-        let next = select(pool, 7);
+        let next = select(pool, 7, false);
         let names: Vec<String> = next.iter().map(|s| s.formula.to_string()).collect();
         // Front 0 is {a, b} (the repeat !!a is dropped), front 1 is {c}.
         // Spare 4 by weights 1, 1, 1/2: 1.6, 1.6, 0.8.
@@ -546,9 +553,29 @@ mod tests {
             scored("b", 1.0, 0.2),
             scored("c", 0.0, 0.9),
         ];
-        let next = select(pool, 2);
+        let next = select(pool, 2, false);
         let names: Vec<String> = next.iter().map(|s| s.formula.to_string()).collect();
         assert_eq!(names, ["b", "c"]);
+    }
+
+    #[test]
+    fn feasible_first_selection_keeps_holders_over_graded_failures() {
+        // Graded failures at 0.5 and 0.8 are not dominated by the holder b
+        // under plain NSGA-II, so they take the two slots ahead of it.
+        let pool = || {
+            vec![
+                scored("a", 0.5, 0.9),
+                scored("b", 1.0, 0.2),
+                scored("c", 0.8, 0.6),
+                scored("d", 1.0, 0.1),
+            ]
+        };
+        let names = |next: Vec<Scored>| -> Vec<String> {
+            next.iter().map(|s| s.formula.to_string()).collect()
+        };
+        assert_eq!(names(select(pool(), 2, false)), ["a", "b"]);
+        assert_eq!(names(select(pool(), 2, true)), ["b", "d"]);
+        assert_eq!(names(select(pool(), 3, true)), ["b", "d", "a"]);
     }
 
     #[test]

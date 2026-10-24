@@ -6,7 +6,7 @@
 //! ```text
 //! search_bench --backend nuxmv|explicit|spin|tapaal --model PATH
 //!     [--atoms a,b,...] [--ltl 'φ'] [--property ID]
-//!     --seed N --generations G --population P --status graded|binary
+//!     --seed N --generations G --population P --status binary|graded|graded-feasible
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
 //! ```
 //!
@@ -48,7 +48,7 @@ use gawain::oracle::{Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status graded|binary [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -116,7 +116,12 @@ fn parse_args() -> Result<Args, String> {
                 args.status = Some(match value.as_str() {
                     "graded" => Status::Graded,
                     "binary" => Status::Binary,
-                    _ => return Err(format!("--status {value}: graded or binary")),
+                    "graded-feasible" => Status::GradedFeasible,
+                    _ => {
+                        return Err(format!(
+                            "--status {value}: binary, graded or graded-feasible"
+                        ))
+                    }
                 })
             }
             "--timeout" => args.timeout = number()?,
@@ -226,6 +231,7 @@ fn search_on<B: Backend>(
     field(&mut out, "seed", &args.seed.to_string());
     let status = match args.status {
         Some(Status::Graded) => "graded",
+        Some(Status::GradedFeasible) => "graded-feasible",
         _ => "binary",
     };
     field(&mut out, "status", &json(status));

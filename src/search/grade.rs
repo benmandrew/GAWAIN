@@ -6,8 +6,9 @@
 //! lassos that violate φ and k the number of those that φ' satisfies. φ
 //! scores 0, and for a fixed set of lassos the score is monotone under
 //! implication. The set grows during a run, so the whole pool is rescored
-//! before each selection. The default, [`Status::Binary`], scores every
-//! such candidate 0.
+//! before each selection. [`Status::GradedFeasible`] keeps the grade but
+//! ranks every proved candidate above every other in selection. The
+//! default, [`Status::Binary`], scores every such candidate 0.
 
 use std::time::{Duration, Instant};
 
@@ -25,6 +26,24 @@ pub enum Status {
     /// candidate satisfies, kept below 1 ([`Grader`]). Kept for the
     /// ablation in `docs/dev/search.md`.
     Graded,
+    /// The grade of [`Status::Graded`], with every proved candidate ranked
+    /// above every other, by Deb's constrained domination
+    /// ([`super::nsga2::constrained_dominates`]). The grade then orders
+    /// only the candidates that are not proved. Kept for the ablation in
+    /// `docs/dev/search.md`.
+    GradedFeasible,
+}
+
+impl Status {
+    /// Whether candidates are graded against the stored lassos.
+    pub fn graded(self) -> bool {
+        matches!(self, Status::Graded | Status::GradedFeasible)
+    }
+
+    /// Whether selection ranks proved candidates above all others.
+    pub fn feasible_first(self) -> bool {
+        self == Status::GradedFeasible
+    }
 }
 
 /// What rescoring cost over one run.

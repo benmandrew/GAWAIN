@@ -1,0 +1,1715 @@
+instance,repair,arms,spin,reason
+rers2016-101-p13,F((p_c0_t3 | X F p_c0_t9 -> p_c0_t8) | p_c0_t9 U X F p_c0_t3),feasible,skipped,uses X
+rers2016-101-p17,G X !p_c0_t6 | !p_c0_t1,feasible,skipped,uses X
+rers2016-101-p17,G((!p_c0_t7 | !p_c0_t8 U p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)) | X(X p_c0_t1 & !p_c0_t5 -> !p_c0_t6),graded,skipped,uses X
+rers2016-101-p17,G(p_c0_t5 | !p_c0_t7 | p_c0_t8) U G(X((p_c0_t8 | p_c0_t7) & !p_c0_t6) | !p_c0_t6) | !p_c0_t1,feasible,skipped,uses X
+rers2016-101-p17,X F(!p_c0_t8 U (p_c0_t8 & !p_c0_t6 & !p_c0_t1 | X !p_c0_t7) | p_c0_t5),feasible,skipped,uses X
+rers2016-101-p17,X X(!p_c0_t8 | F X(p_c0_t5 U G(!p_c0_t1 | G !p_c0_t6))),graded,skipped,uses X
+rers2016-101-p17,p_c0_t1 & !p_c0_t8 -> G((!p_c0_t1 & p_c0_t5) W X G !p_c0_t6),feasible,skipped,uses X
+rers2016-101-p17,p_c0_t5 -> G(!p_c0_t1 W X G !p_c0_t6),feasible,skipped,uses X
+rers2016-101-p17,p_c0_t8 -> G(!p_c0_t1 W X G !p_c0_t6),feasible,skipped,uses X
+rers2016-102-p14,G(!p_c1_t3 | (!p_c0_t6 U p_c1_t8 | X G(!p_c0_t6 U !p_c1_t3))),graded,skipped,uses X
+rers2016-102-p14,X(X !p_c0_t6 U X !(!p_c1_t8 & p_c1_t3)),feasible,skipped,uses X
+rers2016-102-p19,!(p_c0_t2 U X X p_c0_t2),feasible,skipped,uses X
+rers2016-102-p19,!F(p_c0_t2 & X p_c0_t2),graded,skipped,uses X
+rers2016-102-p19,!X p_c0_t2 & !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-102-p19,!p_c0_t2 & X !p_c0_t2,feasible graded,skipped,uses X
+rers2016-102-p19,!p_c0_t2 R X !p_c0_t2,graded,skipped,uses X
+rers2016-102-p19,X !(p_c0_t2 | X p_c0_t2),binary,skipped,uses X
+rers2016-102-p19,X !X p_c0_t2,binary feasible,skipped,uses X
+rers2016-102-p19,X !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-102-p19,X !p_c0_t2 & !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-102-p19,X !p_c0_t2 R !p_c0_t2,binary,skipped,uses X
+rers2016-102-p19,X G F !p_c0_t2,binary,skipped,uses X
+rers2016-102-p19,X X !X X p_c0_t2,feasible,skipped,uses X
+rers2016-102-p19,X X !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-102-p19,X X X !p_c0_t2,graded,skipped,uses X
+rers2016-102-p4,!((!p_c1_t6 -> p_c1_t7) W (!p_c1_t0 & p_c1_t7 | X G p_c1_t6)) R X !p_c0_t7,graded,skipped,uses X
+rers2016-102-p4,!(((p_c1_t0 -> G p_c0_t7) R (p_c1_t6 | p_c1_t7)) U (p_c0_t7 | X X p_c0_t7)),feasible,skipped,uses X
+rers2016-102-p4,!(X(p_c0_t7 | !p_c1_t0) U p_c0_t7) & !p_c0_t7,binary,skipped,uses X
+rers2016-102-p4,!G !(p_c1_t7 W ((p_c0_t7 <-> G(p_c1_t0 & !p_c1_t6) U X p_c0_t7) | (p_c1_t6 | p_c0_t7))) & !(X p_c0_t7 U p_c0_t7),feasible,skipped,uses X
+rers2016-102-p4,!p_c0_t7 W (G !X(p_c1_t6 & p_c1_t7) & (p_c1_t0 | !p_c0_t7)),graded,skipped,uses X
+rers2016-102-p4,!p_c0_t7 W (G !X(p_c1_t6 & p_c1_t7) & (p_c1_t6 | !p_c0_t7)),graded,skipped,uses X
+rers2016-102-p4,!p_c0_t7 W G(!p_c1_t6 W !X p_c1_t6),graded,skipped,uses X
+rers2016-102-p4,!p_c0_t7 W G(!p_c1_t6 W !X p_c1_t7),graded,skipped,uses X
+rers2016-102-p4,!p_c1_t6 -> (p_c1_t0 | !p_c0_t7) W (X !p_c1_t7 & p_c1_t0),graded,skipped,uses X
+rers2016-102-p4,!p_c1_t6 | X(p_c1_t7 -> G(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7)))),binary,skipped,uses X
+rers2016-102-p4,(!p_c0_t7 | p_c1_t7) & (F X !p_c1_t6 | X(p_c1_t7 -> p_c1_t6)),graded,skipped,uses X
+rers2016-102-p4,(!p_c1_t0 -> p_c1_t6) | !p_c1_t6 -> X !p_c0_t7,feasible,skipped,uses X
+rers2016-102-p4,((p_c1_t7 <-> p_c1_t6) -> X !F(p_c0_t7 & p_c1_t7)) & !p_c0_t7,binary,skipped,uses X
+rers2016-102-p4,(X !p_c1_t6 | G !p_c0_t7) & (F p_c1_t0 & p_c1_t7 | !p_c0_t7),feasible,skipped,uses X
+rers2016-102-p4,(X !p_c1_t6 | G(p_c1_t6 -> !p_c0_t7)) & !p_c0_t7,feasible,skipped,uses X
+rers2016-102-p4,(p_c0_t7 | !p_c1_t6 -> !X !p_c1_t0) | !p_c1_t7 R !p_c0_t7,feasible,skipped,uses X
+rers2016-102-p4,(p_c1_t0 <-> !p_c1_t6) -> X !p_c1_t0 | p_c1_t7 R (!p_c0_t7 | p_c1_t7),binary,skipped,uses X
+rers2016-102-p4,(p_c1_t7 -> X !F p_c0_t7) & !p_c0_t7,binary,skipped,uses X
+rers2016-102-p4,(p_c1_t7 <-> !p_c1_t0) -> X(F(!p_c1_t6 R !((p_c1_t7 -> p_c0_t7) | p_c1_t6)) | !p_c0_t7),feasible,skipped,uses X
+rers2016-102-p4,(p_c1_t7 <-> !p_c1_t0) -> X(F(p_c1_t6 R !(p_c1_t7 | p_c1_t6)) | !p_c0_t7),feasible,skipped,uses X
+rers2016-102-p4,F !p_c1_t0 U G !p_c0_t7 | (p_c1_t7 & p_c1_t0 & !p_c1_t6 | X(!p_c1_t7 & !p_c1_t6)),feasible,skipped,uses X
+rers2016-102-p4,F G X !p_c0_t7 | !(X(p_c0_t7 | !p_c1_t0) U (G(p_c1_t7 | p_c0_t7) W p_c1_t7 | p_c1_t0)),binary,skipped,uses X
+rers2016-102-p4,F G X !p_c0_t7 | !(X(p_c0_t7 | !p_c1_t0) W G(p_c1_t7 & p_c0_t7) W p_c1_t6 | p_c0_t7),binary,skipped,uses X
+rers2016-102-p4,F G X !p_c0_t7 | !(X(p_c0_t7 | !p_c1_t0) W G(p_c1_t7 & p_c0_t7) W p_c1_t7),binary,skipped,uses X
+rers2016-102-p4,F G(G(p_c0_t7 -> p_c1_t6) R ((p_c1_t7 <-> p_c1_t0) | X(p_c1_t7 -> G(!p_c0_t7 U G(p_c1_t0 | !p_c0_t7))))),feasible,skipped,uses X
+rers2016-102-p4,G !p_c0_t7 | (!p_c1_t7 | X(!(p_c1_t7 -> !p_c1_t0) & !p_c1_t6)),feasible,skipped,uses X
+rers2016-102-p4,G !p_c0_t7 | ((p_c0_t7 <-> !(p_c1_t7 -> p_c1_t0)) | X(!(p_c1_t7 -> !p_c1_t0) & !p_c1_t6)),feasible,skipped,uses X
+rers2016-102-p4,G !p_c0_t7 | (p_c1_t6 | !(p_c1_t7 <-> !p_c1_t0) | X(p_c1_t7 & !p_c1_t6)),feasible,skipped,uses X
+rers2016-102-p4,G !p_c0_t7 | (p_c1_t7 & !p_c1_t6 | (X(!p_c1_t7 & !p_c1_t6) & !p_c1_t6 | G !p_c1_t0)),feasible,skipped,uses X
+rers2016-102-p4,G !p_c0_t7 | (p_c1_t7 & !p_c1_t6 | X(!p_c1_t7 & !p_c1_t6)),feasible,skipped,uses X
+rers2016-102-p4,G !p_c0_t7 | (p_c1_t7 & p_c1_t6 | X(!p_c1_t7 & !(p_c1_t6 | p_c1_t7))),feasible,skipped,uses X
+rers2016-102-p4,G(!p_c0_t7 & (!p_c1_t0 | ((!p_c1_t0 <-> p_c1_t7) | p_c1_t7))) W X !p_c1_t6,binary,skipped,uses X
+rers2016-102-p4,G(!p_c0_t7 U !((!p_c0_t7 W X !p_c1_t6 & p_c1_t7) U !X !p_c0_t7)),graded,skipped,uses X
+rers2016-102-p4,G(!p_c0_t7 U !((p_c0_t7 W X(p_c1_t0 & F X p_c1_t6)) U !X !p_c0_t7)),graded,skipped,uses X
+rers2016-102-p4,G(!p_c0_t7 U !((p_c0_t7 W X(p_c1_t0 & G(F(p_c1_t7 & p_c0_t7) W (X p_c1_t6 & p_c1_t7)))) U !X !p_c0_t7)),graded,skipped,uses X
+rers2016-102-p4,G(!p_c1_t0 & (!p_c1_t6 | p_c1_t6 R (p_c1_t0 | p_c1_t7) | p_c1_t6 & p_c1_t0)) | X !p_c0_t7,binary,skipped,uses X
+rers2016-102-p4,G(!p_c1_t7 & (p_c1_t7 & (!p_c1_t6 & p_c1_t0))) U X !p_c0_t7,graded,skipped,uses X
+rers2016-102-p4,X !p_c0_t7 & !p_c0_t7,binary,skipped,uses X
+rers2016-102-p4,X((!p_c1_t6 <-> p_c0_t7) -> G(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7)))),binary,skipped,uses X
+rers2016-102-p4,X(F((p_c1_t7 & !p_c1_t0 | p_c1_t0) R !p_c1_t6 & p_c1_t7) | !p_c0_t7),feasible,skipped,uses X
+rers2016-102-p4,X(p_c1_t0 R !p_c0_t7) W X(F p_c1_t6 -> !p_c1_t7 R p_c1_t0),binary,skipped,uses X
+rers2016-102-p4,p_c0_t7 & !p_c1_t0 -> X(F X X !p_c0_t7 & p_c1_t7 | !p_c1_t6),feasible,skipped,uses X
+rers2016-102-p4,p_c0_t7 -> G(G(p_c1_t0 | !p_c0_t7) & p_c0_t7 R !X p_c1_t0 & !p_c1_t6),graded,skipped,uses X
+rers2016-102-p4,p_c1_t6 & p_c1_t0 & !p_c1_t6 & p_c1_t7 | X !p_c0_t7,binary,skipped,uses X
+rers2016-102-p4,p_c1_t6 | X(!p_c0_t7 & p_c1_t7 -> G(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7)))),binary,skipped,uses X
+rers2016-102-p4,p_c1_t7 | !p_c1_t0 -> X !p_c0_t7,feasible,skipped,uses X
+rers2016-102-p8,F p_c1_t7 W (p_c0_t9 -> F X p_c1_t7),graded,skipped,uses X
+rers2016-102-p8,F(!p_c1_t7 -> !p_c0_t9 & X(p_c0_t9 -> !p_c0_t9)),feasible,skipped,uses X
+rers2016-102-p8,X X(F p_c1_t7 W !p_c0_t9),graded,skipped,uses X
+rers2016-102-p8,X(!p_c0_t9 | F p_c1_t7),binary,skipped,uses X
+rers2016-102-p8,X(F X p_c1_t7 | (p_c0_t9 -> p_c1_t7)),feasible,skipped,uses X
+rers2016-102-p8,X(F X(p_c0_t9 -> p_c1_t7) | (p_c1_t7 <-> p_c0_t9)),feasible,skipped,uses X
+rers2016-102-p8,X(F X(p_c1_t7 | !p_c0_t9) | !p_c0_t9),feasible,skipped,uses X
+rers2016-102-p8,X(F X(p_c1_t7 | !p_c0_t9) | p_c0_t9),feasible,skipped,uses X
+rers2016-102-p8,X(F p_c1_t7 | !p_c0_t9),graded,skipped,uses X
+rers2016-102-p8,p_c1_t7 -> X(F p_c1_t7 | !p_c0_t9),binary,skipped,uses X
+rers2016-103-p11,!F X G(p_c0_t5__c2_t3 U X p_c0_t5__c2_t3),binary,skipped,uses X
+rers2016-103-p11,!G(p_c0_t5__c2_t3 | X X p_c0_t5__c2_t3),feasible,skipped,uses X
+rers2016-103-p11,F !F(X p_c0_t5__c2_t3 & p_c0_t5__c2_t3),binary,skipped,uses X
+rers2016-103-p11,F G X !p_c0_t5__c2_t3 | !p_c0_t5__c2_t3,graded,skipped,uses X
+rers2016-103-p11,F G(p_c0_t5__c2_t3 -> X !p_c0_t5__c2_t3),binary,skipped,uses X
+rers2016-103-p11,F X !p_c0_t5__c2_t3 W G !p_c0_t5__c2_t3,graded,skipped,uses X
+rers2016-103-p11,F(!X p_c0_t5__c2_t3 & !p_c0_t5__c2_t3),binary feasible,skipped,uses X
+rers2016-103-p11,F(!p_c0_t5__c2_t3 & X X !p_c0_t5__c2_t3),feasible,skipped,uses X
+rers2016-103-p11,F(!p_c0_t5__c2_t3 R X !p_c0_t5__c2_t3),feasible,skipped,uses X
+rers2016-103-p11,F(X !p_c0_t5__c2_t3 & !p_c0_t5__c2_t3),feasible graded,skipped,uses X
+rers2016-103-p11,F(X !p_c0_t5__c2_t3 R !p_c0_t5__c2_t3),binary,skipped,uses X
+rers2016-103-p11,G F X F !p_c0_t5__c2_t3,feasible,skipped,uses X
+rers2016-103-p11,G F(!X p_c0_t5__c2_t3 & !p_c0_t5__c2_t3),binary,skipped,uses X
+rers2016-103-p11,X !G F(X p_c0_t5__c2_t3 & p_c0_t5__c2_t3),graded,skipped,uses X
+rers2016-103-p11,X p_c0_t5__c2_t3 -> F G !p_c0_t5__c2_t3,feasible,skipped,uses X
+rers2016-103-p11,X(F G !p_c0_t5__c2_t3 | !p_c0_t5__c2_t3),binary graded,skipped,uses X
+rers2016-103-p11,p_c0_t5__c2_t3 -> F G X !p_c0_t5__c2_t3,feasible,skipped,uses X
+rers2016-103-p14,!((p_c0_t8 | X(p_c1_t2 & (F !(G p_c1_t2 | p_c0_t6) & F !p_c0_t9) & p_c0_t8)) & G F(p_c0_t9 U F p_c0_t9)),binary,skipped,uses X
+rers2016-103-p14,!X(p_c0_t8 & X F(X(p_c1_t2 | p_c0_t6) & p_c0_t9)),binary,skipped,uses X
+rers2016-103-p14,!p_c0_t9 -> F(X(p_c0_t9 | !p_c0_t8) U (p_c1_t2 | !p_c0_t6)),feasible,skipped,uses X
+rers2016-103-p14,(!p_c0_t6 & p_c1_t2) U X X(p_c0_t9 | p_c1_t2) | !p_c0_t8 U X !p_c0_t9,feasible,skipped,uses X
+rers2016-103-p14,(p_c1_t2 | !p_c0_t6) U G((!p_c0_t8 | G !p_c0_t9) & F p_c0_t6) | !p_c0_t8 W X !p_c0_t9,graded,skipped,uses X
+rers2016-103-p14,(p_c1_t2 | !p_c0_t8) W X !p_c0_t9,binary,skipped,uses X
+rers2016-103-p14,G !p_c0_t9 U (p_c1_t2 | p_c1_t2 & !p_c0_t6) U G !p_c0_t8 | !p_c0_t8 W X !p_c0_t9,graded,skipped,uses X
+rers2016-103-p14,G((X !p_c0_t6 | !p_c0_t9) R !p_c0_t9) | !p_c0_t8,feasible,skipped,uses X
+rers2016-103-p14,X(((!p_c0_t9 | !p_c0_t8 & !p_c0_t6) & p_c0_t8) U G F(p_c0_t6 -> p_c1_t2)),feasible,skipped,uses X
+rers2016-103-p14,X((X p_c0_t6 & !p_c0_t8) U (p_c1_t2 | (p_c0_t8 -> X G !p_c0_t9))),binary,skipped,uses X
+rers2016-103-p14,p_c0_t8 -> (p_c0_t6 W F(p_c1_t2 | F p_c0_t9)) U G X(p_c0_t9 -> G p_c1_t2),feasible,skipped,uses X
+rers2016-103-p16,!F X G(p_c0_t1 U X p_c0_t1),binary,skipped,uses X
+rers2016-103-p16,!G(p_c0_t1 | X X p_c0_t1),feasible,skipped,uses X
+rers2016-103-p16,F !F(X p_c0_t1 & p_c0_t1),binary,skipped,uses X
+rers2016-103-p16,F G X !p_c0_t1 | !p_c0_t1,graded,skipped,uses X
+rers2016-103-p16,F G(p_c0_t1 -> X !p_c0_t1),binary,skipped,uses X
+rers2016-103-p16,F X !p_c0_t1 W G !p_c0_t1,graded,skipped,uses X
+rers2016-103-p16,F(!X p_c0_t1 & !p_c0_t1),binary feasible,skipped,uses X
+rers2016-103-p16,F(!p_c0_t1 & X X !p_c0_t1),feasible,skipped,uses X
+rers2016-103-p16,F(!p_c0_t1 R X !p_c0_t1),feasible,skipped,uses X
+rers2016-103-p16,F(X !p_c0_t1 & !p_c0_t1),feasible graded,skipped,uses X
+rers2016-103-p16,F(X !p_c0_t1 R !p_c0_t1),binary,skipped,uses X
+rers2016-103-p16,G F X F !p_c0_t1,feasible,skipped,uses X
+rers2016-103-p16,G F(!X p_c0_t1 & !p_c0_t1),binary,skipped,uses X
+rers2016-103-p16,X !G F(X p_c0_t1 & p_c0_t1),graded,skipped,uses X
+rers2016-103-p16,X p_c0_t1 -> F G !p_c0_t1,feasible,skipped,uses X
+rers2016-103-p16,X(F G !p_c0_t1 | !p_c0_t1),binary graded,skipped,uses X
+rers2016-103-p16,p_c0_t1 -> F G X !p_c0_t1,feasible,skipped,uses X
+rers2016-103-p2,!(p_c0_t2 U X X p_c0_t2),feasible,skipped,uses X
+rers2016-103-p2,!F(p_c0_t2 & X p_c0_t2),graded,skipped,uses X
+rers2016-103-p2,!X p_c0_t2 & !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-103-p2,!p_c0_t2 & X !p_c0_t2,feasible graded,skipped,uses X
+rers2016-103-p2,!p_c0_t2 R X !p_c0_t2,graded,skipped,uses X
+rers2016-103-p2,X !(p_c0_t2 | X p_c0_t2),binary,skipped,uses X
+rers2016-103-p2,X !X p_c0_t2,binary feasible,skipped,uses X
+rers2016-103-p2,X !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-103-p2,X !p_c0_t2 & !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-103-p2,X !p_c0_t2 R !p_c0_t2,binary,skipped,uses X
+rers2016-103-p2,X G F !p_c0_t2,binary,skipped,uses X
+rers2016-103-p2,X X !X X p_c0_t2,feasible,skipped,uses X
+rers2016-103-p2,X X !p_c0_t2,binary feasible graded,skipped,uses X
+rers2016-103-p2,X X X !p_c0_t2,graded,skipped,uses X
+rers2016-103-p6,!F X G(p_c2_t1 U X p_c2_t1),binary,skipped,uses X
+rers2016-103-p6,!G(p_c2_t1 | X X p_c2_t1),feasible,skipped,uses X
+rers2016-103-p6,F !F(X p_c2_t1 & p_c2_t1),binary,skipped,uses X
+rers2016-103-p6,F G X !p_c2_t1 | !p_c2_t1,graded,skipped,uses X
+rers2016-103-p6,F G(p_c2_t1 -> X !p_c2_t1),binary,skipped,uses X
+rers2016-103-p6,F X !p_c2_t1 W G !p_c2_t1,graded,skipped,uses X
+rers2016-103-p6,F(!X p_c2_t1 & !p_c2_t1),binary feasible,skipped,uses X
+rers2016-103-p6,F(!p_c2_t1 & X X !p_c2_t1),feasible,skipped,uses X
+rers2016-103-p6,F(!p_c2_t1 R X !p_c2_t1),feasible,skipped,uses X
+rers2016-103-p6,F(X !p_c2_t1 & !p_c2_t1),feasible graded,skipped,uses X
+rers2016-103-p6,F(X !p_c2_t1 R !p_c2_t1),binary,skipped,uses X
+rers2016-103-p6,G F X F !p_c2_t1,feasible,skipped,uses X
+rers2016-103-p6,G F(!X p_c2_t1 & !p_c2_t1),binary,skipped,uses X
+rers2016-103-p6,X !G F(X p_c2_t1 & p_c2_t1),graded,skipped,uses X
+rers2016-103-p6,X p_c2_t1 -> F G !p_c2_t1,feasible,skipped,uses X
+rers2016-103-p6,X(F G !p_c2_t1 | !p_c2_t1),binary graded,skipped,uses X
+rers2016-103-p6,p_c2_t1 -> F G X !p_c2_t1,feasible,skipped,uses X
+rers2016-103-p7,X G((p_c0_t2 | p_c0_t9) U (p_c0_t6 | !p_c0_t2)),graded,skipped,uses X
+rers2016-103-p7,X(!p_c0_t9 | p_c0_t6) W (!(p_c0_t6 & p_c0_t2) -> !p_c0_t2),feasible,skipped,uses X
+rers2016-103-p7,X(p_c0_t9 -> p_c0_t6) W (p_c0_t6 & p_c0_t2 | !p_c0_t2),binary,skipped,uses X
+rers2016-103-p9,G((F(p_c0_t6 & p_c0_t9) | X !p_c1_t6) R F X(!p_c1_t4 -> !p_c0_t3)),feasible,skipped,uses X
+rers2016-103-p9,X(!p_c0_t3 & !p_c1_t4 | !p_c1_t6) U X !(p_c0_t9 & !p_c0_t6),feasible,skipped,uses X
+rers2016-104-p1,!((!p_c2_t0__c1_t3 & X p_c1_t9) U (p_c1_t9 | p_c2_t0__c1_t3)),feasible,skipped,uses X
+rers2016-104-p1,!((G p_c1_t9 W X p_c2_t0__c1_t3) U p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,!((G p_c1_t9 | X p_c2_t0__c1_t3) U p_c2_t0__c1_t3),graded,skipped,uses X
+rers2016-104-p1,!((X !p_c2_t0__c1_t3 -> !p_c1_t9) U p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,!((p_c1_t9 -> p_c2_t0__c1_t3) U X p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,!((p_c1_t9 <-> X p_c1_t9) U (p_c1_t9 | p_c2_t0__c1_t3)),feasible,skipped,uses X
+rers2016-104-p1,!((p_c2_t0__c1_t3 <-> !p_c1_t9) | X p_c2_t0__c1_t3 | p_c2_t0__c1_t3),binary,skipped,uses X
+rers2016-104-p1,!(X F(p_c2_t0__c1_t3 & p_c1_t9) | p_c1_t9),feasible,skipped,uses X
+rers2016-104-p1,!(X p_c2_t0__c1_t3 | (p_c1_t9 | p_c2_t0__c1_t3)),binary,skipped,uses X
+rers2016-104-p1,!(X(p_c1_t9 W (p_c1_t9 | p_c2_t0__c1_t3)) | p_c1_t9),feasible,skipped,uses X
+rers2016-104-p1,!(p_c1_t9 U (X p_c2_t0__c1_t3 | p_c2_t0__c1_t3)),feasible,skipped,uses X
+rers2016-104-p1,!(p_c1_t9 U X p_c2_t0__c1_t3 | p_c1_t9),feasible,skipped,uses X
+rers2016-104-p1,!(p_c1_t9 U X((p_c1_t9 -> p_c2_t0__c1_t3) -> p_c2_t0__c1_t3)),feasible,skipped,uses X
+rers2016-104-p1,!(p_c1_t9 U X(p_c1_t9 U p_c2_t0__c1_t3)),binary,skipped,uses X
+rers2016-104-p1,!(p_c1_t9 | G X(p_c1_t9 | p_c2_t0__c1_t3)),feasible,skipped,uses X
+rers2016-104-p1,!(p_c1_t9 | X(p_c2_t0__c1_t3 | G p_c1_t9)),graded,skipped,uses X
+rers2016-104-p1,!(p_c1_t9 | p_c2_t0__c1_t3 | X X p_c2_t0__c1_t3),graded,skipped,uses X
+rers2016-104-p1,!(p_c2_t0__c1_t3 U X(!p_c1_t9 -> p_c2_t0__c1_t3)),feasible,skipped,uses X
+rers2016-104-p1,!(p_c2_t0__c1_t3 | X p_c1_t9 | p_c1_t9),binary,skipped,uses X
+rers2016-104-p1,!(p_c2_t0__c1_t3 | X(p_c1_t9 U p_c2_t0__c1_t3)),graded,skipped,uses X
+rers2016-104-p1,!F(p_c1_t9 & X p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,!F(p_c2_t0__c1_t3 & X(p_c2_t0__c1_t3 <-> !p_c1_t9)),feasible,skipped,uses X
+rers2016-104-p1,!X(X p_c2_t0__c1_t3 | p_c1_t9),binary,skipped,uses X
+rers2016-104-p1,!X(X(p_c1_t9 | p_c2_t0__c1_t3) | p_c2_t0__c1_t3),binary,skipped,uses X
+rers2016-104-p1,!X(p_c1_t9 W p_c2_t0__c1_t3),graded,skipped,uses X
+rers2016-104-p1,!X(p_c1_t9 | p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,!X(p_c2_t0__c1_t3 W p_c1_t9),graded,skipped,uses X
+rers2016-104-p1,!X(p_c2_t0__c1_t3 | p_c1_t9),binary,skipped,uses X
+rers2016-104-p1,!p_c1_t9 & X !(p_c2_t0__c1_t3 | p_c1_t9),feasible,skipped,uses X
+rers2016-104-p1,!p_c1_t9 & X !p_c2_t0__c1_t3,feasible,skipped,uses X
+rers2016-104-p1,!p_c1_t9 & X(!p_c2_t0__c1_t3 & !p_c1_t9),graded,skipped,uses X
+rers2016-104-p1,!p_c1_t9 U !(X(p_c2_t0__c1_t3 | p_c1_t9) | p_c1_t9),binary,skipped,uses X
+rers2016-104-p1,!p_c2_t0__c1_t3 & X !(p_c2_t0__c1_t3 | p_c1_t9),feasible,skipped,uses X
+rers2016-104-p1,!p_c2_t0__c1_t3 & X !p_c1_t9,feasible,skipped,uses X
+rers2016-104-p1,!p_c2_t0__c1_t3 U !(X p_c1_t9 | (p_c1_t9 | p_c2_t0__c1_t3)),binary,skipped,uses X
+rers2016-104-p1,F G(!p_c1_t9 | X !p_c2_t0__c1_t3),binary,skipped,uses X
+rers2016-104-p1,F G(!p_c2_t0__c1_t3 | X !p_c1_t9),binary,skipped,uses X
+rers2016-104-p1,F G(!p_c2_t0__c1_t3 | X !p_c2_t0__c1_t3),binary,skipped,uses X
+rers2016-104-p1,G !(X p_c1_t9 R X p_c2_t0__c1_t3),graded,skipped,uses X
+rers2016-104-p1,G(!X p_c1_t9 | (!p_c2_t0__c1_t3 | p_c1_t9)),feasible,skipped,uses X
+rers2016-104-p1,G(!p_c1_t9 & !p_c2_t0__c1_t3 | X !p_c2_t0__c1_t3),graded,skipped,uses X
+rers2016-104-p1,G(!p_c2_t0__c1_t3 | X !p_c1_t9),graded,skipped,uses X
+rers2016-104-p1,G(!p_c2_t0__c1_t3 | X !p_c2_t0__c1_t3 & !p_c1_t9),feasible,skipped,uses X
+rers2016-104-p1,G(!p_c2_t0__c1_t3 | X(p_c1_t9 -> (p_c1_t9 <-> p_c2_t0__c1_t3))),graded,skipped,uses X
+rers2016-104-p1,G((p_c1_t9 -> p_c2_t0__c1_t3) | X !p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,G((p_c2_t0__c1_t3 -> !p_c2_t0__c1_t3) | X !p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,G(p_c1_t9 -> !(X !p_c2_t0__c1_t3 -> p_c2_t0__c1_t3)),feasible,skipped,uses X
+rers2016-104-p1,G(p_c1_t9 | p_c2_t0__c1_t3 -> X !p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,G(p_c2_t0__c1_t3 -> !(X !p_c1_t9 -> p_c1_t9)),feasible,skipped,uses X
+rers2016-104-p1,G(p_c2_t0__c1_t3 -> !(X !p_c2_t0__c1_t3 -> p_c1_t9)),feasible,skipped,uses X
+rers2016-104-p1,G(p_c2_t0__c1_t3 -> !X p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,X !(X p_c2_t0__c1_t3 | p_c1_t9),graded,skipped,uses X
+rers2016-104-p1,X !(p_c1_t9 -> p_c2_t0__c1_t3) R !p_c2_t0__c1_t3,feasible,skipped,uses X
+rers2016-104-p1,X !(p_c1_t9 | p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,X !(p_c2_t0__c1_t3 | p_c1_t9),graded,skipped,uses X
+rers2016-104-p1,X !(p_c2_t0__c1_t3 | p_c1_t9) & !p_c2_t0__c1_t3,feasible,skipped,uses X
+rers2016-104-p1,X !F(p_c2_t0__c1_t3 & (p_c2_t0__c1_t3 -> X p_c1_t9)),feasible,skipped,uses X
+rers2016-104-p1,X !X(p_c1_t9 | p_c2_t0__c1_t3) & !p_c1_t9,feasible,skipped,uses X
+rers2016-104-p1,X !X(p_c1_t9 | p_c2_t0__c1_t3) & !p_c2_t0__c1_t3,feasible,skipped,uses X
+rers2016-104-p1,X !p_c1_t9 & !(p_c1_t9 | p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,X !p_c2_t0__c1_t3 & !(p_c1_t9 | p_c2_t0__c1_t3),feasible,skipped,uses X
+rers2016-104-p1,X !p_c2_t0__c1_t3 & !p_c1_t9,binary feasible,skipped,uses X
+rers2016-104-p1,X !p_c2_t0__c1_t3 & !p_c2_t0__c1_t3,binary,skipped,uses X
+rers2016-104-p1,X G !(p_c1_t9 R p_c2_t0__c1_t3),graded,skipped,uses X
+rers2016-104-p1,X(!p_c1_t9 & !p_c2_t0__c1_t3),binary,skipped,uses X
+rers2016-104-p1,X(!p_c1_t9 & !p_c2_t0__c1_t3) R !p_c2_t0__c1_t3,feasible,skipped,uses X
+rers2016-104-p1,X(!p_c2_t0__c1_t3 & !p_c1_t9),binary feasible,skipped,uses X
+rers2016-104-p1,X(!p_c2_t0__c1_t3 & !p_c1_t9) & !p_c1_t9,binary,skipped,uses X
+rers2016-104-p1,X(p_c2_t0__c1_t3 <-> p_c1_t9) & !p_c2_t0__c1_t3,binary,skipped,uses X
+rers2016-104-p1,p_c1_t9 U !(X(p_c2_t0__c1_t3 | p_c1_t9) | p_c2_t0__c1_t3),binary,skipped,uses X
+rers2016-104-p1,p_c1_t9 U X X !p_c2_t0__c1_t3 & !p_c1_t9,feasible,skipped,uses X
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!(p_c3_t4__c1_t8 & p_c0_t9) | X(p_c0_t6__c1_t7 W !p_c0_t9 -> (p_c3_t9 <-> p_c0_t7__c1_t2) R (!p_c0_t7__c1_t2 | p_c0_t6__c1_t7 | p_c3_t8__c2_t6)))),binary,skipped,uses X
+rers2016-104-p12,G(!p_c3_t4__c1_t8 | (!p_c0_t7__c1_t2 U p_c0_t9 | X p_c3_t9)) | !p_c0_t7__c1_t2,binary,skipped,uses X
+rers2016-104-p12,G(!p_c3_t9 U (p_c3_t8__c2_t6 -> p_c0_t6__c1_t7)) | X(!p_c0_t6__c1_t7 & G p_c0_t6__c1_t7),binary,skipped,uses X
+rers2016-104-p15,!p_c0_t0 | !(!p_c0_t7__c1_t2 <-> !p_c0_t6__c1_t7) | F X(p_c3_t11 | !p_c0_t9),feasible,skipped,uses X
+rers2016-104-p15,X(!p_c0_t6__c1_t7 | G(!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0)),binary,skipped,uses X
+rers2016-104-p15,p_c0_t9 -> X(!p_c0_t0 W (p_c0_t0 | p_c0_t7__c1_t2) W G((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | F p_c3_t11))),binary,skipped,uses X
+rers2016-104-p15,p_c3_t11 -> F((G(!p_c0_t9 <-> p_c3_t11) & p_c0_t7__c1_t2) W (p_c0_t0 | G X(p_c0_t6__c1_t7 | !p_c0_t2))) W G((p_c0_t7__c1_t2 -> p_c3_t11) -> !(p_c0_t9 & !p_c0_t7__c1_t2)),feasible,skipped,uses X
+rers2016-104-p2,!((!p_c2_t1 <-> p_c3_t4__c1_t8) | F X((!p_c2_t1 -> p_c3_t4__c1_t8) & p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,!((!p_c2_t1 <-> p_c3_t4__c1_t8) | F X(p_c3_t4__c1_t8 & p_c2_t1)),feasible,skipped,uses X
+rers2016-104-p2,!(G F G(!p_c3_t4__c1_t8 & (p_c2_t1 | p_c2_t3)) W X p_c2_t1),graded,skipped,uses X
+rers2016-104-p2,!(G F G(!p_c3_t4__c1_t8 & (p_c2_t1 | p_c2_t3)) W X p_c2_t3),graded,skipped,uses X
+rers2016-104-p2,!(G X G(!p_c3_t4__c1_t8 & (p_c2_t1 | p_c2_t3)) W X(p_c3_t4__c1_t8 | p_c2_t1)),graded,skipped,uses X
+rers2016-104-p2,!(G X G((!p_c3_t4__c1_t8 | !p_c2_t1) & (p_c2_t1 | p_c2_t3)) W X p_c3_t4__c1_t8),graded,skipped,uses X
+rers2016-104-p2,!(X((p_c2_t1 | p_c3_t4__c1_t8) & !(p_c2_t3 & !p_c3_t4__c1_t8)) U (!p_c3_t4__c1_t8 -> p_c2_t1)),binary,skipped,uses X
+rers2016-104-p2,!(X(p_c2_t1 & p_c2_t3) U (!p_c3_t4__c1_t8 -> p_c2_t3)),binary,skipped,uses X
+rers2016-104-p2,!(X(p_c2_t1 & p_c3_t4__c1_t8) U (!p_c3_t4__c1_t8 -> p_c2_t3)),binary,skipped,uses X
+rers2016-104-p2,!(p_c2_t1 | p_c2_t3 | X p_c2_t3),binary,skipped,uses X
+rers2016-104-p2,!(p_c2_t1 | p_c2_t3 | X p_c3_t4__c1_t8),binary,skipped,uses X
+rers2016-104-p2,!(p_c2_t1 | p_c2_t3) & X !(!(p_c2_t3 & p_c3_t4__c1_t8) -> p_c2_t1) & !p_c2_t3,binary,skipped,uses X
+rers2016-104-p2,!(p_c2_t3 | F X(p_c3_t4__c1_t8 & p_c2_t1) | p_c2_t1),feasible,skipped,uses X
+rers2016-104-p2,!(p_c2_t3 | F X(p_c3_t4__c1_t8 & p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,!(p_c2_t3 | X X(!p_c3_t4__c1_t8 & p_c2_t1)),graded,skipped,uses X
+rers2016-104-p2,!(p_c2_t3 | X(p_c2_t1 & (X p_c2_t3 | G(!(p_c2_t1 | p_c2_t3) | p_c2_t3)))),graded,skipped,uses X
+rers2016-104-p2,!(p_c3_t4__c1_t8 | F X(p_c3_t4__c1_t8 & p_c2_t1)),feasible,skipped,uses X
+rers2016-104-p2,!(p_c3_t4__c1_t8 | X p_c2_t1),graded,skipped,uses X
+rers2016-104-p2,!(p_c3_t4__c1_t8 | X(p_c2_t3 & (X p_c3_t4__c1_t8 | G(!(p_c2_t1 | p_c2_t3) | p_c2_t3)))),graded,skipped,uses X
+rers2016-104-p2,!(p_c3_t4__c1_t8 | p_c2_t3 | X X(p_c3_t4__c1_t8 & !p_c2_t1)),graded,skipped,uses X
+rers2016-104-p2,!(p_c3_t4__c1_t8 | p_c2_t3 | X X(p_c3_t4__c1_t8 & p_c2_t1)),graded,skipped,uses X
+rers2016-104-p2,!(p_c3_t4__c1_t8 | p_c2_t3 | X(p_c3_t4__c1_t8 & !p_c2_t3 | p_c2_t1 | p_c2_t3)),binary,skipped,uses X
+rers2016-104-p2,!X X(!p_c3_t4__c1_t8 -> p_c2_t3),binary,skipped,uses X
+rers2016-104-p2,!X(F(p_c2_t3 & p_c3_t4__c1_t8) W (G p_c2_t3 U !p_c3_t4__c1_t8 U p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,!X(G F(p_c2_t3 & p_c3_t4__c1_t8) W (G(p_c2_t3 <-> p_c2_t1) U p_c3_t4__c1_t8 U p_c2_t1)),feasible,skipped,uses X
+rers2016-104-p2,!p_c2_t1 & X(!p_c2_t3 & !p_c2_t1),binary,skipped,uses X
+rers2016-104-p2,!p_c2_t1 & X(!p_c3_t4__c1_t8 | p_c2_t1) & !p_c2_t3,binary,skipped,uses X
+rers2016-104-p2,!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3) & X(p_c3_t4__c1_t8 <-> p_c2_t3),graded,skipped,uses X
+rers2016-104-p2,!p_c3_t4__c1_t8 & X(p_c3_t4__c1_t8 W X p_c2_t3 & !p_c2_t1 | !p_c2_t1),feasible,skipped,uses X
+rers2016-104-p2,!p_c3_t4__c1_t8 W !((!p_c2_t1 -> p_c3_t4__c1_t8) | X X(p_c2_t3 <-> p_c3_t4__c1_t8)),binary,skipped,uses X
+rers2016-104-p2,(p_c3_t4__c1_t8 | !p_c2_t3) & X((p_c3_t4__c1_t8 <-> !p_c3_t4__c1_t8 & p_c2_t3) & !p_c2_t1),graded,skipped,uses X
+rers2016-104-p2,F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) & X !(!p_c3_t4__c1_t8 & p_c2_t3),binary,skipped,uses X
+rers2016-104-p2,F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) & X(!p_c3_t4__c1_t8 | p_c2_t1),binary,skipped,uses X
+rers2016-104-p2,F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) & X(!p_c3_t4__c1_t8 | p_c2_t3),binary,skipped,uses X
+rers2016-104-p2,G !(p_c2_t1 | p_c2_t3) | X !p_c3_t4__c1_t8,binary,skipped,uses X
+rers2016-104-p2,G !(p_c2_t3 & (X p_c2_t1 | p_c2_t1)),graded,skipped,uses X
+rers2016-104-p2,G !X(p_c2_t3 R p_c3_t4__c1_t8),graded,skipped,uses X
+rers2016-104-p2,G !p_c2_t1 W !(X F(p_c2_t1 R p_c2_t3) W (p_c2_t3 <-> F !p_c3_t4__c1_t8)),graded,skipped,uses X
+rers2016-104-p2,G X(!p_c3_t4__c1_t8 U !(p_c3_t4__c1_t8 & p_c2_t3 | p_c2_t1)),binary,skipped,uses X
+rers2016-104-p2,G X((p_c3_t4__c1_t8 -> !F p_c3_t4__c1_t8) -> G !(p_c2_t3 R p_c3_t4__c1_t8)),binary,skipped,uses X
+rers2016-104-p2,G(!(p_c2_t3 & X p_c2_t1) | !(p_c2_t3 R !p_c3_t4__c1_t8)),graded,skipped,uses X
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | X !(p_c2_t3 <-> !p_c2_t1),binary,skipped,uses X
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | X !p_c2_t1,binary,skipped,uses X
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | X !p_c2_t3,binary,skipped,uses X
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | X(!p_c3_t4__c1_t8 | p_c2_t3),binary,skipped,uses X
+rers2016-104-p2,G((!p_c2_t1 -> p_c2_t3) -> X !p_c2_t3) & !p_c3_t4__c1_t8,feasible,skipped,uses X
+rers2016-104-p2,G(G(p_c3_t4__c1_t8 <-> p_c2_t1) U !(p_c2_t1 R X p_c2_t1)),graded,skipped,uses X
+rers2016-104-p2,G(X(!p_c2_t1 | p_c3_t4__c1_t8) | !p_c2_t3),feasible,skipped,uses X
+rers2016-104-p2,G(p_c2_t3 -> X !p_c2_t3 & (p_c3_t4__c1_t8 & p_c2_t3 -> !p_c2_t1)),feasible,skipped,uses X
+rers2016-104-p2,G(p_c2_t3 -> X !p_c2_t3) & !p_c2_t1,feasible,skipped,uses X
+rers2016-104-p2,X !(!p_c2_t1 & X p_c2_t3) & (!(p_c3_t4__c1_t8 | p_c2_t1) & !p_c3_t4__c1_t8),feasible,skipped,uses X
+rers2016-104-p2,X !(!p_c3_t4__c1_t8 -> p_c2_t1),feasible,skipped,uses X
+rers2016-104-p2,X !(X(p_c3_t4__c1_t8 -> p_c2_t1) U ((!p_c2_t3 <-> p_c3_t4__c1_t8) R (p_c2_t1 | p_c3_t4__c1_t8))),binary,skipped,uses X
+rers2016-104-p2,X !(p_c2_t3 | p_c2_t1) & X(!p_c2_t1 -> !p_c3_t4__c1_t8),feasible,skipped,uses X
+rers2016-104-p2,X !(p_c3_t4__c1_t8 | p_c2_t3 & !p_c3_t4__c1_t8),feasible,skipped,uses X
+rers2016-104-p2,X !X((!p_c3_t4__c1_t8 -> p_c2_t1) | p_c2_t3),feasible,skipped,uses X
+rers2016-104-p2,X !X(p_c2_t1 | p_c2_t3),feasible,skipped,uses X
+rers2016-104-p2,X !p_c3_t4__c1_t8 & !p_c2_t1,feasible,skipped,uses X
+rers2016-104-p2,X !p_c3_t4__c1_t8 & !p_c2_t3,feasible,skipped,uses X
+rers2016-104-p2,X F !(!F(p_c2_t3 R p_c2_t1) -> X p_c2_t3),feasible,skipped,uses X
+rers2016-104-p2,X G !((p_c2_t3 <-> !p_c2_t1) R p_c3_t4__c1_t8),graded,skipped,uses X
+rers2016-104-p2,X G !(p_c2_t3 & X(G p_c2_t1 U p_c2_t1)),graded,skipped,uses X
+rers2016-104-p2,X G((p_c3_t4__c1_t8 -> F(p_c2_t1 | p_c2_t3)) R G !(p_c2_t3 R p_c3_t4__c1_t8)),graded,skipped,uses X
+rers2016-104-p2,X X !p_c2_t3 | G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),graded,skipped,uses X
+rers2016-104-p2,X X(!p_c3_t4__c1_t8 U !(p_c2_t3 | p_c2_t1)),binary,skipped,uses X
+rers2016-104-p2,X(!p_c2_t1 & (!X p_c3_t4__c1_t8 & !p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,X(!p_c2_t1 & p_c2_t3 <-> p_c2_t1 & !p_c3_t4__c1_t8) & (!p_c3_t4__c1_t8 & !p_c2_t3),feasible,skipped,uses X
+rers2016-104-p2,X(!p_c2_t3 & !X(p_c2_t1 | p_c3_t4__c1_t8)),feasible,skipped,uses X
+rers2016-104-p2,X(!p_c3_t4__c1_t8 & !((p_c2_t1 & p_c3_t4__c1_t8) U X p_c2_t3 | p_c2_t1)) & !p_c3_t4__c1_t8,feasible,skipped,uses X
+rers2016-104-p2,X(!p_c3_t4__c1_t8 & !(p_c2_t1 U X(p_c2_t3 | p_c2_t1))),feasible,skipped,uses X
+rers2016-104-p2,X(!p_c3_t4__c1_t8 & !p_c2_t1 & !((p_c2_t3 | p_c2_t1) U X p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,X(!p_c3_t4__c1_t8 & !p_c2_t1 & !(p_c2_t3 U X p_c2_t1)),feasible,skipped,uses X
+rers2016-104-p2,X(!p_c3_t4__c1_t8 & !p_c2_t1 & !(p_c2_t3 U X p_c3_t4__c1_t8)),feasible,skipped,uses X
+rers2016-104-p2,X(!p_c3_t4__c1_t8 & !p_c2_t1 & !p_c2_t3),binary,skipped,uses X
+rers2016-104-p2,X(!p_c3_t4__c1_t8 & !p_c2_t3),feasible,skipped,uses X
+rers2016-104-p2,X((!p_c2_t1 | p_c3_t4__c1_t8) & !X((!p_c3_t4__c1_t8 <-> p_c2_t1) | p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,X((!p_c2_t3 | p_c3_t4__c1_t8) & !X(p_c2_t1 | p_c3_t4__c1_t8) & !p_c2_t1),feasible,skipped,uses X
+rers2016-104-p2,X((X !(p_c2_t1 | p_c2_t3) | p_c3_t4__c1_t8) & (!p_c3_t4__c1_t8 & X !p_c3_t4__c1_t8)),feasible,skipped,uses X
+rers2016-104-p2,X((p_c2_t1 & p_c2_t3) U (!p_c3_t4__c1_t8 & !p_c2_t1)),feasible,skipped,uses X
+rers2016-104-p2,X((p_c3_t4__c1_t8 -> p_c2_t3) & (!p_c2_t3 & !(p_c3_t4__c1_t8 | p_c2_t1))),feasible,skipped,uses X
+rers2016-104-p2,X(X !p_c2_t1 & ((!p_c2_t3 <-> p_c3_t4__c1_t8) W !p_c3_t4__c1_t8 & !p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,X(X !p_c3_t4__c1_t8 & (p_c2_t1 -> p_c2_t3)),feasible,skipped,uses X
+rers2016-104-p2,X(X(!p_c2_t1 & !p_c2_t3) & X !p_c3_t4__c1_t8),feasible,skipped,uses X
+rers2016-104-p2,p_c2_t1 R !G(X F(p_c2_t1 & p_c3_t4__c1_t8) W (p_c2_t1 | p_c2_t3)),graded,skipped,uses X
+rers2016-104-p2,p_c3_t4__c1_t8 R !G(X F(p_c2_t1 & p_c3_t4__c1_t8) W (p_c2_t1 | p_c2_t3)),graded,skipped,uses X
+rers2016-104-p6,X !p_c3_t11 W ((p_c2_t0__c1_t3 | p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11)),feasible,skipped,uses X
+rers2016-104-p7,F G(X p_c0_t1 W (p_c3_t2 -> X F p_c0_t8)),graded,skipped,uses X
+rers2016-104-p7,X !p_c3_t2 | X !p_c0_t1 U (X p_c0_t8 | p_c0_t1),binary,skipped,uses X
+rers2016-105-p13,!p_c4_t10 W (!p_c4_t10 R X !p_c2_t8__c1_t2),feasible,skipped,uses X
+rers2016-105-p13,!p_c4_t10 W X !p_c2_t8__c1_t2,feasible graded,skipped,uses X
+rers2016-105-p13,(p_c4_t10 -> G p_c4_t10) | (X G !p_c2_t8__c1_t2 | !p_c4_t10),feasible,skipped,uses X
+rers2016-105-p13,(p_c4_t10 -> X !p_c2_t8__c1_t2) | !p_c4_t10,graded,skipped,uses X
+rers2016-105-p13,(p_c4_t10 -> p_c2_t8__c1_t2) W (!(p_c2_t8__c1_t2 | p_c4_t10) R X !p_c2_t8__c1_t2),feasible,skipped,uses X
+rers2016-105-p13,F G(p_c2_t8__c1_t2 | G !p_c2_t8__c1_t2 | !p_c4_t10 | X !p_c4_t10),graded,skipped,uses X
+rers2016-105-p13,F(!p_c4_t10 W G(X !p_c2_t8__c1_t2 | !p_c2_t8__c1_t2)),feasible,skipped,uses X
+rers2016-105-p13,G(p_c4_t10 -> G X(p_c2_t8__c1_t2 W X(p_c4_t10 & p_c2_t8__c1_t2) -> p_c4_t10)),graded,skipped,uses X
+rers2016-105-p13,G(p_c4_t10 -> p_c4_t10 W X(p_c2_t8__c1_t2 -> !F(!p_c4_t10 | p_c2_t8__c1_t2))),feasible,skipped,uses X
+rers2016-105-p13,X !p_c2_t8__c1_t2 | !p_c4_t10,binary,skipped,uses X
+rers2016-105-p13,X !p_c4_t10 | X G !p_c2_t8__c1_t2,binary,skipped,uses X
+rers2016-105-p13,X(!p_c4_t10 | F G !p_c2_t8__c1_t2),binary,skipped,uses X
+rers2016-105-p13,X(!p_c4_t10 | X !p_c2_t8__c1_t2),feasible,skipped,uses X
+rers2016-105-p13,X(G !p_c2_t8__c1_t2 & p_c4_t10 | !p_c4_t10),graded,skipped,uses X
+rers2016-105-p13,X(G !p_c2_t8__c1_t2 | !p_c4_t10),feasible,skipped,uses X
+rers2016-105-p13,X(G(p_c2_t8__c1_t2 -> !p_c2_t8__c1_t2) | !p_c4_t10),feasible,skipped,uses X
+rers2016-105-p13,X(X !p_c4_t10 | X X !p_c2_t8__c1_t2),feasible,skipped,uses X
+rers2016-105-p13,X(p_c4_t10 -> !(F p_c2_t8__c1_t2 | !p_c4_t10 | p_c2_t8__c1_t2)),feasible,skipped,uses X
+rers2016-105-p13,p_c2_t8__c1_t2 -> G(!p_c4_t10 | X G !p_c2_t8__c1_t2),graded,skipped,uses X
+rers2016-105-p13,p_c2_t8__c1_t2 U (X(!p_c4_t10 | G !p_c2_t8__c1_t2) | (p_c2_t8__c1_t2 | p_c4_t10)),binary,skipped,uses X
+rers2016-105-p16,G(!p_c0_t6 | F F(X X p_c2_t7 -> p_c2_t6)),graded,skipped,uses X
+rers2016-105-p16,X p_c2_t6 W ((p_c2_t6 | !p_c0_t6) R (p_c2_t6 | !p_c2_t7)) | p_c2_t7,binary,skipped,uses X
+rers2016-105-p16,X(p_c0_t6 <-> !p_c2_t6) W ((p_c2_t6 | !p_c0_t6) R (p_c2_t6 | !p_c2_t7)) | !p_c0_t6,binary,skipped,uses X
+rers2016-105-p19,!p_c0_t4 | !F X p_c4_t16,feasible,skipped,uses X
+rers2016-105-p19,!p_c0_t4 | X G !p_c4_t16,feasible,skipped,uses X
+rers2016-105-p19,F G((p_c4_t16 -> X !p_c4_t16) | G !p_c0_t4),graded,skipped,uses X
+rers2016-105-p19,G !p_c0_t4 | X(!p_c0_t4 U X X !p_c4_t16),binary,skipped,uses X
+rers2016-105-p19,X !p_c0_t4 | G(!p_c0_t4 | G !p_c4_t16),binary,skipped,uses X
+rers2016-105-p19,X p_c0_t4 W G(!p_c0_t4 | G !p_c4_t16) | !p_c4_t16,graded,skipped,uses X
+rers2016-105-p19,X(!p_c0_t4 | G !p_c4_t16),binary,skipped,uses X
+rers2016-105-p19,X(!p_c0_t4 | G(X F G !p_c0_t4 W X !p_c4_t16)),feasible,skipped,uses X
+rers2016-105-p19,X(!p_c0_t4 | X(p_c0_t4 | !p_c4_t16)),feasible,skipped,uses X
+rers2016-105-p19,X(F((p_c4_t16 -> p_c0_t4) & !p_c0_t4) R (p_c0_t4 -> G !p_c4_t16)),feasible,skipped,uses X
+rers2016-105-p19,X(G !p_c4_t16 | !p_c0_t4),graded,skipped,uses X
+rers2016-105-p19,X(X !p_c0_t4 | X X !p_c4_t16),feasible,skipped,uses X
+rers2016-105-p19,X(X !p_c4_t16 | !p_c0_t4),graded,skipped,uses X
+rers2016-105-p19,p_c0_t4 -> F X G !p_c4_t16 & !p_c4_t16,feasible,skipped,uses X
+rers2016-105-p19,p_c0_t4 -> X G !p_c4_t16,feasible,skipped,uses X
+rers2016-105-p2,!p_c4_t12 | X(!(!p_c2_t6 & (p_c2_t3__c1_t6 & p_c2_t7)) -> G !p_c2_t6),feasible,skipped,uses X
+rers2016-105-p2,(!p_c2_t3__c1_t6 <-> p_c2_t6) -> X X G(!p_c4_t12 | G !p_c2_t6),binary,skipped,uses X
+rers2016-105-p2,(p_c4_t12 -> !(p_c4_t12 | !p_c4_t3)) W X !p_c2_t6,feasible,skipped,uses X
+rers2016-105-p2,(p_c4_t12 -> !(p_c4_t12 | !p_c4_t3)) W X !p_c2_t6 W (p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7)) | p_c4_t12,feasible,skipped,uses X
+rers2016-105-p2,F G(G !p_c4_t12 | (X !p_c2_t6 | (!p_c2_t6 & (p_c2_t7 & p_c2_t3__c1_t6)) U !p_c2_t6)),binary,skipped,uses X
+rers2016-105-p2,G((!p_c4_t12 | G F !p_c2_t6) & (!p_c4_t12 | (!(!p_c4_t12 <-> p_c2_t6) U !X p_c4_t12) U G !(p_c2_t6 & p_c4_t3))),feasible,skipped,uses X
+rers2016-105-p2,G((X p_c2_t6 -> !p_c2_t3__c1_t6) W ((p_c4_t3 <-> p_c4_t12) U G !p_c4_t12 & !p_c2_t6)) | X(p_c4_t12 -> !p_c4_t12),feasible,skipped,uses X
+rers2016-105-p2,X X((p_c4_t12 -> G p_c2_t3__c1_t6) & (G F p_c4_t3 | p_c4_t3 U G F !(p_c2_t7 | p_c2_t6))) | G(!p_c4_t12 | G !p_c2_t6),binary,skipped,uses X
+rers2016-105-p2,X(G !p_c2_t6 | !p_c4_t12),graded,skipped,uses X
+rers2016-105-p2,p_c4_t12 -> X G !p_c2_t6,feasible,skipped,uses X
+rers2016-105-p2,p_c4_t12 R (p_c4_t12 -> F G(G(G !(p_c2_t7 | !p_c4_t12) R p_c4_t12 | !p_c2_t6) W X X !p_c2_t3__c1_t6) | G p_c2_t6),graded,skipped,uses X
+rers2016-105-p2,p_c4_t12 W X(X p_c4_t12 -> (p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7)) U F G !p_c2_t6),graded,skipped,uses X
+rers2016-106-p13,!X((!p_c1_t3 -> p_c1_t3) & G !p_c1_t0),graded,skipped,uses X
+rers2016-106-p13,!p_c1_t3 W X !G !p_c1_t0 | p_c1_t3,feasible,skipped,uses X
+rers2016-106-p13,X X(F p_c1_t0 | !p_c1_t3),graded,skipped,uses X
+rers2016-106-p13,X p_c1_t3 -> X F p_c1_t0,binary,skipped,uses X
+rers2016-106-p13,X p_c1_t3 | p_c1_t3 -> F p_c1_t0,feasible,skipped,uses X
+rers2016-106-p13,X(F p_c1_t0 | !p_c1_t3),graded,skipped,uses X
+rers2016-106-p13,X(F p_c1_t0 | G !X p_c1_t3),feasible,skipped,uses X
+rers2016-106-p13,X(F p_c1_t3 -> F(p_c1_t0 | !(p_c1_t0 U F p_c1_t3))),feasible,skipped,uses X
+rers2016-106-p13,X(G !p_c1_t0 -> !p_c1_t3),binary feasible,skipped,uses X
+rers2016-106-p13,X(p_c1_t0 R (p_c1_t3 -> F p_c1_t0)),graded,skipped,uses X
+rers2016-106-p7,!((!p_c3_t0 | p_c1_t5__c3_t10) & X(F !p_c2_t8__c1_t4 & p_c2_t8__c1_t4)),feasible,skipped,uses X
+rers2016-106-p7,!(F p_c1_t5__c3_t10 U (p_c2_t8__c1_t4 & (X(p_c2_t8__c1_t4 & !p_c3_t0) | p_c3_t0))),binary,skipped,uses X
+rers2016-106-p7,!(F p_c3_t0 U ((p_c1_t5__c3_t10 | p_c2_t8__c1_t4) & X p_c2_t8__c1_t4)),binary,skipped,uses X
+rers2016-106-p7,!(F p_c3_t0 U (p_c3_t0 & X !(p_c2_t8__c1_t4 -> !p_c1_t5__c3_t10))) & !p_c2_t8__c1_t4,binary,skipped,uses X
+rers2016-106-p7,!(X G((!p_c1_t5__c3_t10 -> !p_c3_t0) & p_c2_t8__c1_t4) & !p_c2_t8__c1_t4),feasible,skipped,uses X
+rers2016-106-p7,!F(p_c1_t5__c3_t10 & X p_c2_t8__c1_t4),binary,skipped,uses X
+rers2016-106-p7,!p_c2_t8__c1_t4 & X(!p_c1_t5__c3_t10 -> p_c2_t8__c1_t4 -> !p_c3_t0),feasible,skipped,uses X
+rers2016-106-p7,!p_c2_t8__c1_t4 & X(p_c1_t5__c3_t10 -> !p_c3_t0),feasible,skipped,uses X
+rers2016-106-p7,!p_c2_t8__c1_t4 W !(X G F(p_c1_t5__c3_t10 & !p_c3_t0) & !p_c1_t5__c3_t10),feasible,skipped,uses X
+rers2016-106-p7,!p_c2_t8__c1_t4 W F G(X X !p_c2_t8__c1_t4 -> X !p_c3_t0),feasible,skipped,uses X
+rers2016-106-p7,!p_c3_t0 W F G(X X(p_c3_t0 | p_c1_t5__c3_t10) -> X G !p_c2_t8__c1_t4),feasible,skipped,uses X
+rers2016-106-p7,(!p_c1_t5__c3_t10 -> X !p_c3_t0) U (p_c1_t5__c3_t10 | G !p_c2_t8__c1_t4),binary,skipped,uses X
+rers2016-106-p7,(!p_c3_t0 | X !p_c1_t5__c3_t10) & !X p_c2_t8__c1_t4,binary,skipped,uses X
+rers2016-106-p7,(X F !p_c2_t8__c1_t4 | !p_c3_t0) & (!p_c1_t5__c3_t10 | !p_c3_t0),feasible,skipped,uses X
+rers2016-106-p7,(p_c1_t5__c3_t10 -> X !p_c3_t0) U (!p_c1_t5__c3_t10 | G !p_c2_t8__c1_t4),binary,skipped,uses X
+rers2016-106-p7,(p_c1_t5__c3_t10 <-> p_c3_t0) U X !p_c2_t8__c1_t4,graded,skipped,uses X
+rers2016-106-p7,(p_c1_t5__c3_t10 | !p_c2_t8__c1_t4) W F G(X X p_c2_t8__c1_t4 -> X(p_c1_t5__c3_t10 -> G !p_c1_t5__c3_t10)),feasible,skipped,uses X
+rers2016-106-p7,(p_c2_t8__c1_t4 <-> p_c3_t0) U X(!p_c1_t5__c3_t10 U !p_c2_t8__c1_t4),graded,skipped,uses X
+rers2016-106-p7,(p_c2_t8__c1_t4 | !(p_c3_t0 <-> !p_c2_t8__c1_t4)) W F G(X X(p_c2_t8__c1_t4 | p_c1_t5__c3_t10) -> X G p_c2_t8__c1_t4),feasible,skipped,uses X
+rers2016-106-p7,F G(X X p_c3_t0 -> X !(!p_c2_t8__c1_t4 -> p_c1_t5__c3_t10)),feasible,skipped,uses X
+rers2016-106-p7,F(!p_c2_t8__c1_t4 W ((G !p_c1_t5__c3_t10 | X G !p_c3_t0) & !p_c1_t5__c3_t10)),feasible,skipped,uses X
+rers2016-106-p7,F(G(!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4) | X G(p_c3_t0 -> !p_c3_t0)),feasible,skipped,uses X
+rers2016-106-p7,G X F !p_c2_t8__c1_t4 & G(p_c1_t5__c3_t10 -> !p_c3_t0),graded,skipped,uses X
+rers2016-106-p7,G(!p_c1_t5__c3_t10 U G X F !p_c2_t8__c1_t4) & G(p_c2_t8__c1_t4 -> !p_c3_t0),graded,skipped,uses X
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10)) | X(!p_c3_t0 & !p_c2_t8__c1_t4),graded,skipped,uses X
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & G !p_c1_t5__c3_t10 | !p_c2_t8__c1_t4) | X X !p_c3_t0,feasible,skipped,uses X
+rers2016-106-p7,G(!p_c3_t0 | (G p_c1_t5__c3_t10 | G !X !G(p_c3_t0 | !p_c1_t5__c3_t10)) & (p_c2_t8__c1_t4 <-> p_c1_t5__c3_t10)),feasible,skipped,uses X
+rers2016-106-p7,G(G !(p_c2_t8__c1_t4 <-> !p_c1_t5__c3_t10) | (p_c2_t8__c1_t4 -> p_c3_t0 | !X p_c2_t8__c1_t4)),feasible,skipped,uses X
+rers2016-106-p7,G(G !p_c2_t8__c1_t4 | p_c2_t8__c1_t4 | (p_c3_t0 -> p_c2_t8__c1_t4 | !X(p_c3_t0 | p_c1_t5__c3_t10))),feasible,skipped,uses X
+rers2016-106-p7,G(G(!p_c2_t8__c1_t4 | !p_c1_t5__c3_t10) | p_c2_t8__c1_t4 | (p_c3_t0 -> p_c2_t8__c1_t4 | !X p_c3_t0)) & !p_c2_t8__c1_t4,feasible,skipped,uses X
+rers2016-106-p7,G(X !p_c3_t0 | F G !p_c2_t8__c1_t4),binary,skipped,uses X
+rers2016-106-p7,X !p_c2_t8__c1_t4 & (p_c1_t5__c3_t10 -> F !p_c3_t0),binary,skipped,uses X
+rers2016-106-p7,X F(p_c1_t5__c3_t10 -> !p_c3_t0) & !p_c2_t8__c1_t4,feasible,skipped,uses X
+rers2016-106-p7,X F(p_c1_t5__c3_t10 | !p_c2_t8__c1_t4) W G F p_c1_t5__c3_t10 & !p_c2_t8__c1_t4,feasible,skipped,uses X
+rers2016-106-p7,X X(!p_c2_t8__c1_t4 & (!p_c3_t0 | !p_c1_t5__c3_t10)),feasible,skipped,uses X
+rers2016-106-p7,X X((p_c3_t0 -> !p_c1_t5__c3_t10) & !p_c2_t8__c1_t4),feasible,skipped,uses X
+rers2016-106-p7,X(G !p_c1_t5__c3_t10 W (!p_c3_t0 U G !G p_c2_t8__c1_t4)),feasible,skipped,uses X
+rers2016-106-p7,p_c2_t8__c1_t4 U G((p_c2_t8__c1_t4 -> !X p_c2_t8__c1_t4) W (p_c3_t0 U X p_c1_t5__c3_t10)),feasible,skipped,uses X
+rers2016-106-p7,p_c3_t0 W F G(X X p_c2_t8__c1_t4 -> X(p_c1_t5__c3_t10 & F p_c2_t8__c1_t4 -> G !p_c1_t5__c3_t10)),feasible,skipped,uses X
+rers2016-106-p8,!p_c5_t10 W (X F X G !p_c3_t2 & X !p_c3_t2),feasible,skipped,uses X
+rers2016-106-p8,!p_c5_t10 W F X G !p_c3_t2,feasible,skipped,uses X
+rers2016-106-p8,!p_c5_t10 | F(!p_c3_t2 W !F X !p_c3_t2),feasible,skipped,uses X
+rers2016-106-p8,!p_c5_t10 | G((p_c3_t2 -> p_c5_t10) W !F X !p_c3_t2),feasible,skipped,uses X
+rers2016-106-p8,F G X(X !p_c5_t10 | G !p_c3_t2),graded,skipped,uses X
+rers2016-106-p8,F X G(!p_c5_t10 | G !p_c3_t2),graded,skipped,uses X
+rers2016-106-p8,F(!p_c5_t10 W G X !p_c3_t2),feasible,skipped,uses X
+rers2016-106-p8,G(!F G X p_c3_t2 & !p_c3_t2 | !p_c5_t10),feasible,skipped,uses X
+rers2016-106-p8,G(!p_c5_t10 | G !p_c3_t2) W X G F !p_c3_t2,binary,skipped,uses X
+rers2016-106-p8,X !p_c5_t10 | G X G !p_c3_t2,binary,skipped,uses X
+rers2016-106-p8,X F G(G !p_c3_t2 | !p_c5_t10),feasible,skipped,uses X
+rers2016-106-p8,X G(!p_c5_t10 | !G F(!p_c3_t2 -> p_c3_t2)),graded,skipped,uses X
+rers2016-106-p8,X(!p_c5_t10 | G !p_c3_t2),feasible,skipped,uses X
+rers2016-106-p8,X(X !p_c5_t10 | F G !p_c3_t2 | p_c3_t2),graded,skipped,uses X
+rers2016-106-p8,p_c5_t10 -> F G(X !p_c5_t10 -> G !p_c3_t2),graded,skipped,uses X
+rers2016-106-p8,p_c5_t10 -> G X G !p_c3_t2,graded,skipped,uses X
+rers2016-101-p13,(p_c0_t8 | !p_c0_t3) R (p_c0_t8 | !p_c0_t9 | F p_c0_t3 | p_c0_t3),graded,holds,
+rers2016-101-p13,(p_c0_t8 | !p_c0_t3) R (p_c0_t8 | !p_c0_t9 | F p_c0_t3),binary feasible graded,holds,
+rers2016-101-p13,(!p_c0_t3 | p_c0_t8) R (p_c0_t8 | !p_c0_t9 | F p_c0_t3),binary,holds,
+rers2016-101-p13,!(p_c0_t8 <-> !p_c0_t9) | F p_c0_t3 | !p_c0_t9,feasible,holds,
+rers2016-101-p13,(!p_c0_t3 -> p_c0_t8) R (p_c0_t3 | F(p_c0_t8 | !p_c0_t9 | p_c0_t3)),feasible,holds,
+rers2016-101-p13,!p_c0_t9 | p_c0_t8 | F p_c0_t3,feasible,holds,
+rers2016-101-p13,(!p_c0_t9 | p_c0_t8) R (p_c0_t8 | !p_c0_t9 | F p_c0_t3),feasible,holds,
+rers2016-101-p13,(p_c0_t3 -> p_c0_t8) R (p_c0_t8 | F(p_c0_t8 | !p_c0_t9 | p_c0_t3)),feasible,holds,
+rers2016-101-p13,(p_c0_t3 -> p_c0_t8) R (p_c0_t8 | !(p_c0_t9 | p_c0_t8) | F p_c0_t3),feasible,holds,
+rers2016-101-p13,(p_c0_t8 & (p_c0_t3 | p_c0_t8)) R (!p_c0_t9 | F(p_c0_t3 | p_c0_t8)),feasible,holds,
+rers2016-101-p13,(p_c0_t8 | !p_c0_t9) R ((p_c0_t8 | !p_c0_t9) & p_c0_t8 | F(p_c0_t9 -> p_c0_t3)),graded,holds,
+rers2016-101-p13,p_c0_t8 R ((p_c0_t8 | !p_c0_t9) & !p_c0_t9 | F(!p_c0_t8 -> p_c0_t3)),graded,holds,
+rers2016-101-p13,(p_c0_t8 | !p_c0_t9) R (p_c0_t8 | (F p_c0_t3 | !p_c0_t9)),binary,holds,
+rers2016-101-p13,F p_c0_t3 W (p_c0_t8 | !p_c0_t9),binary,holds,
+rers2016-101-p13,F p_c0_t3 W (p_c0_t8 R (p_c0_t8 | !p_c0_t9)) | !p_c0_t3,binary,holds,
+rers2016-101-p13,F p_c0_t3 W (p_c0_t8 R (p_c0_t8 | !p_c0_t9)) | G F G F p_c0_t8 | p_c0_t9,binary,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F p_c0_t3 W F(p_c0_t8 | F p_c0_t3) | !p_c0_t9),binary,holds,
+rers2016-101-p13,p_c0_t8 R (!(p_c0_t8 <-> !p_c0_t9) | F(!p_c0_t3 -> p_c0_t8)),feasible,holds,
+rers2016-101-p13,G(!p_c0_t9 | p_c0_t8) W F(p_c0_t8 | p_c0_t3),binary,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 & !p_c0_t3 | !p_c0_t9 | F(!p_c0_t8 -> p_c0_t3)),graded,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F p_c0_t3) | !p_c0_t8 R (p_c0_t8 | !p_c0_t9),graded,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F p_c0_t3) | !p_c0_t9,binary,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F(!p_c0_t9 | p_c0_t3)),binary,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | p_c0_t3 | F(!p_c0_t8 -> p_c0_t3) | !p_c0_t9),graded,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F(!p_c0_t3 -> p_c0_t8)),binary,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F(p_c0_t3 | p_c0_t8)),binary feasible graded,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F(p_c0_t3 | !p_c0_t9)),binary,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | F(p_c0_t9 -> p_c0_t3)),graded,holds,
+rers2016-101-p13,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F(p_c0_t8 | p_c0_t3)),binary,holds,
+rers2016-101-p13,p_c0_t8 R F(!(p_c0_t8 | p_c0_t3) -> !p_c0_t9),feasible,holds,
+rers2016-101-p13,p_c0_t8 R F((!p_c0_t3 -> p_c0_t8 | !p_c0_t9) | p_c0_t3),graded,holds,
+rers2016-101-p13,p_c0_t8 | !p_c0_t9 | p_c0_t3 | F p_c0_t3,feasible,holds,
+rers2016-101-p13,p_c0_t8 R F(p_c0_t8 | !p_c0_t9 | p_c0_t3),binary,holds,
+rers2016-101-p13,p_c0_t8 | !p_c0_t9 | F p_c0_t3,binary feasible graded,holds,
+rers2016-101-p13,p_c0_t8 | !p_c0_t9 | p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F p_c0_t3),graded,holds,
+rers2016-101-p17,(!(p_c0_t8 & p_c0_t7) U p_c0_t8) W G(!p_c0_t1 | G !p_c0_t6),binary,holds,
+rers2016-101-p13,p_c0_t8 | (p_c0_t8 | !p_c0_t9) | F p_c0_t3,feasible,holds,
+rers2016-101-p17,(p_c0_t8 & p_c0_t5) U (!p_c0_t7 -> G !p_c0_t6) | (p_c0_t5 | !p_c0_t1),binary,holds,
+rers2016-101-p17,F((!p_c0_t7 | !(p_c0_t8 | p_c0_t7) U p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)),binary,holds,
+rers2016-101-p17,(!p_c0_t1 | !p_c0_t6) U (p_c0_t5 | !p_c0_t7),binary,holds,
+rers2016-101-p17,F((!p_c0_t7 | !p_c0_t8 U p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)),graded,holds,
+rers2016-101-p17,F((!p_c0_t7 | p_c0_t5 | !p_c0_t8 U p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)),binary,holds,
+rers2016-101-p17,F((!p_c0_t7 | p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)),feasible,holds,
+rers2016-101-p17,G F((!p_c0_t7 | p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)),graded,holds,
+rers2016-101-p17,G F((!p_c0_t7 | (!p_c0_t8 U p_c0_t5 | p_c0_t5)) & (!p_c0_t1 | G !p_c0_t6)),binary,holds,
+rers2016-101-p17,G(!p_c0_t5 & (!p_c0_t8 -> p_c0_t8) | G !p_c0_t6) | !p_c0_t1,feasible,holds,
+rers2016-101-p17,G(!p_c0_t1 | G !p_c0_t6 W (!p_c0_t8 U (p_c0_t8 & !p_c0_t6))),feasible,holds,
+rers2016-101-p17,G(!p_c0_t8 U (p_c0_t7 -> p_c0_t5) & (!p_c0_t6 | (p_c0_t1 U !p_c0_t1 | p_c0_t8 & !p_c0_t5))),binary,holds,
+rers2016-101-p17,G(!p_c0_t1 | p_c0_t7 & !p_c0_t1 | G((p_c0_t6 & !p_c0_t8) U (!p_c0_t6 | p_c0_t5))),graded,holds,
+rers2016-101-p17,G(!p_c0_t1 | G F !p_c0_t6 W (!p_c0_t8 U p_c0_t5)),feasible,holds,
+rers2016-101-p17,G(!p_c0_t8 | G !p_c0_t6) | !p_c0_t1,feasible,holds,
+rers2016-101-p17,G((!(p_c0_t7 | p_c0_t1) | F((!p_c0_t1 | p_c0_t8) U (p_c0_t5 | !p_c0_t7))) & (!p_c0_t1 | G !p_c0_t6)) | !p_c0_t5,binary,holds,
+rers2016-101-p17,G((!p_c0_t7 | !(p_c0_t8 & !(p_c0_t7 <-> !p_c0_t8)) U (p_c0_t8 | p_c0_t5)) & ((p_c0_t6 -> !p_c0_t1) | G !(!p_c0_t1 | p_c0_t7))),binary,holds,
+rers2016-101-p2,!p_c0_t1 | p_c0_t2 | G !p_c0_t7,binary feasible graded,holds,
+rers2016-101-p17,G((p_c0_t5 | !p_c0_t7 | (!p_c0_t1 | p_c0_t8) U !p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)) | (p_c0_t1 <-> p_c0_t6),graded,holds,
+rers2016-101-p2,(!p_c0_t7 | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),binary graded,holds,
+rers2016-101-p17,G((p_c0_t7 <-> !p_c0_t5) | G !p_c0_t6) | !p_c0_t1,feasible,holds,
+rers2016-101-p17,G(p_c0_t1 & p_c0_t5 & (!p_c0_t8 -> p_c0_t8) | G !p_c0_t6) | !p_c0_t1,feasible,holds,
+rers2016-101-p17,p_c0_t1 -> G((p_c0_t7 | !p_c0_t6) & !p_c0_t6),feasible,holds,
+rers2016-101-p2,(!(p_c0_t2 | !p_c0_t7) -> p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),binary,holds,
+rers2016-101-p2,((p_c0_t1 <-> p_c0_t7) | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),binary,holds,
+rers2016-101-p2,(G !p_c0_t7 | !p_c0_t7) W (p_c0_t2 R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7)),binary feasible graded,holds,
+rers2016-101-p2,((p_c0_t1 <-> !p_c0_t7) -> p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),graded,holds,
+rers2016-101-p2,(p_c0_t2 | !p_c0_t7) R (!(p_c0_t1 | p_c0_t2) | p_c0_t2 | G !p_c0_t7),feasible,holds,
+rers2016-101-p2,(p_c0_t7 -> p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),binary feasible graded,holds,
+rers2016-101-p2,G(!p_c0_t7 | !p_c0_t2) U ((p_c0_t1 | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7)),graded,holds,
+rers2016-101-p2,(p_c0_t2 | !p_c0_t7) R (!(!p_c0_t2 -> p_c0_t1) | p_c0_t2 | G !p_c0_t7),binary,holds,
+rers2016-101-p2,p_c0_t2 R (!p_c0_t1 | p_c0_t2 | G F !p_c0_t7),feasible,holds,
+rers2016-101-p2,(p_c0_t2 | !p_c0_t7) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),binary feasible graded,holds,
+rers2016-101-p2,(p_c0_t7 -> p_c0_t2) R (p_c0_t2 | !p_c0_t1 | p_c0_t2 | G !(!p_c0_t2 & p_c0_t7)),graded,holds,
+rers2016-102-p13,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7),feasible,holds,
+rers2016-102-p13,!p_c0_t0__c1_t2 | (p_c0_t4 | p_c0_t5) | p_c0_t8 | (p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | (p_c0_t4 | p_c0_t5) | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),binary,holds,
+rers2016-102-p13,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t4 | (p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),binary,holds,
+rers2016-102-p13,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | (!(p_c0_t8 & p_c0_t5) -> p_c0_t5) R (p_c0_t5 | !p_c1_t7),binary,holds,
+rers2016-102-p13,(p_c0_t4 | (p_c0_t8 | !p_c0_t0__c1_t2)) R (!(p_c0_t0__c1_t2 | p_c0_t5) | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),binary,holds,
+rers2016-102-p13,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7),binary feasible graded,holds,
+rers2016-102-p13,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | (!(p_c1_t7 | p_c0_t8) | p_c0_t8)),feasible,holds,
+rers2016-102-p13,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | (p_c0_t0__c1_t2 & !p_c1_t7 | !p_c1_t7)),binary,holds,
+rers2016-102-p13,(p_c0_t4 | !p_c1_t7 | p_c0_t8) R (!(p_c0_t0__c1_t2 | p_c0_t5) | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),graded,holds,
+rers2016-102-p13,(p_c0_t4 | (p_c0_t8 | !p_c0_t0__c1_t2)) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),graded,holds,
+rers2016-102-p13,(p_c0_t4 | (p_c0_t8 | !p_c0_t4)) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),feasible,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t5 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 & p_c0_t0__c1_t2 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),graded,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t5 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),binary,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t8 | !p_c0_t5) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | p_c0_t8 R (p_c0_t8 | p_c0_t0__c1_t2 R p_c1_t7),graded,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | !p_c1_t7,binary feasible graded,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t8 | !(p_c0_t5 & p_c1_t7)) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | p_c0_t8 R (p_c0_t4 | p_c0_t0__c1_t2 R p_c1_t7),graded,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | !p_c1_t7 | p_c0_t5 R (p_c0_t5 | (!p_c1_t7 | p_c0_t0__c1_t2 & !p_c1_t7)),graded,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t8 | !p_c0_t5) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | p_c0_t8 R (p_c0_t4 | p_c0_t8 | G p_c1_t7),binary,holds,
+rers2016-102-p13,(p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | (p_c0_t5 | !p_c0_t0__c1_t2) R (p_c0_t5 | !p_c1_t7)),binary graded,holds,
+rers2016-102-p13,(p_c0_t4 | p_c1_t7 | (p_c0_t8 | p_c0_t5)) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),graded,holds,
+rers2016-102-p14,(p_c0_t6 <-> !p_c1_t3) U (p_c1_t3 -> p_c1_t8),feasible,holds,
+rers2016-102-p14,(p_c1_t3 -> F !p_c0_t6 & p_c1_t8 & !p_c1_t3) | !p_c0_t6 U p_c1_t8,binary,holds,
+rers2016-102-p14,G(!(p_c1_t8 | p_c0_t6) U (p_c1_t3 -> p_c1_t8)),binary,holds,
+rers2016-102-p14,G F(!p_c1_t3 | (!p_c0_t6 | !p_c1_t3) U p_c1_t8),binary,holds,
+rers2016-102-p13,(p_c0_t5 R (p_c0_t5 | !p_c1_t7)) U (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | G !p_c0_t8),feasible,holds,
+rers2016-102-p14,!p_c0_t6 U p_c1_t8 | !p_c1_t3,graded,holds,
+rers2016-102-p14,(p_c0_t6 -> !p_c0_t6) U (p_c1_t8 | !p_c1_t3),feasible,holds,
+rers2016-102-p14,G(!p_c0_t6 U ((p_c1_t3 -> p_c1_t8) | !p_c1_t3)),graded,holds,
+rers2016-102-p14,G F(!p_c1_t3 | !p_c0_t6 U p_c1_t8),graded,holds,
+rers2016-102-p14,G(!p_c0_t6 U (!p_c1_t3 | p_c1_t8)),binary feasible graded,holds,
+rers2016-102-p14,G(!p_c0_t6 U (p_c1_t8 | !p_c1_t3)),binary graded,holds,
+rers2016-102-p14,G(!p_c1_t3 | !p_c0_t6 U p_c1_t8) | !p_c0_t6 | p_c1_t3,binary,holds,
+rers2016-102-p14,G(!p_c1_t3 | !p_c0_t6 U (p_c1_t3 -> p_c1_t8)),binary feasible graded,holds,
+rers2016-102-p14,G(!p_c0_t6 U (p_c1_t3 -> p_c1_t8)),binary graded,holds,
+rers2016-102-p14,G(!p_c1_t3 | (!p_c0_t6 & !p_c1_t8) U p_c1_t8) | !p_c0_t6,binary,holds,
+rers2016-102-p14,G(!p_c1_t3 | (!p_c0_t6 | !p_c1_t3) U (p_c1_t8 | !p_c1_t3)),graded,holds,
+rers2016-102-p14,G(!p_c1_t3 | !p_c0_t6 U (!p_c1_t3 | p_c1_t8)),binary,holds,
+rers2016-102-p14,G(!p_c1_t3 | F(p_c1_t3 -> p_c1_t8) W (!p_c0_t6 U p_c1_t8)),feasible,holds,
+rers2016-102-p14,G(!p_c1_t3 | F(p_c1_t3 | p_c0_t6 -> p_c1_t8)),graded,holds,
+rers2016-102-p14,G(!p_c1_t3 | (p_c1_t8 <-> p_c0_t6) U !p_c1_t3 U (p_c1_t8 | !p_c1_t3)),binary,holds,
+rers2016-102-p14,G(F p_c1_t8 | p_c0_t6 | !p_c1_t3) | !p_c0_t6,feasible,holds,
+rers2016-102-p14,G(p_c1_t8 | !p_c0_t6 U (p_c1_t3 -> p_c1_t8)),feasible,holds,
+rers2016-102-p14,G(p_c1_t8 | !p_c0_t6 U (!p_c1_t3 | p_c1_t8 | p_c1_t8)),feasible,holds,
+rers2016-102-p14,p_c1_t3 -> F(!p_c0_t6 -> p_c1_t8),feasible,holds,
+rers2016-102-p19,!(p_c0_t2 | F G p_c0_t2),feasible,holds,
+rers2016-102-p14,p_c0_t6 W !p_c1_t3 | G(!p_c1_t3 | (!p_c0_t6 | p_c1_t3) U p_c1_t8),binary,holds,
+rers2016-102-p19,G F !p_c0_t2,binary feasible graded,holds,
+rers2016-102-p19,!p_c0_t2,binary feasible graded,holds,
+rers2016-102-p2,p_c1_t4 W (p_c1_t4 | !(p_c0_t9 | p_c1_t3)),binary,holds,
+rers2016-102-p2,p_c1_t4 | !(p_c0_t9 | p_c1_t3),binary feasible graded,holds,
+rers2016-102-p4,!((!p_c0_t7 | !p_c1_t6 -> p_c1_t6) U p_c0_t7 & (!p_c0_t7 & p_c1_t6 & !p_c1_t0) W F(p_c1_t0 -> F(p_c1_t7 | p_c0_t7))),feasible,holds,
+rers2016-102-p4,!(G(p_c1_t6 -> !p_c0_t7) -> p_c0_t7),feasible,holds,
+rers2016-102-p4,!(p_c0_t7 | !G((p_c0_t7 -> G p_c1_t0 & p_c1_t0) | (F p_c1_t6 -> !p_c1_t7))),graded,holds,
+rers2016-102-p4,!(p_c0_t7 & F(!p_c1_t0 U (!p_c1_t6 | p_c0_t7))),binary,holds,
+rers2016-102-p4,!((p_c1_t7 & !p_c1_t6) R (!p_c1_t0 | p_c1_t7) | p_c0_t7) | !p_c0_t7,graded,holds,
+rers2016-102-p4,!p_c1_t6 | F(!p_c1_t7 -> p_c1_t7 R (!p_c1_t0 | p_c1_t7)),binary,holds,
+rers2016-102-p4,!(p_c1_t7 U p_c1_t0 & p_c0_t7 W F(!p_c0_t7 -> F(p_c0_t7 & !p_c1_t0))),feasible,holds,
+rers2016-102-p4,(!(p_c1_t6 | !p_c1_t0) | p_c1_t7) R !p_c0_t7,graded,holds,
+rers2016-102-p4,(!p_c1_t6 & !p_c1_t7) R !p_c0_t7,graded,holds,
+rers2016-102-p4,(!p_c1_t6 -> p_c0_t7) -> G((p_c1_t0 & p_c0_t7 | p_c1_t7) & !p_c1_t0 | !p_c0_t7),feasible,holds,
+rers2016-102-p4,(!p_c1_t0 | p_c1_t7 -> p_c0_t7) -> G(p_c1_t6 & p_c1_t7 | !p_c0_t7),feasible,holds,
+rers2016-102-p4,(!p_c1_t6 -> p_c0_t7) -> G(p_c1_t6 & p_c1_t7 | !p_c0_t7),feasible,holds,
+rers2016-102-p4,(!p_c1_t0 | !p_c1_t7 -> p_c1_t0) -> G(p_c1_t7 | !p_c0_t7),feasible,holds,
+rers2016-102-p4,(!p_c1_t6 -> p_c1_t0) -> F G !p_c0_t7,feasible,holds,
+rers2016-102-p4,(!p_c1_t6 | (!p_c1_t7 | !p_c0_t7)) R !p_c0_t7,feasible,holds,
+rers2016-102-p4,(!p_c1_t7 & !p_c1_t6) R !p_c0_t7,binary,holds,
+rers2016-102-p4,(!p_c1_t7 & !p_c1_t6) R (!p_c0_t7 | p_c1_t7),graded,holds,
+rers2016-102-p4,(((!p_c1_t6 <-> (p_c1_t7 -> !p_c1_t0)) | p_c1_t0) & (!p_c1_t6 & p_c1_t0)) R !p_c0_t7,binary,holds,
+rers2016-102-p4,((!p_c0_t7 <-> !p_c1_t0) & !p_c1_t6) R (p_c1_t7 | !p_c0_t7),binary,holds,
+rers2016-102-p4,F G((!p_c1_t0 | p_c1_t7) U (!p_c1_t6 R !p_c0_t7)),graded,holds,
+rers2016-102-p4,F(!p_c0_t7 & (!p_c1_t6 | G(!p_c1_t0 & !p_c1_t7 | p_c1_t7) & p_c1_t7 R (!p_c1_t0 | p_c1_t7))),graded,holds,
+rers2016-102-p4,(p_c1_t7 & !p_c0_t7) R (!p_c1_t0 | p_c1_t7) | !p_c0_t7 & !p_c1_t6,graded,holds,
+rers2016-102-p4,(p_c0_t7 <-> p_c1_t6) R !p_c0_t7,feasible,holds,
+rers2016-102-p4,F(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R ((!p_c1_t0 | p_c1_t7) & p_c1_t6))),binary,holds,
+rers2016-102-p4,G !(((p_c0_t7 | !p_c1_t7) & p_c1_t6) R p_c0_t7),feasible,holds,
+rers2016-102-p4,F(!p_c0_t7 & (!p_c1_t6 | (p_c1_t0 & p_c0_t7) R (!p_c1_t0 | p_c1_t7))),graded,holds,
+rers2016-102-p4,F(!p_c0_t7 & (!p_c1_t6 | !p_c1_t7 R (!p_c1_t0 | p_c1_t7))),graded,holds,
+rers2016-102-p4,G !((p_c0_t7 & (!p_c1_t0 -> p_c1_t7)) R ((p_c0_t7 | !p_c1_t7 | p_c1_t0) & (p_c1_t7 | p_c0_t7)) & p_c0_t7),feasible,holds,
+rers2016-102-p4,G !p_c0_t7 & G(!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7)) | !p_c0_t7 & !p_c1_t0 & !p_c1_t6,binary,holds,
+rers2016-102-p4,G !p_c0_t7 W (!p_c1_t7 R !(!p_c1_t0 <-> p_c1_t7)),feasible,holds,
+rers2016-102-p4,G !p_c0_t7 W !(p_c1_t6 | p_c0_t7 | p_c1_t0),binary,holds,
+rers2016-102-p4,G !p_c0_t7 | !p_c1_t7 & !p_c1_t0,binary,holds,
+rers2016-102-p4,G !p_c0_t7 W (!p_c0_t7 R !(!p_c1_t0 <-> p_c0_t7)),feasible,holds,
+rers2016-102-p4,G !p_c1_t0 | p_c1_t7 | p_c1_t6 -> G !p_c0_t7,feasible,holds,
+rers2016-102-p4,G !p_c1_t0 | p_c1_t0 -> !p_c0_t7 W !(F(!p_c1_t6 | p_c1_t0) | G !p_c1_t7),feasible,holds,
+rers2016-102-p4,G !p_c1_t0 | (p_c1_t0 <-> !p_c1_t6) -> G !p_c0_t7,feasible,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!(p_c1_t6 | !p_c1_t0) | p_c1_t7 R (!p_c1_t0 | p_c1_t7))),graded,holds,
+rers2016-102-p4,G !p_c1_t0 | (p_c1_t0 | p_c0_t7 <-> (p_c1_t7 -> !p_c1_t6)) -> G !p_c0_t7,feasible,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 & p_c1_t0 | (p_c1_t7 | p_c1_t0) R (!p_c1_t0 | p_c1_t7))),binary,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7))),feasible,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t0 | !p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))),graded,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | (p_c1_t7 | p_c1_t0) R ((p_c1_t6 <-> !p_c1_t0) | p_c1_t7))),graded,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | (p_c1_t7 | p_c1_t6) R (!p_c1_t0 | p_c1_t7))),binary,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | (p_c1_t7 & p_c1_t0) R (!p_c1_t0 | p_c1_t7))),graded,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | G((!p_c1_t0 | p_c1_t7) & p_c1_t6))),graded,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | G(!p_c1_t0 & p_c1_t7 | p_c1_t6))),feasible,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | p_c0_t7 R (!p_c1_t0 | p_c1_t7))),graded,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | G(!p_c1_t0 | p_c1_t7))) | !p_c1_t7,binary,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7) & p_c1_t6)),binary,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | p_c0_t7 R (p_c1_t0 <-> p_c1_t7) | p_c1_t7)),feasible,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))),binary,holds,
+rers2016-102-p4,G F(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 | p_c1_t7 R !p_c1_t0)),graded,holds,
+rers2016-102-p4,G(!p_c0_t7 & !p_c1_t6) U (p_c1_t7 R (!p_c1_t0 | p_c1_t7)) | !p_c1_t6,binary,holds,
+rers2016-102-p4,G(!(p_c1_t6 <-> !p_c1_t0) | G(!p_c1_t0 | p_c1_t7) | !(p_c1_t7 & p_c0_t7)) & !p_c0_t7,binary,holds,
+rers2016-102-p4,G p_c1_t0 | (p_c1_t0 | p_c0_t7 <-> (p_c1_t7 -> !p_c1_t6)) -> G !p_c0_t7,feasible,holds,
+rers2016-102-p4,G(!(p_c1_t6 & p_c0_t7) | (!p_c0_t7 -> !p_c1_t7) R (!p_c1_t0 | p_c1_t7)) & !(!p_c1_t7 & p_c0_t7),graded,holds,
+rers2016-102-p4,G(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7 & !p_c0_t7))) | !p_c1_t7,graded,holds,
+rers2016-102-p4,G(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7))) W ((p_c1_t6 | !(p_c0_t7 & p_c1_t6)) R (p_c0_t7 <-> p_c1_t7)),binary,holds,
+rers2016-102-p4,G(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))) | !p_c1_t6,binary,holds,
+rers2016-102-p4,G(!p_c0_t7 & (p_c1_t7 | !p_c1_t0 | (p_c1_t7 -> !p_c1_t0))) | !p_c1_t7 & !p_c0_t7,binary,holds,
+rers2016-102-p4,G(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))) | !p_c1_t7,binary feasible graded,holds,
+rers2016-102-p4,G(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))) W !(p_c0_t7 | p_c1_t0),binary,holds,
+rers2016-102-p4,G(!p_c0_t7 & G F(!p_c1_t0 | p_c1_t7 | !p_c1_t6)) | !p_c1_t6,binary,holds,
+rers2016-102-p4,G(!p_c0_t7 & G(!p_c1_t0 | p_c1_t7 | !p_c1_t6)) | !p_c1_t0,binary,holds,
+rers2016-102-p4,G(!p_c0_t7 & p_c1_t7 & (!p_c1_t0 | p_c1_t7)) W ((!p_c1_t6 | p_c0_t7) R (!p_c0_t7 | p_c1_t7 & (!p_c1_t6 & !p_c1_t7))),graded,holds,
+rers2016-102-p4,G(!p_c1_t6 | !p_c1_t7 R (!p_c1_t0 | p_c1_t7) | p_c1_t7) & !p_c0_t7,binary,holds,
+rers2016-102-p4,G(!p_c1_t6 | (p_c1_t6 -> p_c1_t7) R (!p_c1_t0 | p_c1_t7)),graded,holds,
+rers2016-102-p4,G(!p_c0_t7 | !p_c1_t7 | !p_c1_t7 R (p_c1_t0 | p_c1_t7 & !p_c0_t7)) & (p_c0_t7 -> !(p_c1_t6 -> !p_c0_t7)),graded,holds,
+rers2016-102-p4,G(!p_c0_t7 | !p_c1_t7 | (p_c1_t0 | p_c1_t7 & !p_c0_t7)) & (p_c0_t7 -> !((p_c1_t6 <-> !p_c1_t0) -> !p_c0_t7)),graded,holds,
+rers2016-102-p4,G(!p_c1_t6 | (p_c1_t7 | !p_c1_t6) R (!p_c1_t0 | p_c1_t7)),feasible,holds,
+rers2016-102-p4,G((p_c0_t7 -> !(p_c0_t7 & p_c1_t6)) & ((p_c1_t6 -> !p_c0_t7) & p_c1_t7) R (!p_c1_t0 | p_c1_t7 | !p_c1_t6)) & !p_c0_t7,feasible,holds,
+rers2016-102-p4,G(!p_c1_t6 | p_c1_t6 R (!p_c1_t0 | p_c1_t7 | !p_c1_t7)) & !p_c0_t7,graded,holds,
+rers2016-102-p4,G((p_c0_t7 -> !p_c1_t6 & (p_c1_t0 | !p_c1_t7)) | G !p_c0_t7) & !p_c0_t7,feasible,holds,
+rers2016-102-p4,G(p_c1_t6 & !p_c1_t7 | !p_c0_t7) | (p_c1_t0 <-> p_c1_t7),binary,holds,
+rers2016-102-p4,G(p_c0_t7 & (p_c1_t6 | p_c1_t7 R ((p_c1_t0 -> !p_c1_t6) | p_c1_t7))) U !p_c0_t7,feasible,holds,
+rers2016-102-p4,G(p_c1_t6 & (p_c1_t0 & !p_c1_t7) | !p_c0_t7) | (p_c1_t6 <-> p_c1_t7),binary,holds,
+rers2016-102-p4,G((p_c1_t6 -> !p_c1_t0) | p_c1_t7) U (!p_c1_t7 R !p_c0_t7),graded,holds,
+rers2016-102-p4,G(p_c1_t7 | !p_c0_t7) | !(p_c1_t7 <-> !p_c0_t7) & !p_c1_t0,binary,holds,
+rers2016-102-p4,p_c0_t7 -> F((!p_c1_t0 | !p_c1_t6) R G !p_c0_t7),feasible,holds,
+rers2016-102-p4,p_c1_t6 W G(!p_c1_t6 -> G !((p_c0_t7 & p_c1_t7 | G(p_c1_t0 <-> !p_c1_t7)) R p_c0_t7)),feasible,holds,
+rers2016-102-p4,p_c1_t7 & !p_c1_t6 -> G !p_c0_t7 & p_c1_t7,feasible,holds,
+rers2016-102-p4,p_c1_t7 & !p_c1_t0 -> G !p_c0_t7 & p_c1_t7,feasible,holds,
+rers2016-102-p4,p_c1_t7 & !p_c1_t0 -> G !p_c0_t7,feasible,holds,
+rers2016-102-p8,!G F(G !p_c1_t7 & p_c0_t9) | !p_c0_t9,feasible,holds,
+rers2016-102-p8,!p_c0_t9 | F p_c1_t7,binary graded,holds,
+rers2016-102-p8,F p_c1_t7 W !p_c0_t9,binary graded,holds,
+rers2016-102-p8,F p_c1_t7 U (p_c1_t7 | !p_c0_t9),binary,holds,
+rers2016-102-p8,F p_c1_t7 | !p_c0_t9,binary feasible graded,holds,
+rers2016-102-p8,(p_c0_t9 & p_c1_t7) W F p_c1_t7 | !p_c0_t9,binary,holds,
+rers2016-102-p8,F(p_c0_t9 & p_c1_t7 | F p_c1_t7) W F !p_c0_t9,feasible,holds,
+rers2016-102-p8,G F !p_c0_t9 W F p_c1_t7,feasible,holds,
+rers2016-102-p8,G F(!p_c0_t9 | F p_c1_t7),binary feasible graded,holds,
+rers2016-102-p8,F p_c1_t7 | (p_c0_t9 <-> p_c1_t7),feasible,holds,
+rers2016-102-p8,G F p_c1_t7 | G F !p_c0_t9,graded,holds,
+rers2016-102-p8,G F(!p_c0_t9 | p_c1_t7),binary feasible graded,holds,
+rers2016-102-p8,G F((!p_c0_t9 -> p_c0_t9) -> p_c1_t7),binary,holds,
+rers2016-102-p8,G(!p_c0_t9 | F(!p_c0_t9 | p_c1_t7)),feasible,holds,
+rers2016-102-p8,G F(p_c0_t9 & p_c1_t7 | !p_c0_t9),feasible,holds,
+rers2016-102-p8,G(F p_c1_t7 | !p_c0_t9) | !p_c0_t9,feasible,holds,
+rers2016-102-p8,G F(p_c1_t7 | !p_c0_t9),binary feasible graded,holds,
+rers2016-102-p8,p_c0_t9 -> F p_c1_t7,feasible graded,holds,
+rers2016-102-p8,p_c1_t7 -> G(F p_c1_t7 | F G !p_c0_t9),feasible,holds,
+rers2016-102-p8,p_c0_t9 | p_c1_t7 -> G((p_c1_t7 <-> p_c0_t9) | F p_c1_t7),graded,holds,
+rers2016-103-p11,!p_c0_t5__c2_t3 | !G F p_c0_t5__c2_t3,binary,holds,
+rers2016-102-p8,p_c1_t7 | p_c0_t9 -> F p_c1_t7,feasible,holds,
+rers2016-103-p11,F !p_c0_t5__c2_t3 W F G !p_c0_t5__c2_t3,binary,holds,
+rers2016-103-p11,F G !p_c0_t5__c2_t3 W !p_c0_t5__c2_t3,graded,holds,
+rers2016-103-p11,F G !p_c0_t5__c2_t3 | !p_c0_t5__c2_t3,binary feasible graded,holds,
+rers2016-103-p11,!p_c0_t5__c2_t3 | F G !p_c0_t5__c2_t3,graded,holds,
+rers2016-103-p11,G(p_c0_t5__c2_t3 U !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p11,p_c0_t5__c2_t3 -> !F G F p_c0_t5__c2_t3,feasible,holds,
+rers2016-103-p11,G F !p_c0_t5__c2_t3,binary feasible graded,holds,
+rers2016-103-p11,G !p_c0_t5__c2_t3 W G !G p_c0_t5__c2_t3,feasible,holds,
+rers2016-103-p11,p_c0_t5__c2_t3 -> G F G !p_c0_t5__c2_t3,binary,holds,
+rers2016-103-p14,!p_c0_t8 | !F(p_c0_t9 & (!(p_c0_t8 & !p_c0_t9) | !p_c0_t6)),feasible,holds,
+rers2016-103-p11,p_c0_t5__c2_t3 -> F !F p_c0_t5__c2_t3,feasible,holds,
+rers2016-103-p14,F G(!p_c0_t8 | G !p_c0_t9) | !p_c0_t9,binary,holds,
+rers2016-103-p11,p_c0_t5__c2_t3 -> F G !p_c0_t5__c2_t3,feasible graded,holds,
+rers2016-103-p14,F G(!p_c0_t8 | G !p_c0_t9) | p_c0_t8 | !p_c0_t6,binary,holds,
+rers2016-103-p14,F G(p_c0_t8 | G !p_c0_t9) | !p_c0_t8,binary,holds,
+rers2016-103-p14,F G(!p_c0_t8 | G !p_c0_t9) | !p_c0_t8,binary,holds,
+rers2016-103-p14,F((!p_c0_t8 | G !p_c0_t9 | p_c0_t6) & (!p_c0_t6 | F p_c1_t2)),graded,holds,
+rers2016-103-p14,F((!(p_c0_t8 | !p_c0_t9) | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2)),feasible,holds,
+rers2016-103-p14,F(p_c1_t2 | !p_c0_t6) W G((!p_c0_t8 | G !p_c0_t9) & ((!p_c0_t6 | F p_c1_t2) & p_c0_t8)),feasible,holds,
+rers2016-103-p14,F((!p_c0_t8 & !p_c0_t6 | G(!p_c0_t9 | p_c0_t6)) & (!p_c0_t6 | F p_c1_t2)),graded,holds,
+rers2016-103-p14,F((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2 & p_c1_t2)),binary graded,holds,
+rers2016-103-p14,F((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2)),binary graded,holds,
+rers2016-103-p14,G !p_c0_t9 W !p_c0_t8,feasible,holds,
+rers2016-103-p14,G !p_c0_t9 | !p_c0_t8,binary feasible,holds,
+rers2016-103-p14,G F((!p_c0_t8 & (p_c1_t2 | p_c0_t9) | G !p_c0_t9 | p_c0_t9 & !p_c0_t8) & (!p_c0_t6 | F p_c1_t2)),graded,holds,
+rers2016-103-p14,G F G !p_c0_t9 | !p_c0_t8,graded,holds,
+rers2016-103-p14,G F((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F(p_c0_t6 & p_c1_t2))),feasible,holds,
+rers2016-103-p14,G F((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2)),binary graded,holds,
+rers2016-103-p14,G F((G !p_c0_t9 | F(p_c0_t8 | p_c0_t9)) & (!p_c0_t6 | F p_c1_t2)),graded,holds,
+rers2016-103-p14,G(!p_c0_t8 | (G F !p_c0_t6 | G !p_c0_t9)),binary,holds,
+rers2016-103-p14,G(!p_c0_t8 | G !p_c0_t9) | !p_c0_t6,binary,holds,
+rers2016-103-p14,G(!p_c0_t8 | G !p_c0_t9) | G p_c0_t9 U G p_c0_t8 | !(p_c1_t2 | p_c0_t6),binary,holds,
+rers2016-103-p14,G F((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | p_c1_t2)),binary,holds,
+rers2016-103-p14,G(!(!p_c0_t9 | (!p_c0_t8 | p_c1_t2)) | F(p_c1_t2 | !p_c0_t6)),binary,holds,
+rers2016-103-p14,G(!p_c0_t8 | p_c0_t6 | (G F !p_c0_t9 | G !p_c0_t9)),binary,holds,
+rers2016-103-p14,G((!p_c0_t8 <-> p_c0_t9) | F(p_c1_t2 | !p_c0_t6)),binary,holds,
+rers2016-103-p14,G((!p_c0_t6 & (p_c0_t9 <-> !p_c0_t8) | G(p_c0_t8 -> !p_c0_t9)) & F(p_c0_t6 -> p_c1_t2)),binary,holds,
+rers2016-103-p14,G((!p_c0_t8 | F !p_c0_t9) & (!p_c0_t6 | F p_c1_t2)) | F p_c1_t2,binary feasible graded,holds,
+rers2016-103-p14,G(!p_c0_t8 | p_c0_t6 | G !p_c0_t9) | !p_c1_t2 & !p_c0_t6,graded,holds,
+rers2016-103-p14,G((!p_c0_t8 | G(p_c0_t6 -> !p_c0_t9)) & F(p_c0_t6 -> p_c1_t2)),binary,holds,
+rers2016-103-p14,G(((p_c0_t6 -> !p_c0_t8) | G !p_c0_t9) & (!p_c0_t6 | F(p_c1_t2 | !p_c0_t6))),binary,holds,
+rers2016-103-p14,G((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2)) | !p_c1_t2,binary feasible graded,holds,
+rers2016-103-p14,G((!p_c0_t8 | G !(p_c0_t8 & p_c0_t9)) & (!(!p_c0_t9 & p_c0_t6) | F(!p_c0_t6 | p_c1_t2))),graded,holds,
+rers2016-103-p14,G(((p_c0_t8 -> p_c1_t2) | G(p_c1_t2 -> !p_c0_t9)) & F !(p_c0_t6 & !p_c1_t2)),feasible,holds,
+rers2016-103-p14,G((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | p_c0_t8 | F p_c1_t2)) | !p_c0_t6,graded,holds,
+rers2016-103-p14,G(F !p_c0_t9 & (!p_c0_t6 | F p_c1_t2)) | F p_c1_t2 | !p_c0_t8,graded,holds,
+rers2016-103-p14,p_c0_t6 -> G(p_c0_t9 | !p_c0_t8 | G !p_c0_t9),binary,holds,
+rers2016-103-p14,G((p_c0_t9 | G !p_c0_t9 & p_c1_t2) & (p_c0_t9 | F !p_c0_t8)) | !p_c0_t6 | F p_c1_t2,feasible,holds,
+rers2016-103-p15,((p_c2_t7 <-> p_c0_t5__c2_t3) | p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),feasible,holds,
+rers2016-103-p15,((p_c0_t5__c2_t3 -> !p_c2_t7) | p_c0_t5__c2_t3) R (p_c0_t5__c2_t3 | !p_c2_t9 | ((!p_c1_t7 -> p_c2_t9) -> p_c1_t7) R (p_c1_t7 | !(!p_c2_t7 -> p_c2_t7))),graded,holds,
+rers2016-103-p15,((p_c2_t9 -> p_c1_t7) | !(p_c2_t7 | p_c0_t5__c2_t3)) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)) | p_c0_t5__c2_t3 | p_c1_t7 R (p_c1_t7 | !p_c2_t7),feasible,holds,
+rers2016-103-p14,G(G F !p_c0_t9 | G(!p_c0_t6 | (F p_c1_t2 | p_c0_t8))),graded,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | !p_c2_t7 | p_c1_t7) R ((p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9) & !p_c1_t7 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),binary,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | (p_c1_t7 | !p_c2_t7)) R (p_c0_t5__c2_t3 | p_c1_t7 & !p_c2_t9 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),graded,holds,
+rers2016-103-p14,p_c1_t2 -> G(p_c0_t9 | !p_c0_t8 | G !p_c0_t9),binary,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | p_c1_t7) R (((p_c0_t5__c2_t3 -> p_c1_t7) <-> p_c1_t7) | !p_c2_t9 | (p_c1_t7 | (p_c1_t7 | p_c0_t5__c2_t3 & !p_c2_t7) R (p_c1_t7 | !p_c2_t7))),binary,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)) & (p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),graded,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 & p_c2_t7 | !p_c2_t9 | (p_c1_t7 | !p_c2_t9) R (p_c1_t7 | !p_c2_t7)),binary,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | (p_c0_t5__c2_t3 & p_c2_t7 | !p_c2_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | (p_c2_t9 -> p_c1_t7) R (p_c1_t7 | !p_c2_t7))),binary,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | (p_c0_t5__c2_t3 | p_c1_t7) R (p_c1_t7 | !p_c2_t7)) | p_c2_t9,graded,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)) | !p_c2_t9,binary feasible,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | p_c2_t7 | p_c2_t9 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),graded,holds,
+rers2016-103-p15,(p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7 | p_c0_t5__c2_t3)) | !p_c2_t7,graded,holds,
+rers2016-103-p15,p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | (!p_c1_t7 R (p_c1_t7 | (p_c1_t7 | !p_c2_t7))) W (p_c1_t7 R (p_c1_t7 | p_c0_t5__c2_t3 & !p_c2_t7)),feasible,holds,
+rers2016-103-p15,p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | !(p_c0_t5__c2_t3 & p_c2_t9) R (!(p_c2_t7 -> p_c2_t9) | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),graded,holds,
+rers2016-103-p15,p_c0_t5__c2_t3 | p_c1_t7 | (p_c0_t5__c2_t3 | (p_c1_t7 | !p_c2_t7)) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | (p_c1_t7 R (p_c1_t7 | !p_c2_t7)) W p_c1_t7),graded,holds,
+rers2016-103-p15,p_c1_t7 | !p_c2_t9 | (p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),binary,holds,
+rers2016-103-p16,!p_c0_t1 | F G !p_c0_t1,graded,holds,
+rers2016-103-p16,F G !p_c0_t1 | !p_c0_t1,binary feasible graded,holds,
+rers2016-103-p16,!p_c0_t1 | !G F p_c0_t1,binary,holds,
+rers2016-103-p15,p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7),binary feasible graded,holds,
+rers2016-103-p16,F !p_c0_t1 W F G !p_c0_t1,binary,holds,
+rers2016-103-p16,F G !p_c0_t1 W !p_c0_t1,graded,holds,
+rers2016-103-p16,p_c0_t1 -> !F G F p_c0_t1,feasible,holds,
+rers2016-103-p16,p_c0_t1 -> F !F p_c0_t1,feasible,holds,
+rers2016-103-p16,p_c0_t1 -> F G !p_c0_t1,feasible graded,holds,
+rers2016-103-p16,G F !p_c0_t1,binary feasible graded,holds,
+rers2016-103-p16,G !p_c0_t1 W G !G p_c0_t1,feasible,holds,
+rers2016-103-p16,p_c0_t1 -> G F G !p_c0_t1,binary,holds,
+rers2016-103-p16,G(p_c0_t1 U !p_c0_t1),binary,holds,
+rers2016-103-p2,!(p_c0_t2 | F G p_c0_t2),feasible,holds,
+rers2016-103-p20,!(p_c0_t2 <-> !p_c0_t1) | p_c1_t6 | F p_c1_t6 | !p_c0_t1,feasible,holds,
+rers2016-103-p2,!p_c0_t2,binary feasible graded,holds,
+rers2016-103-p2,G F !p_c0_t2,binary feasible graded,holds,
+rers2016-103-p20,!p_c0_t1 | F(p_c0_t2 | p_c1_t6) W F(p_c0_t2 | !(p_c0_t1 & !p_c0_t2 | p_c1_t6)),feasible,holds,
+rers2016-103-p20,(!p_c0_t1 | p_c0_t2) R (p_c0_t2 | !p_c0_t1 | F((!p_c0_t2 -> p_c0_t1) -> p_c1_t6)),feasible,holds,
+rers2016-103-p20,!p_c0_t1 | p_c0_t2 | F p_c1_t6 W (p_c0_t2 R (!p_c0_t1 | p_c0_t2)),feasible,holds,
+rers2016-103-p20,!p_c0_t1 | p_c0_t2 | F p_c1_t6,binary feasible graded,holds,
+rers2016-103-p20,!(p_c1_t6 & !p_c0_t2) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),graded,holds,
+rers2016-103-p20,(!p_c1_t6 | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),binary,holds,
+rers2016-103-p20,(!p_c0_t1 | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),feasible,holds,
+rers2016-103-p20,(p_c0_t1 -> p_c0_t2) R (!(!p_c0_t2 & p_c0_t1) | p_c0_t2 | F p_c1_t6),graded,holds,
+rers2016-103-p20,(F(!p_c0_t1 | p_c1_t6) U F p_c1_t6) W (!p_c0_t1 | p_c0_t2),binary,holds,
+rers2016-103-p20,(!p_c1_t6 | p_c0_t2) R (p_c0_t2 | F(p_c0_t1 | p_c0_t2 -> p_c1_t6)),binary,holds,
+rers2016-103-p20,(p_c0_t2 & p_c1_t6 <-> p_c1_t6) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),graded,holds,
+rers2016-103-p20,(p_c0_t1 | p_c0_t2) R (p_c0_t2 | !p_c0_t1 | F((!p_c0_t2 -> p_c0_t1) -> p_c1_t6)),feasible,holds,
+rers2016-103-p20,(p_c0_t2 | !(p_c1_t6 | p_c0_t1)) R (!p_c0_t1 | p_c0_t2 | F(!p_c1_t6 -> p_c1_t6)),feasible,holds,
+rers2016-103-p20,(p_c0_t2 | !p_c0_t1) R (p_c0_t2 | F p_c1_t6 | !p_c0_t1),graded,holds,
+rers2016-103-p20,(p_c0_t2 | !p_c0_t1) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),binary,holds,
+rers2016-103-p20,(p_c0_t2 | !p_c1_t6) R (!p_c0_t1 | p_c0_t2 | p_c1_t6 | F p_c1_t6),binary,holds,
+rers2016-103-p20,(p_c0_t2 | !p_c1_t6) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),binary graded,holds,
+rers2016-103-p20,F p_c1_t6 W (!p_c0_t1 | p_c0_t2),graded,holds,
+rers2016-103-p20,(p_c1_t6 -> p_c0_t2) R (!p_c0_t1 | p_c0_t2 | F(p_c1_t6 | p_c0_t2)),binary,holds,
+rers2016-103-p20,F((!p_c0_t2 -> p_c1_t6) R (!p_c0_t1 | p_c0_t2 | p_c1_t6)),binary,holds,
+rers2016-103-p20,p_c0_t2 R (!p_c0_t1 | F(p_c1_t6 | p_c0_t2)) | !p_c1_t6,graded,holds,
+rers2016-103-p20,p_c0_t2 R (p_c0_t2 | F(p_c1_t6 | !p_c0_t1 & !p_c1_t6)),feasible,holds,
+rers2016-103-p20,F(p_c0_t2 R (!p_c0_t1 | p_c0_t2 | F p_c1_t6)),binary,holds,
+rers2016-103-p20,p_c0_t2 R (!p_c0_t1 | p_c0_t2 | F(p_c1_t6 | !p_c0_t1)),binary feasible graded,holds,
+rers2016-103-p20,p_c0_t2 R (!p_c0_t1 | p_c0_t2 | F(p_c0_t2 <-> p_c1_t6) W F p_c1_t6),binary,holds,
+rers2016-103-p20,p_c0_t2 R (!p_c0_t1 | p_c0_t2 | F(p_c1_t6 | (p_c0_t2 | !p_c0_t1))),graded,holds,
+rers2016-103-p20,p_c0_t2 R (p_c0_t2 | F(!p_c0_t1 | p_c1_t6)),feasible graded,holds,
+rers2016-103-p20,p_c0_t2 R (p_c0_t2 | F(p_c1_t6 | !p_c0_t1)),binary feasible,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | !(p_c1_t7 <-> !p_c2_t8) | p_c1_t7) R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8),feasible,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | !p_c2_t8 | p_c1_t7) R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8),binary,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | !p_c2_t8 | !(p_c2_t8 -> !(p_c1_t7 | p_c1_t3__c0_t0))) R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8),graded,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | !(p_c2_t8 | p_c2_t2) | p_c1_t7) R (p_c1_t3__c0_t0 | p_c1_t7 | p_c1_t7 | !p_c2_t2 | G !(!p_c1_t3__c0_t0 & p_c2_t8)),graded,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | (p_c1_t7 | !p_c2_t8)) R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8 & p_c2_t2),graded,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | (p_c1_t7 | !p_c2_t8)) R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8),graded,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2) R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8),graded,holds,
+rers2016-103-p4,(p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t8) R (p_c1_t7 | !p_c2_t2 | p_c1_t3__c0_t0 R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8)),binary,holds,
+rers2016-103-p5,(p_c0_t6 | (!(p_c0_t9 | p_c1_t3__c0_t0) -> p_c1_t3__c0_t0)) R (p_c0_t6 | p_c1_t3__c0_t0 | p_c0_t2 | (!p_c0_t9 -> p_c2_t1 -> p_c0_t9) R (!p_c0_t2 | p_c0_t9)),binary,holds,
+rers2016-103-p5,(!(p_c0_t9 & p_c0_t2) R (!(p_c0_t2 & !p_c1_t3__c0_t0) | p_c0_t9)) U ((p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9))),binary,holds,
+rers2016-103-p4,p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8,binary feasible graded,holds,
+rers2016-103-p5,(p_c0_t6 | (p_c1_t3__c0_t0 | !p_c0_t6)) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9)),binary,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 & p_c2_t1 | p_c1_t3__c0_t0 | !p_c2_t1 | (p_c0_t9 | p_c1_t3__c0_t0) R (p_c0_t2 -> !(p_c0_t2 -> !p_c0_t9)) | p_c0_t6),graded,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 & !p_c0_t9 | !p_c2_t1 | (p_c0_t9 | !p_c2_t1) R (!p_c0_t2 | p_c0_t9)),graded,holds,
+rers2016-103-p5,(p_c0_t6 | (p_c1_t3__c0_t0 | !p_c0_t6 & !p_c0_t9)) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9)),feasible,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | (!p_c2_t1 | p_c0_t9) R (!p_c0_t2 | p_c0_t9)),binary,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0 | !p_c0_t9) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | (((p_c0_t6 -> p_c0_t9 & !p_c1_t3__c0_t0) R (!p_c0_t2 & p_c1_t3__c0_t0)) U (p_c0_t9 R (!p_c0_t2 | p_c0_t9)) | p_c0_t9)),graded,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | ((p_c0_t9 | !p_c2_t1) R (!p_c0_t2 | p_c0_t9) | p_c0_t9)),graded,holds,
+rers2016-103-p5,p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | ((p_c2_t1 <-> !p_c0_t6) -> p_c0_t9) R (!p_c0_t2 | p_c0_t9),graded,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | (p_c0_t9 | !p_c2_t1) R (!p_c0_t2 | p_c0_t9)),graded,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | (p_c0_t9 | !(!p_c2_t1 -> p_c1_t3__c0_t0)) R (!p_c0_t2 | p_c0_t9)),feasible,holds,
+rers2016-103-p5,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | (p_c1_t3__c0_t0 | p_c0_t9) R (!p_c0_t2 | p_c0_t9)),graded,holds,
+rers2016-103-p6,!p_c2_t1 | !G F p_c2_t1,binary,holds,
+rers2016-103-p5,p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9),binary feasible graded,holds,
+rers2016-103-p5,p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | (p_c1_t3__c0_t0 | p_c0_t6) R (p_c0_t6 | p_c1_t3__c0_t0 & !p_c0_t9 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9)),graded,holds,
+rers2016-103-p6,!p_c2_t1 | F G !p_c2_t1,graded,holds,
+rers2016-103-p5,p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | ((p_c2_t1 | !p_c0_t9 <-> !p_c0_t6) -> p_c0_t9) R (!p_c0_t2 | p_c0_t9),graded,holds,
+rers2016-103-p5,p_c1_t3__c0_t0 | p_c0_t6 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9),feasible,holds,
+rers2016-103-p6,F G !p_c2_t1 W !p_c2_t1,graded,holds,
+rers2016-103-p6,F !p_c2_t1 W F G !p_c2_t1,binary,holds,
+rers2016-103-p6,F G !p_c2_t1 | !p_c2_t1,binary feasible graded,holds,
+rers2016-103-p6,G !p_c2_t1 W G !G p_c2_t1,feasible,holds,
+rers2016-103-p6,G F !p_c2_t1,binary feasible graded,holds,
+rers2016-103-p6,p_c2_t1 -> !F G F p_c2_t1,feasible,holds,
+rers2016-103-p6,p_c2_t1 -> F G !p_c2_t1,feasible graded,holds,
+rers2016-103-p6,p_c2_t1 -> G F G !p_c2_t1,binary,holds,
+rers2016-103-p6,G(p_c2_t1 U !p_c2_t1),binary,holds,
+rers2016-103-p6,p_c2_t1 -> F !F p_c2_t1,feasible,holds,
+rers2016-103-p7,!p_c0_t9 U p_c0_t6 | !p_c0_t2,binary,holds,
+rers2016-103-p7,F p_c0_t6 W p_c0_t9 W !p_c0_t2,feasible,holds,
+rers2016-103-p7,!p_c0_t9 U !(p_c0_t2 & !p_c0_t6),feasible,holds,
+rers2016-103-p7,!p_c0_t2 | G(!p_c0_t2 | !p_c0_t9 U p_c0_t6),binary,holds,
+rers2016-103-p7,F(!p_c0_t2 | !p_c0_t9 U p_c0_t6),binary feasible,holds,
+rers2016-103-p7,F(!p_c0_t2 | !p_c0_t9 U (p_c0_t2 <-> p_c0_t6)),graded,holds,
+rers2016-103-p7,G F(!(!p_c0_t9 <-> p_c0_t2) | G(!p_c0_t2 | !p_c0_t6 U p_c0_t6)),binary,holds,
+rers2016-103-p7,G F(!(p_c0_t2 | p_c0_t6) | !p_c0_t9 U p_c0_t6 | !p_c0_t2 | p_c0_t6),graded,holds,
+rers2016-103-p7,G F(!p_c0_t2 | (p_c0_t2 | p_c0_t9) & p_c0_t6),feasible,holds,
+rers2016-103-p7,G F(!p_c0_t2 | !p_c0_t9 U p_c0_t6),graded,holds,
+rers2016-103-p7,G F(!p_c0_t2 | G(!p_c0_t2 | !p_c0_t9 U p_c0_t6)),binary feasible,holds,
+rers2016-103-p7,G F(!p_c0_t2 | !p_c0_t9 U (p_c0_t2 & p_c0_t6)),graded,holds,
+rers2016-103-p7,G G(!p_c0_t9 U (p_c0_t6 | p_c0_t2 -> p_c0_t6)),feasible,holds,
+rers2016-103-p7,G p_c0_t2 U !p_c0_t9 U !(p_c0_t2 & !p_c0_t6),binary,holds,
+rers2016-103-p7,G(!p_c0_t2 | !p_c0_t9 U p_c0_t6) U (p_c0_t6 | !p_c0_t2),graded,holds,
+rers2016-103-p7,G(!p_c0_t2 | (F !p_c0_t9 W (!p_c0_t9 U p_c0_t6) | !p_c0_t2)),binary,holds,
+rers2016-103-p7,G(!p_c0_t2 | F(p_c0_t2 | p_c0_t9 -> p_c0_t6)),graded,holds,
+rers2016-103-p7,G(!p_c0_t2 | F(p_c0_t2 & !p_c0_t9 -> p_c0_t6)),graded,holds,
+rers2016-103-p7,G(!p_c0_t2 | !p_c0_t9 U (p_c0_t2 -> p_c0_t6)),feasible,holds,
+rers2016-103-p7,G(!p_c0_t2 | !p_c0_t9 U p_c0_t6) W !p_c0_t2,feasible,holds,
+rers2016-103-p7,G(!p_c0_t9 & !p_c0_t2 | F(p_c0_t6 | !p_c0_t2)),feasible,holds,
+rers2016-103-p7,G(!p_c0_t2 | !p_c0_t9 U p_c0_t6) | !p_c0_t9,feasible,holds,
+rers2016-103-p7,G(!p_c0_t2 | p_c0_t6 | !p_c0_t9 U p_c0_t6) | G p_c0_t6 | !p_c0_t6,binary,holds,
+rers2016-103-p7,G(!p_c0_t9 U (!p_c0_t2 | p_c0_t6)),binary feasible graded,holds,
+rers2016-103-p7,G(!p_c0_t9 U (p_c0_t2 -> p_c0_t6)),binary feasible,holds,
+rers2016-103-p7,G((p_c0_t2 <-> !p_c0_t9) U (!p_c0_t2 | p_c0_t6)),graded,holds,
+rers2016-103-p7,G((p_c0_t6 <-> p_c0_t9) U (p_c0_t6 | !p_c0_t2)),binary,holds,
+rers2016-103-p7,G((p_c0_t9 <-> !p_c0_t9 & !p_c0_t2) U (p_c0_t2 -> p_c0_t6)),graded,holds,
+rers2016-103-p7,G(p_c0_t9 | !p_c0_t2 | !p_c0_t9 U p_c0_t6) | F !p_c0_t2,binary,holds,
+rers2016-103-p7,G((p_c0_t9 -> !p_c0_t9) U (p_c0_t2 -> p_c0_t6)),graded,holds,
+rers2016-103-p7,G(p_c0_t6 | (!p_c0_t2 | p_c0_t2 & !p_c0_t9) U (p_c0_t6 | !p_c0_t2)),binary,holds,
+rers2016-103-p7,G(!p_c0_t9 U (p_c0_t6 | !p_c0_t2)),binary,holds,
+rers2016-103-p7,G((!p_c0_t9 | p_c0_t6) U (!p_c0_t2 | p_c0_t6)),graded,holds,
+rers2016-103-p7,G(((p_c0_t6 <-> p_c0_t9) | !p_c0_t2) U (p_c0_t6 | !p_c0_t2)),feasible,holds,
+rers2016-103-p8,(p_c0_t6 | !p_c0_t8 & p_c0_t5__c2_t3 & !p_c1_t3__c0_t0 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,(p_c0_t6 | (!p_c0_t5__c2_t3 -> p_c0_t8)) R (p_c0_t6 | p_c0_t8 | (p_c0_t6 | !p_c1_t3__c0_t0) | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,(p_c0_t6 | (p_c0_t5__c2_t3 | p_c1_t3__c0_t0) | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),graded,holds,
+rers2016-103-p8,(p_c0_t6 | (p_c0_t5__c2_t3 -> p_c0_t5__c2_t3 -> p_c0_t8)) R ((p_c1_t3__c0_t0 | !p_c0_t8) & p_c0_t8 | (p_c0_t6 | !p_c1_t3__c0_t0) | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,((!p_c0_t5__c2_t3 -> p_c0_t6) | p_c0_t8 | p_c0_t5__c2_t3) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,(p_c0_t6 | (p_c0_t8 | p_c0_t5__c2_t3)) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),binary feasible graded,holds,
+rers2016-103-p8,(p_c0_t6 | !p_c0_t5__c2_t3 | p_c0_t8) R (p_c0_t6 | p_c0_t8 & !(p_c0_t5__c2_t3 & p_c0_t6) | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t5__c2_t3 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G(p_c0_t5__c2_t3 -> !p_c0_t5__c2_t3)),feasible,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8 | !p_c0_t5__c2_t3) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),graded,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t5__c2_t3 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8 | !p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),graded,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3) | !(!p_c1_t3__c0_t0 -> p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3) | !p_c0_t5__c2_t3,binary feasible graded,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3) | G F !p_c0_t6,graded,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G F !p_c0_t5__c2_t3),feasible,holds,
+rers2016-103-p8,p_c0_t6 | p_c0_t8 | !p_c0_t8 R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),graded,holds,
+rers2016-103-p8,(p_c0_t6 | p_c1_t3__c0_t0 | p_c0_t8 | !p_c0_t5__c2_t3) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),graded,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8 | (p_c0_t8 <-> p_c1_t3__c0_t0) & (p_c0_t6 | !p_c0_t5__c2_t3)) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,(p_c0_t6 | p_c0_t8 | p_c0_t5__c2_t3) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),binary,holds,
+rers2016-103-p8,p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3,binary feasible graded,holds,
+rers2016-103-p8,p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | ((p_c1_t3__c0_t0 -> p_c0_t8) | p_c0_t6) W G !p_c0_t5__c2_t3,feasible,holds,
+rers2016-103-p9,!p_c0_t3 | F p_c1_t4,binary,holds,
+rers2016-103-p9,(p_c0_t6 -> !p_c1_t6) U (!p_c0_t3 | p_c1_t4 | p_c0_t6),binary,holds,
+rers2016-103-p9,(p_c0_t9 W F p_c0_t6) U G(F p_c1_t4 W F !p_c0_t3),graded,holds,
+rers2016-103-p9,F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F p_c1_t4)),binary graded,holds,
+rers2016-103-p9,F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & F !p_c1_t4) | p_c1_t4,binary,holds,
+rers2016-103-p9,F((!p_c0_t9 | !p_c1_t6 U p_c0_t6 | !p_c1_t4) & (!p_c0_t3 | F p_c1_t4)),graded,holds,
+rers2016-103-p9,G F(!p_c0_t3 | F p_c1_t4),feasible,holds,
+rers2016-103-p9,G F(!p_c0_t9 | !p_c0_t3 U p_c0_t6),feasible,holds,
+rers2016-103-p9,F((!p_c0_t9 | p_c0_t6 | !p_c1_t6 U p_c0_t6 & p_c0_t6) & (!p_c0_t3 | (F p_c1_t4 | !p_c0_t9))),graded,holds,
+rers2016-103-p9,G F(!p_c0_t9 | !p_c1_t6 U p_c0_t6),graded,holds,
+rers2016-103-p9,F(p_c0_t3 & p_c0_t9 | G !p_c0_t9 W (!p_c1_t6 U p_c0_t6)),binary,holds,
+rers2016-103-p9,G F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | !p_c1_t4 | F p_c1_t4)),graded,holds,
+rers2016-103-p9,G F((!(p_c0_t9 | p_c1_t6 & p_c0_t6) | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F p_c1_t4)),binary,holds,
+rers2016-103-p9,G F((!p_c0_t9 | !p_c1_t6 U (!p_c1_t6 -> p_c0_t6)) & (!p_c0_t3 | p_c1_t4 | F(!p_c0_t9 -> p_c1_t4))),graded,holds,
+rers2016-103-p9,G F((!p_c0_t9 | (p_c0_t6 | p_c1_t4)) & (!p_c0_t3 | F p_c1_t4)),binary,holds,
+rers2016-103-p9,G F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F(p_c1_t4 | p_c0_t9))),graded,holds,
+rers2016-103-p9,G(!(p_c0_t9 | p_c0_t3) | !p_c1_t6 U (p_c0_t9 -> p_c0_t6)),binary,holds,
+rers2016-103-p9,G F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F p_c1_t4)),graded,holds,
+rers2016-103-p9,G(!(p_c1_t6 & p_c0_t9) U (p_c0_t6 | !p_c0_t9) & ((p_c0_t9 -> !p_c0_t3) | F p_c1_t4)),feasible,holds,
+rers2016-103-p9,G F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | p_c0_t6 | p_c0_t9 | F p_c1_t4)),binary,holds,
+rers2016-103-p9,G F(((p_c1_t6 -> !p_c0_t9) | (p_c0_t6 <-> !p_c1_t6) U p_c0_t9) & (!p_c0_t3 | F p_c1_t4)),graded,holds,
+rers2016-103-p9,G(!(p_c1_t6 | !p_c0_t9 & p_c1_t4) U (!p_c0_t9 | p_c0_t6)),binary,holds,
+rers2016-103-p9,G(!(p_c1_t6 & p_c1_t4) U (p_c0_t6 | !p_c0_t9) & F(p_c1_t4 | !p_c0_t3)),feasible,holds,
+rers2016-103-p9,G(!p_c0_t3 | F p_c1_t4) | !(p_c0_t6 | p_c0_t3),feasible,holds,
+rers2016-103-p9,G(!p_c0_t3 | F p_c1_t4) | !p_c0_t9,feasible,holds,
+rers2016-103-p9,G(!p_c0_t9 | !p_c1_t6 U (p_c0_t6 | !p_c0_t9)) | p_c0_t6,binary,holds,
+rers2016-103-p9,G(!p_c0_t9 | !p_c1_t6 U (p_c0_t9 -> p_c0_t6)),binary,holds,
+rers2016-103-p9,G(!p_c1_t6 U ((p_c0_t9 -> p_c0_t6) | p_c0_t3)),binary,holds,
+rers2016-103-p9,G(!p_c0_t9 | !p_c1_t6 U p_c0_t6) | !p_c0_t9,graded,holds,
+rers2016-103-p9,G(!p_c1_t6 U (p_c0_t6 | !p_c0_t9) | p_c0_t6 & p_c1_t4),graded,holds,
+rers2016-103-p9,G(!p_c0_t9 | !p_c1_t6 U p_c0_t6) | !p_c0_t6,feasible,holds,
+rers2016-103-p9,G(!p_c0_t9 | !p_c1_t6 U p_c0_t6) | !p_c1_t6,graded,holds,
+rers2016-103-p9,G(!p_c1_t6 U (p_c0_t6 | !p_c0_t9) & (p_c0_t6 | !p_c0_t3 | F p_c0_t3)),feasible,holds,
+rers2016-103-p9,G((!p_c0_t3 | p_c1_t6) W F(p_c0_t3 -> G F p_c1_t4)),binary,holds,
+rers2016-103-p9,G(!p_c1_t6 U (p_c0_t6 | !p_c0_t9)),binary,holds,
+rers2016-103-p9,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F(p_c1_t4 | p_c0_t9))) | !p_c1_t6,binary,holds,
+rers2016-103-p9,G((!p_c0_t9 | !p_c1_t6 U (p_c1_t6 | p_c0_t6) | !p_c1_t4) & (!p_c0_t3 | F(p_c1_t4 | !p_c0_t3))),binary,holds,
+rers2016-103-p9,G((!p_c0_t9 | !p_c1_t6 U (p_c0_t6 | !p_c0_t9)) & (p_c0_t6 | !p_c0_t3 | F p_c0_t3)),graded,holds,
+rers2016-103-p9,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F p_c1_t4)) | !p_c0_t6,binary feasible graded,holds,
+rers2016-103-p9,G(((p_c0_t9 -> !p_c0_t9) | !p_c1_t6 U (p_c0_t6 | !p_c1_t6)) & (!p_c0_t3 | F(!p_c0_t3 | p_c1_t4))),feasible,holds,
+rers2016-103-p9,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F p_c1_t4)) | G(!(p_c0_t3 -> p_c0_t6) | F !p_c1_t4),graded,holds,
+rers2016-103-p9,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F(p_c1_t4 | !(p_c0_t9 | !p_c0_t3)))) | !p_c0_t9,binary,holds,
+rers2016-103-p9,G(((p_c0_t9 -> !p_c0_t9) | (!p_c1_t6 & !p_c0_t6) U (p_c0_t6 | !p_c0_t9)) & (!p_c0_t3 | (F p_c0_t6 | !p_c0_t9))),binary,holds,
+rers2016-103-p9,G((!p_c0_t9 | (!p_c1_t6 & !p_c0_t6) U (p_c0_t6 | !p_c0_t9)) & (!p_c0_t3 | F(p_c1_t4 | !p_c0_t9))),graded,holds,
+rers2016-103-p9,G((p_c0_t6 | !p_c1_t6) U (!p_c0_t9 | p_c0_t6)),feasible,holds,
+rers2016-103-p9,G(((p_c0_t9 -> !p_c0_t9) | F(p_c0_t6 | !p_c1_t6) | !p_c0_t6) & (!p_c0_t3 | F(!p_c0_t3 & !p_c0_t6 | p_c1_t4))),feasible,holds,
+rers2016-103-p9,G((p_c1_t4 | !p_c0_t9 | !p_c1_t6 U (!p_c0_t3 | p_c0_t6)) & (!p_c0_t3 | F((!p_c0_t3 -> p_c0_t6) -> p_c1_t4))),feasible,holds,
+rers2016-103-p9,p_c0_t6 -> G(!p_c0_t3 | F p_c1_t4),feasible,holds,
+rers2016-103-p9,G((p_c0_t6 | (p_c0_t6 -> !p_c1_t6) U !p_c0_t6) & (!p_c0_t3 | F(!p_c0_t3 | p_c1_t4))),binary,holds,
+rers2016-103-p9,G((p_c0_t6 & !(p_c1_t6 -> !p_c1_t6) | F(p_c0_t6 | !p_c0_t9)) & F((!p_c0_t9 | p_c0_t6) & (!p_c0_t3 | F p_c1_t4))),feasible,holds,
+rers2016-103-p9,G(F !(p_c0_t9 & !p_c0_t6) & ((p_c0_t9 -> p_c0_t3) | F(!p_c1_t6 | !(p_c0_t3 <-> p_c0_t6)))),feasible,holds,
+rers2016-104-p1,!((p_c1_t9 | p_c2_t0__c1_t3) R (p_c2_t0__c1_t3 | p_c1_t9)),binary,holds,
+rers2016-104-p1,!(!p_c1_t9 U p_c2_t0__c1_t3),graded,holds,
+rers2016-103-p9,G(p_c0_t3 & !p_c0_t9 | !(p_c1_t6 & !p_c1_t4) U (p_c0_t6 | !p_c0_t9 | !(!p_c0_t9 <-> p_c0_t6))),graded,holds,
+rers2016-104-p1,!(p_c1_t9 W (p_c1_t9 | p_c2_t0__c1_t3)),binary,holds,
+rers2016-104-p1,!(p_c2_t0__c1_t3 | p_c1_t9),binary feasible graded,holds,
+rers2016-104-p1,!(G !p_c1_t9 U (p_c1_t9 | p_c2_t0__c1_t3)),feasible,holds,
+rers2016-104-p1,!(p_c1_t9 U p_c2_t0__c1_t3),graded,holds,
+rers2016-104-p1,!(p_c1_t9 | p_c2_t0__c1_t3 | G p_c1_t9),binary graded,holds,
+rers2016-104-p1,!(G(p_c1_t9 <-> p_c2_t0__c1_t3) U (p_c1_t9 | p_c2_t0__c1_t3)),feasible,holds,
+rers2016-104-p1,!(p_c1_t9 | p_c2_t0__c1_t3),feasible graded,holds,
+rers2016-104-p1,!(p_c1_t9 | p_c2_t0__c1_t3) & (p_c2_t0__c1_t3 <-> p_c1_t9),feasible,holds,
+rers2016-104-p1,!p_c1_t9 & !(p_c1_t9 | p_c2_t0__c1_t3),feasible,holds,
+rers2016-104-p1,F !(p_c1_t9 | p_c2_t0__c1_t3),graded,holds,
+rers2016-104-p1,F !(p_c1_t9 | p_c2_t0__c1_t3) & !(p_c1_t9 | p_c2_t0__c1_t3),feasible,holds,
+rers2016-104-p1,!p_c1_t9 & !p_c2_t0__c1_t3,binary,holds,
+rers2016-104-p1,F !(p_c1_t9 | p_c2_t0__c1_t3) & !p_c1_t9,graded,holds,
+rers2016-104-p1,F !(p_c1_t9 | p_c2_t0__c1_t3) & !p_c2_t0__c1_t3,graded,holds,
+rers2016-104-p1,!G(F(p_c1_t9 & p_c2_t0__c1_t3) W p_c1_t9),graded,holds,
+rers2016-104-p1,!G F(p_c1_t9 R p_c2_t0__c1_t3),feasible,holds,
+rers2016-104-p1,F !(F(p_c2_t0__c1_t3 & p_c1_t9) | p_c2_t0__c1_t3),feasible,holds,
+rers2016-104-p1,!G(F(p_c1_t9 & p_c2_t0__c1_t3) W p_c2_t0__c1_t3),graded,holds,
+rers2016-104-p1,G !(p_c1_t9 & p_c2_t0__c1_t3) & !(p_c2_t0__c1_t3 | p_c1_t9),binary,holds,
+rers2016-104-p1,F !(F(p_c2_t0__c1_t3 & p_c1_t9) | p_c1_t9),feasible,holds,
+rers2016-104-p1,G !(p_c1_t9 & p_c2_t0__c1_t3) & !p_c1_t9,binary graded,holds,
+rers2016-104-p1,F !p_c2_t0__c1_t3 W G !(p_c1_t9 | p_c2_t0__c1_t3),binary,holds,
+rers2016-104-p1,G !(p_c1_t9 & p_c2_t0__c1_t3) & !p_c2_t0__c1_t3,binary graded,holds,
+rers2016-104-p1,G !(p_c1_t9 | p_c2_t0__c1_t3) | !p_c1_t9,graded,holds,
+rers2016-104-p1,G !(p_c1_t9 | p_c2_t0__c1_t3) | F p_c1_t9,binary feasible graded,holds,
+rers2016-104-p1,G !(p_c1_t9 R p_c2_t0__c1_t3),feasible graded,holds,
+rers2016-104-p1,G !(p_c2_t0__c1_t3 & p_c1_t9) & (!p_c1_t9 | p_c2_t0__c1_t3),graded,holds,
+rers2016-104-p1,G !(p_c2_t0__c1_t3 & p_c1_t9) & !p_c2_t0__c1_t3,feasible graded,holds,
+rers2016-104-p1,G F(p_c1_t9 | !(p_c1_t9 | p_c2_t0__c1_t3)),binary,holds,
+rers2016-104-p1,G F(p_c1_t9 | p_c2_t0__c1_t3 -> p_c1_t9),binary,holds,
+rers2016-104-p1,G !(p_c2_t0__c1_t3 & p_c1_t9) & !p_c1_t9,feasible,holds,
+rers2016-104-p1,G F !p_c2_t0__c1_t3 & !p_c1_t9,feasible,holds,
+rers2016-104-p1,G F(p_c2_t0__c1_t3 -> !(p_c1_t9 | p_c2_t0__c1_t3)),graded,holds,
+rers2016-104-p1,G(p_c1_t9 -> !p_c2_t0__c1_t3) & !p_c1_t9,binary graded,holds,
+rers2016-104-p1,G(!p_c2_t0__c1_t3 | !p_c1_t9) & !p_c1_t9,graded,holds,
+rers2016-104-p1,G(F !(p_c1_t9 | p_c2_t0__c1_t3) | !p_c2_t0__c1_t3),graded,holds,
+rers2016-104-p1,p_c1_t9 R !p_c2_t0__c1_t3,binary,holds,
+rers2016-104-p12,!p_c3_t8__c2_t6 | G(!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U (p_c0_t9 | p_c0_t7__c1_t2)),binary,holds,
+rers2016-104-p1,p_c2_t0__c1_t3 <-> p_c1_t9,graded,holds,
+rers2016-104-p12,F((!(p_c3_t8__c2_t6 & p_c0_t7__c1_t2) | p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | p_c0_t9 | !p_c0_t7__c1_t2 U p_c0_t9)),graded,holds,
+rers2016-104-p12,(!p_c0_t7__c1_t2 | !p_c3_t9) U (p_c0_t6__c1_t7 | !p_c3_t8__c2_t6),graded,holds,
+rers2016-104-p12,(G !p_c3_t8__c2_t6 | p_c0_t6__c1_t7) U !p_c0_t7__c1_t2 U (!p_c3_t4__c1_t8 | p_c0_t9),feasible,holds,
+rers2016-104-p1,G(p_c1_t9 -> !p_c2_t0__c1_t3) & !p_c2_t0__c1_t3,graded,holds,
+rers2016-104-p1,G(p_c2_t0__c1_t3 -> (!p_c1_t9 <-> p_c2_t0__c1_t3)) & !p_c1_t9,binary,holds,
+rers2016-104-p12,F((!p_c3_t8__c2_t6 | !p_c3_t9 U (p_c0_t6__c1_t7 | p_c3_t9)) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),graded,holds,
+rers2016-104-p12,F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | F p_c0_t9)),graded,holds,
+rers2016-104-p1,G(p_c2_t0__c1_t3 -> !p_c1_t9) & !(p_c1_t9 | p_c2_t0__c1_t3),graded,holds,
+rers2016-104-p12,F((!p_c3_t8__c2_t6 | G((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9))) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),binary,holds,
+rers2016-104-p12,F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | F p_c0_t9 & (!(p_c3_t9 | !p_c3_t8__c2_t6) | p_c3_t4__c1_t8) U p_c0_t9 | p_c0_t7__c1_t2)),graded,holds,
+rers2016-104-p12,F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | p_c0_t9)),binary,holds,
+rers2016-104-p12,G F(!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7),graded,holds,
+rers2016-104-p12,G F(!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9),graded,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9 | p_c3_t9)),graded,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | !(p_c3_t9 & !p_c0_t7__c1_t2) U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),binary,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !(p_c0_t7__c1_t2 & !p_c3_t8__c2_t6) U p_c0_t9)),graded,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | p_c0_t9)),binary feasible,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | p_c0_t9 | !p_c0_t7__c1_t2 U p_c0_t9)),graded,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | (!p_c3_t9 & !p_c3_t4__c1_t8) U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),feasible,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7 | !p_c0_t9) & (!p_c3_t4__c1_t8 | (!p_c0_t7__c1_t2 & !p_c0_t6__c1_t7) U p_c0_t9)),binary,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !(p_c0_t7__c1_t2 & p_c0_t6__c1_t7) U p_c0_t9)),binary,holds,
+rers2016-104-p12,G((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)) | !p_c3_t8__c2_t6,graded,holds,
+rers2016-104-p12,G((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | (!p_c0_t7__c1_t2 | p_c3_t8__c2_t6) U p_c0_t9)) | !p_c0_t6__c1_t7,graded,holds,
+rers2016-104-p12,G F((!p_c3_t8__c2_t6 | p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),graded,holds,
+rers2016-104-p12,G(!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U (p_c0_t9 | !p_c3_t4__c1_t8)),binary,holds,
+rers2016-104-p12,G(!p_c3_t8__c2_t6 | !p_c3_t9 U (p_c0_t6__c1_t7 | !(p_c3_t4__c1_t8 | p_c3_t8__c2_t6))),binary,holds,
+rers2016-104-p12,G((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | F p_c0_t9)) | !p_c3_t9,graded,holds,
+rers2016-104-p12,G(!(p_c3_t8__c2_t6 | !p_c0_t6__c1_t7) | !(!p_c3_t8__c2_t6 | p_c3_t9) U (p_c3_t8__c2_t6 -> p_c0_t6__c1_t7)),graded,holds,
+rers2016-104-p12,G((!p_c3_t8__c2_t6 | !(p_c3_t9 & !p_c0_t7__c1_t2) W (!p_c0_t6__c1_t7 | p_c3_t8__c2_t6 | p_c0_t7__c1_t2)) & (p_c0_t9 | !p_c0_t7__c1_t2 U (!p_c3_t4__c1_t8 | p_c0_t9))),binary,holds,
+rers2016-104-p12,G((!(!p_c3_t4__c1_t8 | p_c3_t8__c2_t6) | F(p_c3_t8__c2_t6 -> p_c0_t6__c1_t7)) & (!p_c3_t4__c1_t8 | !(!p_c3_t4__c1_t8 <-> p_c0_t9) U ((p_c3_t4__c1_t8 <-> p_c3_t8__c2_t6) & !p_c3_t8__c2_t6) | (!p_c0_t7__c1_t2 | p_c0_t9))),feasible,holds,
+rers2016-104-p13,!p_c3_t3 | p_c3_t5,binary feasible graded,holds,
+rers2016-104-p13,F(p_c3_t5 R (!p_c3_t3 | p_c3_t5)),feasible graded,holds,
+rers2016-104-p13,p_c3_t5 R F(!p_c3_t3 | p_c3_t5),feasible,holds,
+rers2016-104-p13,p_c3_t5 U (!p_c3_t3 | p_c3_t5),binary feasible graded,holds,
+rers2016-104-p13,F(p_c3_t5 R (!p_c3_t3 | p_c3_t5)) | p_c3_t5,graded,holds,
+rers2016-104-p14,!(p_c0_t3 | p_c0_t8) | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9),binary,holds,
+rers2016-104-p12,G((p_c0_t6__c1_t7 | !p_c3_t9 U (p_c0_t6__c1_t7 | !p_c3_t8__c2_t6)) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 | F(p_c0_t7__c1_t2 | !p_c0_t9))),graded,holds,
+rers2016-104-p12,G(((p_c3_t8__c2_t6 -> !p_c3_t9) | F(!p_c0_t9 | p_c0_t6__c1_t7)) & (!((p_c0_t7__c1_t2 -> !p_c0_t9) <-> p_c3_t4__c1_t8) | (p_c3_t4__c1_t8 | p_c0_t6__c1_t7 -> !(p_c3_t4__c1_t8 <-> p_c0_t7__c1_t2)) U (p_c3_t4__c1_t8 -> p_c0_t9))),graded,holds,
+rers2016-104-p12,G((!p_c3_t8__c2_t6 | p_c0_t6__c1_t7 U p_c3_t9) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)) W G(!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U (p_c0_t9 | !p_c3_t4__c1_t8)),graded,holds,
+rers2016-104-p14,!p_c0_t3 | (p_c0_t8 | p_c3_t8__c2_t6) | p_c0_t8 R (p_c0_t8 | !p_c0_t9),binary,holds,
+rers2016-104-p12,G((p_c3_t9 | !p_c0_t6__c1_t7 U (!p_c0_t9 | (p_c0_t6__c1_t7 | !p_c3_t8__c2_t6))) & !p_c0_t7__c1_t2 U (p_c3_t4__c1_t8 -> p_c0_t9)),graded,holds,
+rers2016-104-p14,!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9),binary feasible graded,holds,
+rers2016-104-p14,!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R ((!p_c0_t9 <-> !p_c0_t8) | p_c0_t8),feasible,holds,
+rers2016-104-p14,!p_c0_t3 | p_c3_t8__c2_t6 | p_c3_t8__c2_t6 R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),graded,holds,
+rers2016-104-p14,(p_c0_t8 R (p_c0_t8 | !p_c0_t9)) W (!(p_c0_t3 & !p_c3_t8__c2_t6) | p_c3_t8__c2_t6 | p_c0_t8 & !p_c0_t3 & !p_c3_t8__c2_t6),binary,holds,
+rers2016-104-p14,(p_c0_t8 | p_c3_t8__c2_t6) R (!p_c0_t3 | p_c3_t8__c2_t6 | (p_c0_t9 | (!p_c0_t3 | p_c0_t8)) R (p_c0_t8 | !p_c0_t9)),feasible,holds,
+rers2016-104-p14,(p_c0_t3 -> p_c3_t8__c2_t6) | p_c0_t8 R (p_c0_t8 | !p_c0_t9),feasible,holds,
+rers2016-104-p14,(!p_c0_t8 | p_c3_t8__c2_t6) R (!p_c0_t3 | (p_c3_t8__c2_t6 | p_c0_t8) R !(!(p_c0_t8 | p_c3_t8__c2_t6 & p_c0_t3) & p_c0_t9)),graded,holds,
+rers2016-104-p14,(p_c3_t8__c2_t6 | !(p_c0_t8 | p_c0_t9)) R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),feasible,holds,
+rers2016-104-p14,(p_c3_t8__c2_t6 | !p_c0_t3) R (!p_c0_t3 | p_c0_t9 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),graded,holds,
+rers2016-104-p14,(p_c3_t8__c2_t6 | !p_c0_t8 & !p_c0_t3) R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),graded,holds,
+rers2016-104-p14,(p_c0_t3 | p_c3_t8__c2_t6) R (!p_c0_t3 | p_c3_t8__c2_t6 | (p_c0_t8 | !p_c0_t3) R (p_c0_t8 | !p_c0_t9)),binary,holds,
+rers2016-104-p14,(p_c0_t8 -> p_c3_t8__c2_t6) R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),binary,holds,
+rers2016-104-p14,(p_c3_t8__c2_t6 | !p_c0_t8) R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),binary graded,holds,
+rers2016-104-p14,p_c3_t8__c2_t6 R (!p_c0_t3 | p_c3_t8__c2_t6 | (p_c0_t3 -> p_c0_t8) R (p_c0_t8 | !p_c0_t9)),graded,holds,
+rers2016-104-p14,p_c3_t8__c2_t6 R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)) | !p_c0_t3,binary graded,holds,
+rers2016-104-p14,p_c3_t8__c2_t6 R (!p_c0_t3 | p_c3_t8__c2_t6 | (p_c0_t8 R (p_c0_t8 | (!p_c0_t9 | p_c3_t8__c2_t6))) U (p_c0_t8 R (p_c0_t8 | !p_c0_t9))) | !p_c0_t9,binary,holds,
+rers2016-104-p15,!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0,feasible,holds,
+rers2016-104-p15,(!p_c0_t7__c1_t2 W p_c0_t0) W ((p_c0_t0 <-> !(p_c3_t11 & !p_c0_t9)) U (p_c0_t6__c1_t7 | !p_c0_t2)),binary,holds,
+rers2016-104-p15,F(!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11),graded,holds,
+rers2016-104-p15,F((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | (!p_c0_t6__c1_t7 | p_c0_t2) U p_c3_t11)),graded,holds,
+rers2016-104-p14,p_c3_t8__c2_t6 R (!p_c0_t3 | p_c3_t8__c2_t6 | (p_c0_t8 | !p_c0_t3) R (p_c0_t8 | !p_c0_t9)),binary,holds,
+rers2016-104-p15,((!p_c0_t7__c1_t2 & !p_c0_t6__c1_t7 | p_c0_t9) U (!p_c0_t2 | p_c0_t0)) W ((p_c0_t7__c1_t2 <-> !(p_c3_t11 -> !p_c0_t0)) U (p_c0_t6__c1_t7 | !p_c0_t2)),binary,holds,
+rers2016-104-p15,F((!p_c0_t2 | F p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)),graded,holds,
+rers2016-104-p15,F((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)),binary,holds,
+rers2016-104-p15,F((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 W p_c3_t11)),graded,holds,
+rers2016-104-p15,F(p_c0_t6__c1_t7 & !(p_c0_t9 & p_c0_t2) | G F((!p_c0_t2 | (!p_c0_t7__c1_t2 & p_c0_t6__c1_t7) U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11))),graded,holds,
+rers2016-104-p15,G(!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) | !p_c0_t9 & !p_c0_t0,binary,holds,
+rers2016-104-p15,G(!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11) | !p_c0_t9 & !p_c3_t11,feasible,holds,
+rers2016-104-p15,G((!p_c0_t2 | !p_c0_t7__c1_t2 U (p_c0_t0 | !(p_c0_t2 | !p_c0_t9))) & !p_c0_t6__c1_t7 U (p_c0_t9 -> p_c3_t11)) W (!p_c0_t6__c1_t7 & (!p_c0_t2 & !p_c0_t7__c1_t2)),graded,holds,
+rers2016-104-p15,G(!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11) | !p_c3_t11,graded,holds,
+rers2016-104-p15,G F(!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0),binary,holds,
+rers2016-104-p15,G((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)) | !p_c0_t9,binary feasible graded,holds,
+rers2016-104-p15,G((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)) | !p_c3_t11,binary,holds,
+rers2016-104-p15,G((!p_c0_t2 | !p_c0_t7__c1_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)) | !p_c0_t2,graded,holds,
+rers2016-104-p15,G((!p_c0_t2 | F !p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U (p_c3_t11 & p_c0_t2))) U !p_c0_t7__c1_t2 U (p_c0_t0 | !p_c0_t2),graded,holds,
+rers2016-104-p15,G(p_c0_t9 | !p_c0_t2 | (p_c3_t11 | !p_c0_t6__c1_t7 | p_c0_t6__c1_t7) U p_c0_t0) W !p_c0_t7__c1_t2,binary,holds,
+rers2016-104-p15,G(!p_c0_t2 | !p_c0_t7__c1_t2 U (p_c0_t2 -> p_c0_t0)),graded,holds,
+rers2016-104-p16,(p_c2_t10 R (!p_c2_t9 | p_c2_t10)) W G((!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | !p_c2_t1 | p_c2_t10)) & (!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7))) | !p_c3_t7,graded,holds,
+rers2016-104-p15,G((!p_c0_t2 | !p_c0_t7__c1_t2 U (p_c0_t2 -> p_c0_t0)) & (p_c3_t11 | F !p_c3_t11)),graded,holds,
+rers2016-104-p15,G((!p_c0_t2 | p_c0_t0 U !p_c0_t0) & (!p_c0_t9 | !(p_c0_t6__c1_t7 | !p_c0_t9) U p_c0_t2)) U !p_c0_t7__c1_t2 U (p_c0_t0 | !p_c0_t2),graded,holds,
+rers2016-104-p15,G(!p_c0_t7__c1_t2 U (p_c0_t2 -> p_c0_t0)),feasible,holds,
+rers2016-104-p15,G((!p_c0_t2 | !p_c0_t7__c1_t2 U (p_c0_t0 | !(p_c0_t2 | p_c0_t9))) & (p_c0_t2 <-> !p_c0_t6__c1_t7) U (p_c0_t6__c1_t7 & p_c0_t9 -> p_c3_t11)),graded,holds,
+rers2016-104-p16,G(!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)) | !p_c3_t7,graded,holds,
+rers2016-104-p16,G(!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)) | (p_c2_t10 | !p_c3_t7),graded,holds,
+rers2016-104-p16,G(!p_c2_t9 | p_c2_t10) W G((!p_c2_t1 | p_c3_t10__c0_t4 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)) & (!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7))) | !p_c3_t7,binary,holds,
+rers2016-104-p16,G((!p_c2_t1 | (p_c2_t10 | p_c3_t7) R (!p_c2_t9 | p_c2_t10)) & (!(p_c3_t10__c0_t4 & !p_c2_t10) | p_c2_t10 R (p_c2_t10 | !p_c3_t7))) | !p_c3_t10__c0_t4,binary,holds,
+rers2016-104-p16,G(!p_c2_t1 | ((p_c2_t1 | !(p_c2_t10 | !p_c3_t10__c0_t4) -> p_c2_t10 & p_c2_t9 | !p_c2_t1) | p_c2_t10) R (!p_c2_t9 | p_c2_t10)),binary,holds,
+rers2016-104-p16,G(!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7)) | !p_c3_t7,graded,holds,
+rers2016-104-p16,G(!p_c2_t1 | (p_c2_t1 -> p_c2_t10) R (!p_c2_t9 | p_c2_t10)),graded,holds,
+rers2016-104-p16,G(!p_c2_t1 | (p_c2_t10 | !p_c2_t1) R (!p_c2_t9 | p_c2_t10)),graded,holds,
+rers2016-104-p16,G((!p_c2_t1 | p_c3_t10__c0_t4 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)) & (!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7)) | p_c2_t10) | (p_c2_t10 | p_c3_t7) R (!p_c2_t9 | p_c2_t10) | p_c2_t9,graded,holds,
+rers2016-104-p16,G((!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)) & (!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7))) | !p_c3_t10__c0_t4,graded,holds,
+rers2016-104-p2,!(!(p_c2_t1 | !p_c3_t4__c1_t8 & p_c2_t3) -> p_c3_t4__c1_t8 | p_c2_t1),graded,holds,
+rers2016-104-p16,G(p_c2_t9 <-> !p_c2_t1) -> (F(!p_c3_t10__c0_t4 & p_c3_t7 | p_c2_t10) & !p_c3_t10__c0_t4) U G(!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)),binary,holds,
+rers2016-104-p2,!(!p_c3_t4__c1_t8 <-> p_c2_t1 & !p_c3_t4__c1_t8) & !p_c2_t3,feasible,holds,
+rers2016-104-p16,G(p_c2_t9 <-> !p_c2_t1) -> F(!p_c3_t10__c0_t4 & p_c2_t10 & p_c3_t7 | p_c2_t10) U G(!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)),binary,holds,
+rers2016-104-p2,!(!p_c3_t4__c1_t8 -> p_c2_t1),binary feasible,holds,
+rers2016-104-p2,!((p_c2_t1 <-> !p_c2_t3) | p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,!((p_c2_t3 | p_c2_t1) & !p_c3_t4__c1_t8 | p_c2_t3),feasible,holds,
+rers2016-104-p16,G(!p_c3_t10__c0_t4 | (!p_c3_t10__c0_t4 | p_c2_t10) R (p_c2_t10 | !p_c3_t7)),feasible,holds,
+rers2016-104-p2,!(F !p_c3_t4__c1_t8 & p_c2_t1 | p_c3_t4__c1_t8),graded,holds,
+rers2016-104-p2,!(!p_c3_t4__c1_t8 -> p_c2_t3),feasible,holds,
+rers2016-104-p2,!(p_c2_t1 | G(p_c2_t3 & !p_c3_t4__c1_t8 | p_c3_t4__c1_t8) | p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,!((!p_c2_t1 <-> p_c3_t4__c1_t8) | F(p_c3_t4__c1_t8 & p_c2_t3)),feasible,holds,
+rers2016-104-p2,!(p_c2_t1 | p_c2_t3) & !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p2,!(p_c2_t1 | p_c2_t3),feasible,holds,
+rers2016-104-p2,!(p_c2_t3 <-> !p_c3_t4__c1_t8),graded,holds,
+rers2016-104-p2,!(p_c2_t1 | p_c2_t3 | p_c3_t4__c1_t8),feasible,holds,
+rers2016-104-p2,!(p_c2_t3 | p_c3_t4__c1_t8),binary graded,holds,
+rers2016-104-p2,!(p_c2_t1 | p_c3_t4__c1_t8) & !p_c2_t3,binary,holds,
+rers2016-104-p2,!(p_c2_t3 | p_c2_t1) W (p_c2_t1 <-> !p_c3_t4__c1_t8),feasible,holds,
+rers2016-104-p2,!p_c2_t1 & !p_c2_t3 & !(p_c2_t3 <-> !p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,!(p_c2_t1 | F((!p_c3_t4__c1_t8 -> p_c3_t4__c1_t8) & p_c2_t3)),feasible,holds,
+rers2016-104-p2,!p_c2_t3 & !p_c2_t1 & (p_c2_t3 <-> p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,!(G p_c2_t1 U F(p_c2_t3 R p_c2_t1)) & !(p_c3_t4__c1_t8 | p_c2_t1),feasible,holds,
+rers2016-104-p2,!p_c2_t1 & F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),binary,holds,
+rers2016-104-p2,!p_c2_t3 & !p_c3_t4__c1_t8,feasible,holds,
+rers2016-104-p2,!p_c2_t3 & (!(p_c3_t4__c1_t8 | p_c2_t1) | p_c2_t3),binary,holds,
+rers2016-104-p2,!p_c2_t3 & F((!p_c3_t4__c1_t8 | p_c2_t3) & !(p_c2_t1 | p_c2_t3)),binary,holds,
+rers2016-104-p2,!(p_c3_t4__c1_t8 | F((!p_c3_t4__c1_t8 -> p_c3_t4__c1_t8) & p_c2_t3)),feasible,holds,
+rers2016-104-p2,!p_c3_t4__c1_t8 & !p_c2_t3,feasible,holds,
+rers2016-104-p2,(!(p_c2_t1 | p_c2_t3) -> !p_c3_t4__c1_t8 -> p_c3_t4__c1_t8) -> G !(p_c3_t4__c1_t8 & !p_c2_t3),graded,holds,
+rers2016-104-p2,!p_c3_t4__c1_t8 & !p_c2_t1 & !p_c2_t3,feasible,holds,
+rers2016-104-p2,!p_c3_t4__c1_t8 & !p_c2_t1,feasible,holds,
+rers2016-104-p2,(!(p_c2_t1 | p_c2_t3) -> !p_c3_t4__c1_t8 -> p_c3_t4__c1_t8) -> G(p_c3_t4__c1_t8 | !p_c2_t3),graded,holds,
+rers2016-104-p2,!p_c3_t4__c1_t8 & F((!p_c3_t4__c1_t8 | p_c2_t3) & !(p_c2_t1 | p_c2_t3)),binary,holds,
+rers2016-104-p2,!F(p_c3_t4__c1_t8 R (!p_c2_t1 <-> p_c2_t3)),graded,holds,
+rers2016-104-p2,(p_c2_t1 -> G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3))) & !p_c2_t3,graded,holds,
+rers2016-104-p2,!G G F((p_c2_t1 -> F p_c2_t1) & p_c2_t3 R p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,(p_c3_t4__c1_t8 -> G(!p_c3_t4__c1_t8 & !(p_c2_t1 | !p_c2_t3))) & !p_c2_t3,graded,holds,
+rers2016-104-p2,(!p_c3_t4__c1_t8 U p_c2_t1 | !(p_c2_t1 | p_c2_t3)) & !p_c3_t4__c1_t8 & !p_c2_t1,feasible,holds,
+rers2016-104-p2,F !((!p_c3_t4__c1_t8 -> p_c2_t1) | p_c2_t3) & !p_c2_t1,graded,holds,
+rers2016-104-p2,F !(p_c2_t1 | p_c2_t3) & (p_c3_t4__c1_t8 <-> p_c2_t3),binary,holds,
+rers2016-104-p2,(p_c2_t1 <-> !p_c2_t3) -> G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),binary,holds,
+rers2016-104-p2,F !(p_c2_t1 | p_c2_t3) & !p_c2_t3,graded,holds,
+rers2016-104-p2,(G(p_c3_t4__c1_t8 -> !(p_c2_t1 | p_c2_t3)) | p_c2_t3) & (p_c2_t1 | !p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,F !p_c3_t4__c1_t8 W G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),feasible,holds,
+rers2016-104-p2,F p_c3_t4__c1_t8 | G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),binary,holds,
+rers2016-104-p2,F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),binary feasible graded,holds,
+rers2016-104-p2,F(p_c2_t1 <-> p_c2_t1 | p_c2_t3) & !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p2,F G F !(p_c2_t1 | p_c2_t3),graded,holds,
+rers2016-104-p2,G !(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) U (G p_c3_t4__c1_t8 | (p_c2_t1 -> p_c3_t4__c1_t8)),binary,holds,
+rers2016-104-p2,F G(F !p_c2_t3 & !p_c3_t4__c1_t8 | (G !(p_c2_t1 R p_c3_t4__c1_t8) | p_c2_t3)),feasible,holds,
+rers2016-104-p2,F G !(p_c2_t3 R p_c2_t1),feasible,holds,
+rers2016-104-p2,F G !(p_c2_t1 R p_c2_t3),feasible,holds,
+rers2016-104-p2,F G(G !G(p_c2_t1 <-> !p_c3_t4__c1_t8) & !(p_c3_t4__c1_t8 & p_c2_t3)),feasible,holds,
+rers2016-104-p2,F G(p_c2_t3 | G !((p_c2_t1 <-> p_c3_t4__c1_t8) R p_c2_t1)),feasible,holds,
+rers2016-104-p2,F(p_c2_t3 | G(!p_c2_t1 U !p_c3_t4__c1_t8)),feasible,holds,
+rers2016-104-p2,F G(G !G(p_c2_t1 | p_c2_t3) & !(p_c3_t4__c1_t8 & p_c2_t3)),feasible,holds,
+rers2016-104-p2,G !(!p_c3_t4__c1_t8 & !(!p_c2_t1 | !p_c2_t3)) & (p_c2_t3 -> !p_c2_t3),graded,holds,
+rers2016-104-p2,G !(p_c2_t1 & p_c2_t3) & !p_c2_t3,binary,holds,
+rers2016-104-p2,G !(p_c2_t1 & p_c2_t3) & (!p_c2_t3 & !p_c2_t1),binary,holds,
+rers2016-104-p2,G !(p_c3_t4__c1_t8 & p_c2_t1) & !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p2,G !(p_c3_t4__c1_t8 & p_c2_t3) & !p_c3_t4__c1_t8,binary,holds,
+rers2016-104-p2,G !(p_c3_t4__c1_t8 & !(!p_c2_t1 | p_c2_t3)) & !p_c2_t3,graded,holds,
+rers2016-104-p2,G !(p_c2_t1 & p_c2_t3) & (!p_c3_t4__c1_t8 & !p_c2_t1),binary,holds,
+rers2016-104-p2,G !(p_c3_t4__c1_t8 & !(!p_c2_t1 | p_c2_t3)) & !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p2,G F !(p_c2_t1 | p_c2_t3) & (!p_c2_t1 & !p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3) | p_c2_t1),graded,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3) | p_c2_t1 & p_c3_t4__c1_t8),feasible,holds,
+rers2016-104-p2,G F !(p_c2_t1 | p_c2_t3),feasible,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3) | p_c3_t4__c1_t8) & !p_c2_t1,feasible,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3) | p_c3_t4__c1_t8) & !p_c2_t3,feasible,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) & (p_c3_t4__c1_t8 <-> p_c2_t3),binary,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) & (p_c2_t3 <-> p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,G F((!p_c3_t4__c1_t8 | p_c2_t3) & !(p_c2_t1 | p_c2_t3)),binary,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) & !p_c2_t3,binary,holds,
+rers2016-104-p2,G F((p_c2_t1 -> !p_c3_t4__c1_t8) & !(p_c2_t1 | p_c2_t3)),binary,holds,
+rers2016-104-p2,G F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),graded,holds,
+rers2016-104-p2,G F((p_c2_t3 | !p_c3_t4__c1_t8) & !(p_c2_t1 | p_c2_t3)) & !p_c2_t3,binary,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3) -> p_c2_t1) | !(p_c2_t3 | p_c2_t1),binary,holds,
+rers2016-104-p2,G F(p_c2_t1 | !p_c3_t4__c1_t8 -> !(p_c2_t1 | p_c2_t3)),graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) U (G !p_c3_t4__c1_t8 | !p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | !(p_c3_t4__c1_t8 | p_c2_t1),feasible graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | !(p_c2_t3 | p_c2_t1),graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | !(p_c3_t4__c1_t8 | p_c2_t3),binary,holds,
+rers2016-104-p2,G(!p_c2_t3 W G !(p_c2_t3 R p_c3_t4__c1_t8) | !p_c2_t1),binary,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | !p_c2_t1,graded,holds,
+rers2016-104-p2,G(!p_c2_t3 | !p_c2_t1) & !p_c2_t1 & !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | (p_c2_t1 <-> p_c3_t4__c1_t8),graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | (p_c2_t3 <-> p_c3_t4__c1_t8),graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | !p_c2_t1 & !p_c2_t3,feasible graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | (p_c3_t4__c1_t8 <-> p_c2_t1),binary,holds,
+rers2016-104-p2,G(!p_c2_t3 | !p_c2_t1) & (p_c2_t3 | !p_c3_t4__c1_t8) & !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p2,G(!p_c2_t3 | !p_c2_t1) & !p_c2_t3 & (p_c2_t1 -> p_c3_t4__c1_t8),graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 & (!(p_c2_t1 | p_c2_t3) & p_c2_t1)) | !p_c2_t3,binary,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 | !(p_c2_t1 | p_c2_t3)) & !p_c2_t1,binary,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 | !p_c2_t1) & !p_c3_t4__c1_t8,binary,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 | !(p_c2_t1 | p_c2_t3)) & !p_c2_t3,binary,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 | !p_c2_t1) & (p_c2_t1 <-> p_c3_t4__c1_t8),graded,holds,
+rers2016-104-p2,G(!p_c3_t4__c1_t8 | !(p_c2_t1 | p_c2_t3)) & (p_c2_t1 | !p_c3_t4__c1_t8),binary,holds,
+rers2016-104-p2,G(((p_c3_t4__c1_t8 | !p_c2_t1) & !p_c3_t4__c1_t8) U (p_c2_t3 -> !p_c2_t3)),feasible,holds,
+rers2016-104-p2,G(G !G p_c2_t1 & (p_c2_t1 -> p_c3_t4__c1_t8 | !p_c2_t3)),feasible,holds,
+rers2016-104-p2,G(G !G p_c2_t1 & (p_c2_t3 -> !p_c3_t4__c1_t8)),feasible,holds,
+rers2016-104-p2,G(G !G p_c3_t4__c1_t8 & (p_c2_t3 -> !p_c3_t4__c1_t8)),feasible,holds,
+rers2016-104-p2,G((!p_c2_t3 & p_c2_t1) U G !(p_c3_t4__c1_t8 R p_c2_t1)),binary,holds,
+rers2016-104-p2,p_c3_t4__c1_t8 | (p_c3_t4__c1_t8 -> !p_c2_t1) -> !p_c3_t4__c1_t8 & !p_c2_t3,feasible,holds,
+rers2016-104-p2,G(G !G(p_c2_t3 | p_c3_t4__c1_t8) & (p_c2_t1 -> !p_c2_t3)),feasible,holds,
+rers2016-104-p2,p_c2_t3 | p_c2_t1 -> F G(p_c2_t1 & !(!p_c3_t4__c1_t8 | p_c2_t3)),feasible,holds,
+rers2016-104-p6,!p_c2_t0__c1_t3 R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11) | (p_c2_t0__c1_t3 | p_c3_t11),binary,holds,
+rers2016-104-p2,G(p_c2_t1 & !p_c3_t4__c1_t8 | !p_c2_t1) & !p_c2_t3,binary,holds,
+rers2016-104-p2,G(p_c2_t3 W G !(p_c2_t1 R (!p_c3_t4__c1_t8 -> p_c3_t4__c1_t8))),binary,holds,
+rers2016-104-p2,G(G !G(p_c2_t3 | p_c3_t4__c1_t8) & (p_c2_t1 -> !p_c3_t4__c1_t8)),feasible,holds,
+rers2016-104-p6,((p_c2_t0__c1_t3 | p_c3_t11) R p_c3_t11) W (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),graded,holds,
+rers2016-104-p2,G(p_c3_t4__c1_t8 -> !(p_c2_t1 | p_c2_t3)) & !p_c2_t1,binary,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 & p_c3_t11) W (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),graded,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 -> p_c2_t0__c1_t3 | p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),binary,holds,
+rers2016-104-p2,G(p_c3_t4__c1_t8 -> !(p_c2_t1 | p_c2_t3)) & !p_c2_t3,binary,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 | p_c3_t11 | !p_c2_t0__c1_t3) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),binary feasible graded,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 | p_c3_t11) R p_c3_t11 | (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8),graded,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 | p_c3_t11 | !p_c3_t4__c1_t8) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),feasible,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 | p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11) | !p_c3_t4__c1_t8,graded,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 | p_c3_t11) U (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),binary,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 | p_c3_t11 | !p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),binary,holds,
+rers2016-104-p6,F !(p_c3_t4__c1_t8 & !p_c2_t0__c1_t3) W ((p_c2_t0__c1_t3 | p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11)),feasible,holds,
+rers2016-104-p6,p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11,binary feasible graded,holds,
+rers2016-104-p6,p_c2_t0__c1_t3 | p_c3_t11 | !p_c3_t11 R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),feasible,holds,
+rers2016-104-p6,p_c3_t11 & !p_c2_t0__c1_t3 | (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),feasible,holds,
+rers2016-104-p6,p_c2_t0__c1_t3 U (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),graded,holds,
+rers2016-104-p6,(p_c2_t0__c1_t3 | p_c3_t11) W (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),binary,holds,
+rers2016-104-p7,F(!p_c3_t2 | !p_c0_t1 U p_c0_t8),graded,holds,
+rers2016-104-p6,F((p_c2_t0__c1_t3 | p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11)),binary,holds,
+rers2016-104-p7,G !p_c3_t2 W (!p_c0_t1 U p_c0_t8 | !p_c3_t2),graded,holds,
+rers2016-104-p7,F(!p_c3_t2 & !p_c0_t1 | G(!p_c3_t2 | !p_c0_t1 U p_c0_t8)),feasible,holds,
+rers2016-104-p7,G(!p_c3_t2 | !p_c0_t1 U p_c0_t8 | p_c0_t1) | !p_c3_t2,binary,holds,
+rers2016-104-p7,G(!p_c3_t2 | !p_c0_t1 U p_c0_t8) | !p_c3_t2,graded,holds,
+rers2016-104-p7,G F(!p_c3_t2 | !p_c0_t1 U p_c0_t8),binary,holds,
+rers2016-104-p7,G(!(!p_c3_t2 -> p_c3_t2) | !p_c0_t1 U (!p_c3_t2 | p_c0_t8)),graded,holds,
+rers2016-104-p7,G(!p_c0_t1 U !(p_c3_t2 & !p_c0_t8)),feasible,holds,
+rers2016-104-p7,G(!p_c0_t1 U (!p_c3_t2 | p_c0_t8)),binary feasible graded,holds,
+rers2016-104-p7,G(!p_c0_t1 U (p_c0_t8 | !p_c3_t2)),binary feasible graded,holds,
+rers2016-104-p7,G(!p_c3_t2 | !p_c0_t1 W p_c0_t8) | !p_c0_t8,binary,holds,
+rers2016-104-p7,G F(!p_c3_t2 & !p_c0_t1 | G(!p_c3_t2 | !p_c0_t1 U p_c0_t8)),graded,holds,
+rers2016-104-p7,G(!p_c3_t2 | !p_c0_t1 U (p_c0_t8 | !p_c3_t2)),binary,holds,
+rers2016-104-p7,p_c3_t2 -> G(!p_c3_t2 | F p_c0_t8),feasible,holds,
+rers2016-104-p7,G((p_c0_t8 <-> p_c3_t2) | (p_c3_t2 U !p_c0_t1) U ((p_c3_t2 <-> p_c0_t8) | !p_c3_t2)),feasible,holds,
+rers2016-104-p7,!G !(F p_c3_t2 -> G F p_c0_t8),feasible,holds,
+rers2016-105-p10,((p_c2_t5 -> p_c4_t2) | p_c4_t13) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),graded,holds,
+rers2016-105-p10,(!p_c4_t13 & p_c2_t5 -> p_c4_t2) R ((p_c4_t2 <-> p_c4_t16) | p_c4_t2 | p_c4_t13 | G !p_c2_t5),binary,holds,
+rers2016-105-p10,!(p_c4_t16 | p_c4_t13) | (p_c4_t2 | p_c4_t13) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),graded,holds,
+rers2016-104-p7,G((p_c3_t2 -> p_c0_t1) | F(p_c0_t8 | !(p_c3_t2 | p_c0_t1))),feasible,holds,
+rers2016-104-p7,G(p_c0_t8 | (p_c3_t2 & !p_c0_t1) U (!p_c3_t2 | p_c0_t8)),graded,holds,
+rers2016-105-p10,((p_c4_t2 <-> p_c2_t5) | p_c4_t13 | p_c4_t2) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),binary,holds,
+rers2016-105-p10,((p_c4_t2 <-> !(!p_c4_t2 & p_c4_t13)) | !p_c2_t5) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),binary,holds,
+rers2016-105-p10,(p_c4_t2 | (p_c4_t13 | !p_c2_t5)) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),graded,holds,
+rers2016-105-p10,(p_c4_t2 | (p_c4_t13 | !p_c2_t5)) R (p_c4_t2 | (p_c4_t13 | !p_c4_t16) | G !p_c2_t5),binary,holds,
+rers2016-104-p7,G((p_c3_t2 -> p_c0_t8) | !(p_c3_t2 -> p_c0_t1) U (p_c3_t2 -> p_c0_t8)),feasible,holds,
+rers2016-104-p7,G(p_c3_t2 & !(p_c3_t2 | p_c0_t8) | !p_c0_t1 U (p_c0_t8 | !p_c3_t2)),graded,holds,
+rers2016-105-p10,(p_c4_t2 | (p_c4_t13 <-> p_c4_t13 | p_c2_t5)) R (p_c4_t2 | p_c4_t13 | (!p_c4_t16 | p_c4_t13) | G !p_c2_t5),feasible,holds,
+rers2016-105-p10,(p_c4_t2 | p_c4_t13 | !p_c2_t5) R (p_c4_t2 | p_c4_t13 | (p_c4_t13 | !p_c4_t16) | G !p_c2_t5),binary,holds,
+rers2016-105-p10,(p_c4_t2 | p_c4_t13) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5) | !p_c2_t5,binary feasible graded,holds,
+rers2016-105-p10,(p_c4_t2 | p_c4_t13 | !p_c4_t2) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),graded,holds,
+rers2016-105-p11,(!p_c2_t6 | (!p_c2_t3__c1_t6 -> p_c2_t8__c1_t2) & p_c2_t6) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | (p_c2_t8__c1_t2 | !p_c4_t11) | G !p_c2_t6),binary,holds,
+rers2016-105-p11,(p_c2_t3__c1_t6 | !p_c2_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),binary feasible graded,holds,
+rers2016-105-p11,(!p_c2_t3__c1_t6 | (p_c2_t3__c1_t6 | p_c2_t8__c1_t2)) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),graded,holds,
+rers2016-105-p10,p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5,binary feasible graded,holds,
+rers2016-105-p11,((p_c2_t6 <-> p_c2_t8__c1_t2) | (p_c2_t8__c1_t2 | p_c2_t3__c1_t6)) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),graded,holds,
+rers2016-105-p11,(p_c2_t3__c1_t6 | !p_c2_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | !p_c4_t11 | G !p_c2_t6 | p_c2_t8__c1_t2),binary,holds,
+rers2016-105-p11,(p_c2_t3__c1_t6 | (p_c2_t8__c1_t2 | !p_c2_t6)) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | (G !(p_c2_t6 | p_c2_t8__c1_t2) | G !p_c2_t6)),binary,holds,
+rers2016-105-p11,(p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c2_t3__c1_t6 & !p_c2_t6) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),feasible,holds,
+rers2016-105-p11,(p_c2_t3__c1_t6 | (!p_c2_t6 | p_c2_t8__c1_t2)) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | !p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c4_t11 | G !p_c2_t6)),graded,holds,
+rers2016-105-p11,(p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c2_t6) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),graded,holds,
+rers2016-105-p11,(p_c2_t8__c1_t2 | p_c2_t3__c1_t6 | !p_c2_t6) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),feasible,holds,
+rers2016-105-p12,!(!p_c0_t9 <-> p_c0_t5) | p_c4_t10 | !(!p_c0_t9 | !(p_c0_t5 | p_c0_t9)) R (p_c0_t9 | !p_c4_t18),feasible,holds,
+rers2016-105-p11,(p_c2_t3__c1_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6) | !p_c2_t6,binary,holds,
+rers2016-105-p11,p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6,binary feasible graded,holds,
+rers2016-105-p11,G(p_c2_t3__c1_t6 | p_c2_t8__c1_t2) U (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),feasible,holds,
+rers2016-105-p11,p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !(p_c4_t11 | p_c2_t6) | (p_c2_t3__c1_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),binary,holds,
+rers2016-105-p12,!(p_c0_t5 | p_c0_t9) | p_c4_t10 | (!p_c0_t9 -> p_c4_t10) R (p_c0_t9 & p_c4_t18 | !p_c4_t18),feasible,holds,
+rers2016-105-p12,!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18 & !p_c0_t9),binary,holds,
+rers2016-105-p12,!(!p_c4_t10 & p_c4_t18) R (!p_c0_t5 | p_c4_t10 | (p_c0_t9 | p_c4_t18) R (p_c0_t9 | !p_c4_t18)),binary,holds,
+rers2016-105-p12,!p_c0_t5 | p_c4_t10 | (p_c0_t9 | p_c4_t10) R (p_c0_t9 | !p_c4_t18),binary,holds,
+rers2016-105-p12,!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18),binary feasible graded,holds,
+rers2016-105-p12,!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | p_c4_t10 | !p_c4_t18),binary,holds,
+rers2016-105-p12,(!p_c0_t9 | p_c4_t10) R (!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18)),graded,holds,
+rers2016-105-p12,(!p_c0_t9 | p_c4_t10) R (!p_c0_t5 | p_c0_t9 | p_c4_t10 | !p_c4_t10 R p_c0_t9 R (p_c0_t9 | !p_c4_t18)),graded,holds,
+rers2016-105-p13,!p_c2_t8__c1_t2 | G((p_c4_t10 -> p_c2_t8__c1_t2) | G !p_c2_t8__c1_t2),feasible,holds,
+rers2016-105-p12,p_c4_t10 R (!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18)) | !p_c0_t9,graded,holds,
+rers2016-105-p13,F G !p_c2_t8__c1_t2 | !p_c4_t10,graded,holds,
+rers2016-105-p13,!p_c4_t10 | G !p_c2_t8__c1_t2,binary feasible graded,holds,
+rers2016-105-p12,(p_c4_t10 | !p_c0_t9) R (!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18)),binary feasible graded,holds,
+rers2016-105-p13,F G(p_c4_t10 | G !p_c2_t8__c1_t2) & G !p_c2_t8__c1_t2 | !p_c4_t10,graded,holds,
+rers2016-105-p13,F p_c2_t8__c1_t2 -> !p_c4_t10,feasible,holds,
+rers2016-105-p13,G !p_c2_t8__c1_t2 W !p_c4_t10,feasible,holds,
+rers2016-105-p13,G !p_c2_t8__c1_t2 | !p_c4_t10,binary feasible graded,holds,
+rers2016-105-p13,G p_c2_t8__c1_t2 W G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c2_t8__c1_t2,binary,holds,
+rers2016-105-p13,G(!p_c4_t10 | (G !p_c2_t8__c1_t2 | p_c2_t8__c1_t2)) | !p_c2_t8__c1_t2,feasible,holds,
+rers2016-105-p13,G !p_c4_t10 W G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c4_t10,binary,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) & p_c2_t8__c1_t2 | !p_c2_t8__c1_t2,graded,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2 & (p_c2_t8__c1_t2 -> p_c4_t10)) | !p_c2_t8__c1_t2,graded,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !(!p_c4_t10 <-> p_c2_t8__c1_t2),feasible,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c2_t8__c1_t2 & !p_c4_t10,binary,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c4_t10,binary feasible graded,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c2_t8__c1_t2,binary feasible graded,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | (p_c2_t8__c1_t2 -> G p_c2_t8__c1_t2),binary,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c4_t10 U G !p_c2_t8__c1_t2) | !p_c2_t8__c1_t2,graded,holds,
+rers2016-105-p13,p_c2_t8__c1_t2 -> G(!p_c4_t10 | G !p_c2_t8__c1_t2),graded,holds,
+rers2016-105-p13,p_c2_t8__c1_t2 | p_c4_t10 -> !p_c4_t10 W F(p_c4_t10 U G !p_c2_t8__c1_t2),binary,holds,
+rers2016-105-p13,p_c4_t10 -> !(p_c2_t8__c1_t2 | F p_c2_t8__c1_t2),feasible,holds,
+rers2016-105-p13,p_c4_t10 -> F G !p_c2_t8__c1_t2,graded,holds,
+rers2016-105-p13,p_c4_t10 -> G !p_c2_t8__c1_t2,binary graded,holds,
+rers2016-105-p13,p_c4_t10 -> G(!p_c2_t8__c1_t2 | p_c4_t10),binary,holds,
+rers2016-105-p13,p_c4_t10 -> G(!p_c4_t10 | G !p_c2_t8__c1_t2),graded,holds,
+rers2016-105-p16,!p_c0_t6 W (p_c2_t6 R (p_c2_t6 | !p_c2_t7)),graded,holds,
+rers2016-105-p16,(p_c2_t6 | !p_c0_t6 -> p_c2_t6) -> p_c2_t6 R (p_c2_t6 | !p_c2_t7),binary,holds,
+rers2016-105-p16,(p_c2_t6 | !p_c0_t6) R (p_c2_t6 | !p_c2_t7) | !p_c0_t6,graded,holds,
+rers2016-105-p16,F(p_c2_t6 R (p_c2_t6 | !p_c2_t7)) | !p_c0_t6,graded,holds,
+rers2016-105-p16,G(!p_c0_t6 | (p_c2_t6 | !p_c0_t6) R (p_c2_t6 | !p_c2_t7)) | !p_c2_t7,graded,holds,
+rers2016-105-p16,G(!p_c0_t6 | p_c2_t6 R (p_c2_t6 | !p_c2_t7) & p_c0_t6) | (p_c2_t6 <-> p_c0_t6),graded,holds,
+rers2016-105-p16,G(!p_c0_t6 | p_c2_t6 R (p_c2_t6 | !p_c2_t7)) | !p_c0_t6,binary,holds,
+rers2016-105-p16,p_c0_t6 -> F((p_c0_t6 -> p_c2_t6) R (p_c2_t6 | !p_c2_t7)),binary,holds,
+rers2016-105-p16,p_c0_t6 -> G !p_c2_t7 U (p_c2_t6 R (p_c2_t6 | !p_c2_t7)) & p_c0_t6,feasible,holds,
+rers2016-105-p16,p_c2_t6 R (p_c2_t6 | !p_c2_t7) | !p_c0_t6,graded,holds,
+rers2016-105-p16,p_c2_t6 R (p_c2_t6 | !p_c2_t7) | (p_c2_t7 | !p_c0_t6),graded,holds,
+rers2016-105-p17,!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | ((p_c2_t0 <-> p_c4_t6) | p_c4_t6) R (!p_c4_t3 | p_c4_t6),feasible,holds,
+rers2016-105-p17,!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | (p_c4_t3 | p_c2_t8__c1_t2 | p_c4_t6) R (!p_c4_t3 | p_c4_t6),feasible,holds,
+rers2016-105-p17,!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6),binary feasible graded,holds,
+rers2016-105-p17,!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6) | p_c4_t6,binary,holds,
+rers2016-105-p17,((p_c4_t6 -> p_c2_t8__c1_t2) | (!p_c2_t0 & p_c4_t3 -> p_c4_t18)) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | (p_c4_t3 R p_c4_t6) W (p_c4_t6 R (!p_c4_t3 | p_c4_t6))),graded,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | !p_c4_t3 | p_c4_t18) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6)),graded,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | !p_c4_t6 | p_c4_t18 | p_c4_t18) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 & !p_c4_t6 | p_c4_t6 R (!p_c4_t3 | p_c4_t6)),feasible,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | ((p_c4_t3 <-> p_c2_t0) | p_c4_t18)) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | !p_c4_t18 R ((!p_c2_t0 | p_c2_t8__c1_t2) & !p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6))),binary,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | (p_c4_t18 | !p_c4_t3)) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6)) | p_c2_t8__c1_t2,binary,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | p_c4_t18 | !(p_c4_t3 & !p_c2_t8__c1_t2)) R (!p_c2_t0 | p_c2_t8__c1_t2 | !p_c2_t8__c1_t2 & p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6)),graded,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | p_c4_t18 | !p_c2_t0) R ((!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18) & (!p_c4_t6 | !p_c4_t18) | p_c4_t6 R (!p_c4_t3 | p_c4_t6)),binary,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | p_c4_t18 | !p_c4_t18) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6)),graded,holds,
+rers2016-105-p17,(p_c2_t8__c1_t2 | p_c4_t18) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c2_t0 | p_c4_t6)) | !p_c4_t6,binary,holds,
+rers2016-105-p19,!(!G !p_c4_t16 & p_c0_t4),binary,holds,
+rers2016-105-p19,!G(!G !p_c4_t16 | !p_c0_t4) | !p_c0_t4,graded,holds,
+rers2016-105-p19,!p_c0_t4 | !p_c4_t16 U G !p_c4_t16,feasible,holds,
+rers2016-105-p19,!p_c0_t4 | G !p_c4_t16,feasible,holds,
+rers2016-105-p19,((!p_c4_t16 -> p_c0_t4) -> !p_c0_t4) | G !p_c4_t16,feasible,holds,
+rers2016-105-p19,(p_c0_t4 -> G !p_c4_t16) | !p_c0_t4,graded,holds,
+rers2016-105-p19,G !p_c4_t16 | !p_c0_t4,binary feasible graded,holds,
+rers2016-105-p19,G(!p_c0_t4 | G !p_c4_t16) & !p_c0_t4 | !p_c4_t16,binary,holds,
+rers2016-105-p19,G(!p_c0_t4 | G !p_c4_t16) & p_c4_t16 | !p_c4_t16,graded,holds,
+rers2016-105-p19,G(!p_c0_t4 | G !p_c4_t16) | !(p_c0_t4 | p_c4_t16),graded,holds,
+rers2016-105-p19,G(!p_c0_t4 | G !p_c4_t16) | !p_c0_t4,binary feasible graded,holds,
+rers2016-105-p19,G(!p_c0_t4 | G !p_c4_t16) | !p_c4_t16,binary feasible,holds,
+rers2016-105-p19,G(!p_c0_t4 | G !p_c4_t16) | (!p_c4_t16 | p_c0_t4),binary,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) W G F !p_c2_t8__c1_t2,binary,unknown,Search not completed
+rers2016-105-p10,(p_c4_t2 | p_c4_t13) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G F !p_c2_t5),binary feasible,unknown,Search not completed
+rers2016-105-p13,G(!p_c4_t10 | G F !p_c2_t8__c1_t2),feasible,unknown,Search not completed
+rers2016-105-p19,p_c0_t4 -> G !p_c4_t16,binary feasible,holds,
+rers2016-105-p19,p_c4_t16 | p_c0_t4 -> G(!p_c4_t16 & p_c0_t4 -> G !p_c4_t16),binary,holds,
+rers2016-105-p19,p_c4_t16 | G !p_c0_t4 -> G(p_c0_t4 -> G !p_c4_t16),binary,holds,
+rers2016-105-p2,(!p_c4_t3 & !p_c4_t12) U (F p_c2_t6 -> !p_c4_t12),feasible,holds,
+rers2016-105-p2,F G(!(p_c2_t7 | !p_c2_t3__c1_t6) W (!p_c4_t3 U G F G(p_c4_t3 | !p_c2_t6)) | !p_c2_t3__c1_t6) | !p_c4_t12,feasible,holds,
+rers2016-105-p2,G !G(p_c4_t12 & !p_c2_t6) W (p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7) | !p_c4_t3 | p_c2_t7),binary,holds,
+rers2016-105-p2,G !p_c2_t6 | !p_c4_t12,feasible,holds,
+rers2016-105-p2,G(!p_c2_t7 & p_c4_t12 | G !p_c2_t6) | !p_c4_t12,binary,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | G F !p_c4_t10,graded,unknown,Search not completed
+rers2016-105-p11,(p_c2_t3__c1_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G F !p_c2_t6),binary feasible,unknown,Search not completed
+rers2016-105-p2,G(!p_c4_t12 | G !p_c2_t6) W (!p_c2_t3__c1_t6 | p_c2_t7),graded,holds,
+rers2016-105-p2,G(!p_c4_t12 | G !p_c2_t6) | !(p_c4_t12 | p_c4_t3) | G(!p_c2_t3__c1_t6 | p_c2_t7),binary,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) W G F !p_c4_t10,binary,unknown,Search not completed
+rers2016-105-p2,G(!p_c4_t12 | G !p_c2_t6) | !p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7),binary,holds,
+rers2016-105-p2,G(!p_c4_t12 | G !p_c2_t6) | !p_c4_t3 R (!(!p_c2_t7 & p_c2_t3__c1_t6) | p_c2_t7),feasible,holds,
+rers2016-105-p13,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | G F !p_c2_t8__c1_t2,graded,unknown,Search not completed
+rers2016-105-p2,G(!p_c4_t12 | G !p_c2_t6) | ((p_c2_t6 <-> p_c4_t12) -> p_c2_t7 -> p_c4_t12) R (!p_c2_t3__c1_t6 | p_c2_t7),feasible,holds,
+rers2016-105-p2,G(!p_c4_t12 | G !p_c2_t6) | (p_c4_t3 -> !p_c4_t3),feasible,holds,
+rers2016-105-p2,G(!p_c4_t3 | G(!p_c4_t12 | G !p_c2_t6)) W (!p_c2_t6 R (!p_c2_t3__c1_t6 | p_c2_t7 | p_c4_t3)),binary,holds,
+rers2016-105-p2,G((!p_c4_t12 | G !p_c2_t6) & (!p_c4_t3 | (!p_c2_t3__c1_t6 & p_c4_t3 | p_c2_t7))) | !p_c4_t3,graded,holds,
+rers2016-105-p2,G((!(p_c2_t3__c1_t6 <-> !p_c2_t7) | G(p_c2_t6 | !(p_c2_t6 -> p_c2_t7))) & (!(p_c4_t3 & p_c4_t12) | G p_c2_t3__c1_t6)) | !p_c4_t12 | G !p_c2_t6,binary,holds,
+rers2016-105-p2,G((!p_c4_t12 | G !p_c2_t6) & (!p_c4_t3 | p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7))) | !p_c4_t12 | (p_c2_t7 & !p_c4_t12) R (!p_c2_t3__c1_t6 | p_c2_t7),binary,holds,
+rers2016-105-p13,G(G F !p_c2_t8__c1_t2 W G(!p_c4_t10 | G !p_c2_t8__c1_t2)),graded,unknown,Search not completed
+rers2016-105-p2,G((!p_c4_t12 | G !p_c2_t6) & (!p_c4_t3 | p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7))) | p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7),binary feasible graded,holds,
+rers2016-105-p10,(p_c4_t2 | p_c4_t13) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | F G !p_c2_t5),graded,unknown,Search not completed
+rers2016-105-p19,G(!p_c0_t4 | G F !p_c4_t16),binary feasible graded,unknown,Search not completed
+rers2016-105-p2,G(!p_c4_t12 | (!p_c2_t7 R !p_c2_t3__c1_t6) W G(p_c2_t6 -> !p_c2_t6)),graded,unknown,Search not completed
+rers2016-105-p2,G(((p_c2_t3__c1_t6 <-> !p_c2_t7) | G(p_c2_t6 | !(p_c2_t6 -> !p_c2_t6))) & (!(p_c4_t3 & p_c4_t12) | G !p_c2_t3__c1_t6)) | !p_c4_t12 | G !p_c2_t6,binary,holds,
+rers2016-105-p2,G(((p_c4_t3 <-> p_c4_t12) | G !p_c2_t6) & (!p_c4_t3 | (!p_c2_t3__c1_t6 | p_c2_t7))) | !p_c4_t12,binary,holds,
+rers2016-105-p2,G((p_c2_t7 <-> p_c4_t12 & !p_c2_t3__c1_t6) | G !p_c2_t6) | !p_c4_t12,binary,holds,
+rers2016-105-p2,G((p_c4_t3 | G !p_c2_t6) & (!p_c4_t3 | (!p_c2_t3__c1_t6 | p_c2_t7))) | !p_c4_t12,binary,holds,
+rers2016-105-p2,G(p_c4_t3 | !p_c2_t6) W (!p_c4_t3 R !p_c4_t12),graded,holds,
+rers2016-105-p2,F G(!p_c2_t6 W (p_c4_t12 U G F G !p_c4_t12) | !p_c2_t3__c1_t6),feasible,unknown,Search not completed
+rers2016-105-p2,p_c4_t3 -> p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7),binary,holds,
+rers2016-105-p2,G(!p_c4_t12 | ((!p_c2_t7 -> !p_c4_t3) R !p_c2_t3__c1_t6) W G(p_c2_t6 -> !p_c2_t6)),graded,unknown,Search not completed
+rers2016-105-p20,!(p_c3_t12__c2_t11 & !p_c3_t7 & p_c2_t4) R (!p_c2_t4 | p_c3_t7 | (p_c2_t3__c1_t6 | p_c3_t7) R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),graded,holds,
+rers2016-105-p20,!p_c2_t4 | p_c3_t7 | (p_c2_t3__c1_t6 | p_c3_t7) R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11),feasible,holds,
+rers2016-105-p20,!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11),binary feasible graded,holds,
+rers2016-105-p20,!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11) | p_c2_t3__c1_t6,graded,holds,
+rers2016-105-p20,!p_c2_t4 | p_c3_t7 | p_c3_t7 R (!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),binary,holds,
+rers2016-105-p20,(!p_c2_t4 | p_c3_t7) R (!(p_c2_t4 & !p_c3_t12__c2_t11) | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),feasible,holds,
+rers2016-105-p20,(p_c2_t4 -> !p_c2_t4) | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11),feasible,holds,
+rers2016-105-p20,(p_c3_t7 | !(p_c2_t4 | p_c3_t12__c2_t11)) R (!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),feasible,holds,
+rers2016-105-p20,(p_c3_t7 | !p_c2_t4) R (!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),binary graded,holds,
+rers2016-105-p20,(p_c2_t4 | p_c3_t7) R (!p_c2_t4 | p_c3_t7 | (!p_c2_t4 | p_c2_t3__c1_t6) R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),feasible,holds,
+rers2016-105-p20,(p_c3_t7 | !p_c2_t4) R (p_c3_t7 | !p_c2_t4 | (p_c2_t3__c1_t6 | !p_c2_t4) R (p_c2_t3__c1_t6 | (p_c3_t12__c2_t11 -> !p_c3_t12__c2_t11))),graded,holds,
+rers2016-105-p20,(p_c3_t7 | !p_c3_t12__c2_t11) R (!p_c2_t4 | p_c3_t7 | (p_c2_t4 R (p_c2_t3__c1_t6 | !p_c2_t4)) U (p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11))) | !p_c3_t12__c2_t11,feasible,holds,
+rers2016-105-p20,p_c3_t7 R (!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)) | !p_c2_t3__c1_t6,graded,holds,
+rers2016-105-p20,p_c3_t7 R (!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)) | !p_c3_t12__c2_t11,feasible,holds,
+rers2016-105-p2,G(!p_c4_t12 | G !p_c2_t6) W (p_c4_t3 R (!p_c2_t3__c1_t6 | p_c2_t7)),graded,unknown,Search not completed
+rers2016-105-p5,!(!p_c3_t6 & ((p_c3_t6 -> p_c3_t1) <-> p_c3_t1 & !p_c3_t3)) R (p_c3_t1 | p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3)),graded,holds,
+rers2016-105-p2,G((!p_c4_t12 | G F !p_c2_t6) & (!(!p_c4_t3 <-> p_c2_t7) | (!p_c2_t3__c1_t6 | p_c2_t7))),graded,unknown,Search not completed
+rers2016-105-p5,(p_c3_t6 | !(p_c3_t1 | p_c3_t3)) R (p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 & p_c3_t3 | !p_c3_t3)),graded,holds,
+rers2016-105-p5,(p_c3_t6 | !p_c3_t1 & !p_c3_t6) R (p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3)),graded,holds,
+rers2016-105-p5,(p_c3_t6 & !(p_c3_t1 & p_c3_t3 & !p_c3_t1) | !p_c3_t3) R (p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3)),graded,holds,
+rers2016-105-p5,(p_c3_t6 | !p_c4_t15) & !p_c3_t1 | p_c3_t1 R (p_c3_t1 | !p_c3_t3),binary graded,holds,
+rers2016-105-p5,(p_c3_t6 | !p_c3_t3) R (p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3)),binary,holds,
+rers2016-105-p2,G((!p_c4_t12 | G F !p_c2_t6) & (!p_c4_t3 | (!p_c2_t3__c1_t6 | p_c2_t7))),binary,unknown,Search not completed
+rers2016-105-p20,p_c3_t7 R (!p_c2_t4 | p_c3_t7 | (p_c2_t3__c1_t6 | !p_c2_t4) R (p_c2_t3__c1_t6 | (!p_c3_t12__c2_t11 | p_c3_t7))),graded,holds,
+rers2016-105-p2,G((!p_c4_t12 | G F !p_c2_t6) & (!p_c4_t3 | (!p_c2_t3__c1_t6 | p_c2_t7 | p_c2_t7 & (p_c2_t3__c1_t6 & p_c4_t3)))),graded,unknown,Search not completed
+rers2016-105-p5,p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3),binary feasible graded,holds,
+rers2016-105-p5,p_c3_t6 R (p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3)) | !p_c4_t15,feasible,holds,
+rers2016-105-p5,p_c3_t6 | !p_c4_t15 | (!p_c4_t15 | p_c3_t1) R (p_c3_t1 | !p_c3_t3),binary,holds,
+rers2016-105-p7,!p_c2_t4 | p_c4_t19__c2_t10 | (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)),feasible,holds,
+rers2016-105-p5,p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3) | p_c3_t1,binary,holds,
+rers2016-105-p7,!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8),binary feasible graded,holds,
+rers2016-105-p7,!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8) & !p_c4_t19__c2_t10,binary,holds,
+rers2016-105-p7,(!p_c2_t4 | p_c4_t19__c2_t10) R (!p_c2_t4 | p_c4_t19__c2_t10 | F(p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8))),binary,holds,
+rers2016-105-p7,(p_c1_t1 -> p_c4_t19__c2_t10) R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (!p_c4_t8__c1_t8 | p_c1_t1)),graded,holds,
+rers2016-105-p7,!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8) & p_c2_t4,graded,holds,
+rers2016-105-p7,(p_c4_t19__c2_t10 | !p_c4_t8__c1_t8) R (!p_c2_t4 & !p_c4_t19__c2_t10 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)),feasible,holds,
+rers2016-105-p7,(p_c4_t19__c2_t10 | !p_c2_t4) R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)),binary feasible graded,holds,
+rers2016-105-p2,G((!p_c4_t12 | G F !p_c2_t6) & ((!p_c2_t3__c1_t6 -> p_c4_t3) | (!p_c2_t3__c1_t6 | p_c2_t7))),binary,unknown,Search not completed
+rers2016-105-p7,p_c4_t19__c2_t10 R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)) | !p_c1_t1,binary,holds,
+rers2016-105-p7,p_c4_t19__c2_t10 R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8) | p_c1_t1) | p_c2_t4 | !p_c1_t1,binary,holds,
+rers2016-105-p7,(p_c4_t8__c1_t8 -> p_c4_t19__c2_t10) R ((p_c2_t4 -> !p_c2_t4) | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)),graded,holds,
+rers2016-105-p7,p_c4_t19__c2_t10 R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)) | !p_c2_t4,binary,holds,
+rers2016-106-p11,(!p_c3_t4 | (p_c3_t4 | p_c5_t10)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),binary,holds,
+rers2016-105-p7,p_c4_t19__c2_t10 R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)) | !p_c1_t1 R (p_c1_t1 | p_c4_t19__c2_t10 | !p_c4_t8__c1_t8),graded,holds,
+rers2016-106-p11,((p_c3_t5 -> p_c3_t4) | p_c5_t10) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),graded,holds,
+rers2016-106-p11,(p_c3_t4 | !p_c3_t5 | p_c5_t10) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),binary,holds,
+rers2016-106-p11,(p_c3_t4 | (p_c3_t5 -> p_c5_t10)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),binary,holds,
+rers2016-106-p11,(p_c3_t4 | (p_c5_t10 | !p_c3_t5)) R (p_c3_t4 | !p_c5_t5 | (!p_c3_t4 <-> p_c5_t10) | G !p_c3_t5),binary,holds,
+rers2016-106-p11,(p_c3_t4 | (p_c5_t10 | !p_c3_t5)) R (p_c3_t4 | !p_c5_t5 | !p_c3_t4 & p_c5_t10 | G !p_c3_t5),graded,holds,
+rers2016-106-p11,(p_c3_t4 | (p_c5_t10 | !p_c5_t5 & !p_c3_t5)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !(p_c3_t5 & p_c3_t4) & G !p_c3_t5),binary,holds,
+rers2016-106-p11,(p_c3_t4 | (p_c5_t5 | p_c5_t10)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5) | !p_c3_t5 | p_c5_t5,feasible,holds,
+rers2016-106-p11,(p_c3_t4 | p_c5_t10) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5) | !p_c3_t5,binary feasible graded,holds,
+rers2016-106-p11,(p_c3_t5 & !p_c3_t4 -> p_c5_t10) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),feasible,holds,
+rers2016-106-p11,(p_c5_t10 | p_c3_t4 | (p_c3_t5 <-> p_c5_t10)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),binary,holds,
+rers2016-106-p12,G !p_c3_t9 | G !p_c3_t6__c2_t2 | !p_c5_t11,feasible,holds,
+rers2016-106-p11,p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5,binary feasible graded,holds,
+rers2016-105-p2,G((!p_c4_t12 | G F(p_c2_t7 | !p_c2_t6)) & (!p_c4_t12 | G !(p_c2_t6 & p_c4_t3))),feasible,unknown,Search not completed
+rers2016-105-p2,G((!p_c4_t12 | G(!p_c2_t6 | !p_c2_t3__c1_t6)) & (!p_c4_t3 | (p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7) | G(!p_c2_t6 & !p_c2_t7)) | p_c4_t12)),graded,unknown,Search not completed
+rers2016-105-p7,(p_c4_t19__c2_t10 | p_c1_t1 & !p_c2_t4) R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)),graded,holds,
+rers2016-105-p5,(p_c3_t6 | p_c3_t1) R (p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3 | p_c3_t6)),binary,unknown,Search not completed
+rers2016-105-p5,p_c3_t6 R (p_c3_t6 | !p_c4_t15 | (G(p_c3_t6 | G !(p_c3_t6 & p_c3_t1)) U !p_c3_t3) W p_c3_t1),graded,unknown,Search not completed
+rers2016-105-p5,(p_c4_t15 -> !p_c4_t15) W (p_c3_t6 | p_c3_t6 & !p_c3_t1 | p_c3_t1 R (p_c3_t1 | !p_c3_t3)),binary,unknown,Search not completed
+rers2016-106-p12,G(!p_c3_t0 | G !p_c3_t6__c2_t2) | !p_c3_t9,graded,holds,
+rers2016-106-p12,G(!p_c3_t0 | G !p_c3_t6__c2_t2) | !p_c5_t11,graded,holds,
+rers2016-106-p12,G(!p_c3_t0 | (G !p_c3_t6__c2_t2 | p_c3_t6__c2_t2) & G((!p_c3_t0 | p_c5_t11 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9))),feasible,unknown,Search not completed
+rers2016-106-p12,G(!p_c5_t11 | G !p_c3_t9) | !(!p_c3_t6__c2_t2 -> p_c5_t11),binary,holds,
+rers2016-106-p11,(p_c3_t4 | p_c5_t10) R (p_c3_t4 | !p_c5_t5 | p_c5_t10) | (p_c3_t5 -> !p_c5_t10) U G !p_c3_t5,graded,unknown,Search not completed
+rers2016-106-p12,G(!p_c3_t0 | G !p_c3_t6__c2_t2),feasible graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & !p_c3_t9) | !p_c5_t11,feasible,holds,
+rers2016-106-p12,G(!(p_c3_t0 | p_c5_t11 & p_c3_t9) | G !p_c3_t6__c2_t2),feasible,unknown,Search not completed
+rers2016-106-p12,G(!p_c3_t0 | (G !p_c3_t6__c2_t2 & p_c3_t6__c2_t2) W G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9 | p_c3_t6__c2_t2))),graded,unknown,Search not completed
+rers2016-106-p12,G(!p_c3_t0 | G !p_c3_t6__c2_t2 & G(!p_c5_t11 | G !p_c3_t9)),feasible,unknown,Search not completed
+rers2016-105-p5,(p_c3_t6 | p_c3_t3) R (p_c3_t6 | !p_c4_t15 | (F(p_c3_t1 R (p_c3_t1 | !p_c3_t3)) | p_c3_t3)),graded,unknown,Search not completed
+rers2016-106-p12,G(!p_c3_t0 | G !p_c3_t6__c2_t2) & !(p_c3_t9 & p_c5_t11),feasible,unknown,Search not completed
+rers2016-106-p12,G(!p_c5_t11 | G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (p_c3_t6__c2_t2 -> !p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G(!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c3_t9 | !p_c5_t11),binary,unknown,Search not completed
+rers2016-106-p12,G(!p_c3_t0 | G((!p_c3_t6__c2_t2 | G p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & !(p_c5_t11 & p_c3_t9)),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!(p_c5_t11 & p_c3_t0) | G !p_c3_t9)),binary feasible graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!(p_c5_t11 & p_c3_t6__c2_t2) | G(p_c3_t6__c2_t2 -> !p_c3_t9))),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!(p_c5_t11 & p_c3_t6__c2_t2) | G !p_c3_t9)),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!(p_c5_t11 & p_c3_t9) | F(p_c3_t6__c2_t2 & !p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!(p_c5_t11 & p_c3_t9) | G(p_c3_t6__c2_t2 -> !(p_c3_t9 | !p_c5_t11)))),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!(p_c5_t11 & p_c3_t9) | G !p_c5_t11 & !p_c3_t0)),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c3_t6__c2_t2 | G(p_c5_t11 -> !p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c3_t0 | p_c5_t11 | G(!p_c3_t9 | !p_c5_t11))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | !p_c3_t0 | G !p_c3_t9)),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c3_t6__c2_t2 | G(!p_c5_t11 | G !p_c3_t9))),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 & p_c3_t9 | G !(p_c3_t9 & p_c5_t11))),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | !p_c3_t6__c2_t2 | G !p_c3_t9)),binary feasible graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | (G(!p_c3_t9 | !p_c3_t6__c2_t2) | p_c3_t6__c2_t2 & p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | !p_c3_t9 | G(p_c3_t0 <-> !(!p_c5_t11 | p_c3_t9)))),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | (G !p_c3_t9 | !p_c3_t0 & !p_c3_t6__c2_t2))),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | (p_c3_t0 -> p_c3_t6__c2_t2) | G !p_c3_t9)),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | (p_c3_t6__c2_t2 | !p_c3_t9) | G !p_c3_t9)),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | F !(p_c3_t6__c2_t2 & p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | !p_c3_t0,binary,holds,
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | !p_c3_t6__c2_t2,binary feasible graded,holds,
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | !p_c5_t11,binary feasible graded,holds,
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | F !p_c3_t9)),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !(p_c3_t0 & p_c3_t9))),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | F(!p_c3_t9 & p_c5_t11))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !(p_c3_t9 & p_c3_t0))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !(p_c3_t9 & p_c5_t11))),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9 | !(p_c3_t0 | p_c3_t6__c2_t2))),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9 | !p_c3_t0)),binary feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9 | !p_c3_t9)),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9 | !p_c3_t6__c2_t2)),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | G !p_c3_t6__c2_t2,graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G F(p_c3_t9 -> p_c5_t11))),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G F !p_c3_t9)),binary feasible graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & F !p_c3_t9) | !p_c5_t11,graded,holds,
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G(p_c3_t6__c2_t2 -> !p_c3_t9))),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G(p_c3_t0 -> !p_c3_t9))),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G(p_c5_t11 -> !p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | p_c5_t11 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | !p_c5_t11 & !p_c3_t9,feasible,holds,
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | p_c5_t11 & !p_c3_t6__c2_t2 & !p_c3_t0 | G !p_c3_t9)),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & ((!p_c5_t11 | G F !p_c3_t9) & !(p_c5_t11 & p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & ((p_c3_t9 -> !p_c5_t11) | G(p_c3_t0 & !(p_c3_t0 <-> !p_c3_t9)))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (p_c3_t6__c2_t2 & !p_c5_t11 | G(p_c3_t9 -> !p_c5_t11))),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (p_c3_t9 | !p_c5_t11 | G(p_c5_t11 -> !p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & G(p_c3_t9 -> !p_c5_t11)),binary feasible graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G !p_c5_t11 W G !p_c3_t6__c2_t2) & (!(p_c5_t11 & p_c3_t6__c2_t2) | G !p_c3_t9)),binary,unknown,Search not completed
+rers2016-106-p13,!p_c1_t3 U F p_c1_t0 | !p_c1_t3,binary,holds,
+rers2016-106-p12,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (p_c5_t11 | G(p_c5_t11 -> !p_c3_t9))),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c5_t11 | !p_c3_t9 | (G(p_c3_t0 -> !p_c3_t0) | G p_c3_t0)) & (!p_c3_t0 | G !p_c3_t6__c2_t2)),feasible,unknown,Search not completed
+rers2016-106-p12,G((!p_c3_t0 | G((p_c3_t9 | !p_c3_t6__c2_t2) & !(p_c3_t9 & p_c5_t11))) & (!p_c5_t11 | G(p_c3_t6__c2_t2 -> !p_c3_t9))),feasible,unknown,Search not completed
+rers2016-106-p13,!p_c1_t3 | F p_c1_t0,graded,holds,
+rers2016-106-p13,F F p_c1_t0 | !p_c1_t3,binary,holds,
+rers2016-106-p13,!F p_c1_t3 | F p_c1_t0,graded,holds,
+rers2016-106-p13,!p_c1_t3 W F !G !p_c1_t0,feasible,holds,
+rers2016-106-p12,G(G !p_c3_t6__c2_t2 & (!p_c5_t11 | G !p_c3_t9) | !p_c3_t0),graded,unknown,Search not completed
+rers2016-106-p12,G((!p_c5_t11 | !p_c3_t9 | G p_c3_t9) & (!p_c3_t0 | G !p_c3_t6__c2_t2)),feasible,unknown,Search not completed
+rers2016-106-p13,F p_c1_t0 W (F p_c1_t0 & F !p_c1_t3) | !p_c1_t3,graded,holds,
+rers2016-106-p13,!p_c1_t3 W F p_c1_t0,graded,holds,
+rers2016-106-p13,!p_c1_t3 W F(!p_c1_t0 -> p_c1_t0),graded,holds,
+rers2016-106-p13,F p_c1_t0 | !p_c1_t3,binary feasible graded,holds,
+rers2016-106-p12,G((p_c5_t11 | !p_c3_t0 | G !p_c3_t6__c2_t2) & (!(p_c3_t9 & p_c5_t11) | G p_c3_t9)),binary,unknown,Search not completed
+rers2016-106-p12,G((!p_c5_t11 | !p_c3_t9 | (G(p_c3_t0 -> p_c3_t6__c2_t2) | G(p_c3_t9 & !p_c3_t6__c2_t2))) & (!p_c3_t0 | G !p_c3_t6__c2_t2)),feasible,unknown,Search not completed
+rers2016-106-p13,F(p_c1_t3 & F p_c1_t3) -> F p_c1_t0,graded,holds,
+rers2016-106-p13,G !p_c1_t3 | F p_c1_t0,binary,holds,
+rers2016-106-p12,G(p_c3_t0 | G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c3_t9 | G !(p_c5_t11 & p_c3_t9)))),binary,unknown,Search not completed
+rers2016-106-p13,F(p_c1_t0 | G(G !p_c1_t3 | F p_c1_t0)),feasible,holds,
+rers2016-106-p13,G(!p_c1_t3 | F p_c1_t0) | !p_c1_t0,feasible,holds,
+rers2016-106-p13,G(!p_c1_t3 | F p_c1_t0) | !p_c1_t3,binary feasible graded,holds,
+rers2016-106-p13,G((p_c1_t3 <-> p_c1_t0) | F p_c1_t0) | !p_c1_t0,feasible,holds,
+rers2016-106-p13,F G(!p_c1_t3 | F p_c1_t0),binary,unknown,Search not completed
+rers2016-106-p13,G(F p_c1_t0 | !p_c1_t3) | !p_c1_t3,graded,holds,
+rers2016-106-p13,G(F(!p_c1_t0 -> p_c1_t0) | !p_c1_t3) | !p_c1_t0,graded,holds,
+rers2016-106-p13,F G((p_c1_t3 -> G p_c1_t0) W F p_c1_t0),graded,unknown,Search not completed
+rers2016-106-p13,p_c1_t0 -> G(!p_c1_t3 W F(p_c1_t0 & F p_c1_t0)),feasible,holds,
+rers2016-106-p13,p_c1_t0 -> G(F p_c1_t0 | !p_c1_t3),feasible,holds,
+rers2016-106-p13,F(F(p_c1_t0 | !p_c1_t3) W G F p_c1_t0),binary,unknown,Search not completed
+rers2016-106-p13,p_c1_t3 -> F p_c1_t0,feasible,holds,
+rers2016-106-p13,p_c1_t3 -> G(!p_c1_t3 | F p_c1_t0),feasible,holds,
+rers2016-106-p13,F G(p_c1_t3 -> F p_c1_t0),graded,unknown,Search not completed
+rers2016-106-p16,!(p_c5_t1 & !p_c5_t6) & p_c5_t11 -> G((!p_c5_t5 | (!p_c2_t6 | p_c2_t8__c1_t4) | p_c5_t6) & (!p_c5_t6 | p_c5_t11 R (!p_c5_t1 | p_c5_t11))),binary,holds,
+rers2016-106-p16,(p_c2_t8__c1_t4 & p_c5_t6) W (G(!p_c5_t6 | p_c5_t11 R (!p_c5_t1 | p_c5_t11)) | !p_c5_t11),binary,holds,
+rers2016-106-p16,G F((p_c2_t8__c1_t4 <-> p_c5_t5) & p_c5_t6) W G(!p_c5_t5 | p_c2_t8__c1_t4 R (!(p_c2_t6 & !p_c5_t11) | p_c2_t8__c1_t4)) | !p_c2_t6,feasible,holds,
+rers2016-106-p16,G(!p_c5_t5 | (p_c2_t6 | p_c2_t8__c1_t4) R (!(p_c2_t6 & !p_c5_t6) | p_c2_t8__c1_t4)) | (p_c5_t11 & p_c2_t6) R !p_c5_t11 | !p_c5_t1,graded,holds,
+rers2016-106-p13,F p_c1_t0 W F !F p_c1_t3,feasible,unknown,Search not completed
+rers2016-106-p16,G(!p_c5_t5 | (p_c5_t6 | p_c2_t8__c1_t4) R (!p_c2_t6 | p_c2_t8__c1_t4)) | !p_c5_t11 & !p_c5_t1,graded,holds,
+rers2016-106-p16,G((!p_c5_t5 | p_c2_t8__c1_t4 R (!p_c2_t6 | p_c2_t8__c1_t4)) & (!p_c5_t6 | p_c5_t11 R (!p_c5_t1 | p_c5_t11))) | !p_c5_t1,binary,holds,
+rers2016-106-p13,G F(!p_c1_t3 | F p_c1_t0),binary feasible graded,unknown,Search not completed
+rers2016-106-p13,G F(!p_c1_t3 | p_c1_t0),binary graded,unknown,Search not completed
+rers2016-106-p16,G((!p_c5_t5 | p_c2_t8__c1_t4 R (!p_c2_t6 | p_c2_t8__c1_t4)) & (p_c5_t6 | !p_c5_t11 R ((p_c5_t1 -> !p_c5_t6) | p_c5_t11))) | !p_c5_t1,binary,holds,
+rers2016-106-p16,p_c5_t11 R (!p_c5_t1 | p_c5_t11) | !p_c5_t6,binary,holds,
+rers2016-106-p18,!p_c4_t4 & !p_c5_t8__c1_t2 | p_c4_t17 R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),graded,holds,
+rers2016-106-p18,!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2,binary feasible graded,holds,
+rers2016-106-p13,p_c1_t0 | !F p_c1_t3 W F p_c1_t0,feasible,holds,
+rers2016-106-p18,(!p_c5_t8__c1_t2 | p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),binary feasible,holds,
+rers2016-106-p18,(!p_c5_t8__c1_t2 | p_c4_t17) R (!p_c4_t4 | (!p_c4_t4 | p_c4_t17) | G !p_c5_t8__c1_t2),feasible,holds,
+rers2016-106-p18,(!p_c5_t8__c1_t2 | p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2 U G(p_c4_t4 | !p_c5_t8__c1_t2)),binary,holds,
+rers2016-106-p18,(!p_c5_t8__c1_t2 | p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G(p_c5_t8__c1_t2 -> p_c4_t17)),binary,holds,
+rers2016-106-p18,((p_c5_t8__c1_t2 <-> p_c4_t17) | !p_c5_t8__c1_t2) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),feasible,holds,
+rers2016-106-p18,(p_c4_t17 | !p_c5_t8__c1_t2) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),binary feasible graded,holds,
+rers2016-106-p18,(p_c4_t17 | (p_c4_t4 | !p_c5_t8__c1_t2)) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),binary,holds,
+rers2016-106-p18,(p_c5_t8__c1_t2 -> p_c4_t17 & p_c5_t8__c1_t2) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),feasible,holds,
+rers2016-106-p18,(p_c5_t8__c1_t2 -> p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),binary feasible,holds,
+rers2016-106-p13,G F(p_c1_t0 | !p_c1_t3),feasible graded,unknown,Search not completed
+rers2016-106-p18,(p_c5_t8__c1_t2 -> p_c4_t17) R (p_c4_t17 | !p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),feasible,holds,
+rers2016-106-p18,(p_c5_t8__c1_t2 -> p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G(p_c4_t4 | !p_c5_t8__c1_t2)),graded,holds,
+rers2016-106-p18,p_c4_t17 R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2) | !p_c5_t8__c1_t2,binary feasible graded,holds,
+rers2016-106-p19,(G(!p_c0_t7 | F p_c2_t1__c0_t3) & !p_c5_t5) W !p_c0_t5,feasible,holds,
+rers2016-106-p19,F((!p_c0_t5 | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary feasible,holds,
+rers2016-106-p13,F G(F(p_c1_t0 | F p_c1_t0) | !p_c1_t3),graded,unknown,Search not completed
+rers2016-106-p13,G(F p_c1_t0 W F !p_c1_t3),binary,unknown,Search not completed
+rers2016-106-p13,G(p_c1_t0 | F(p_c1_t0 | !p_c1_t3)),feasible,unknown,Search not completed
+rers2016-106-p19,G(!p_c0_t5 | G !p_c5_t5) | !(p_c0_t7 | p_c5_t5),feasible,holds,
+rers2016-106-p19,G(!p_c0_t5 | G !p_c5_t5) | !p_c2_t1__c0_t3,binary,holds,
+rers2016-106-p16,G F(p_c2_t8__c1_t4 <-> p_c5_t5) W G(!p_c5_t5 | p_c2_t8__c1_t4 R (!(p_c2_t6 & !p_c5_t11) | p_c2_t8__c1_t4)),feasible,unknown,Search not completed
+rers2016-106-p16,G(!p_c5_t5 | (p_c2_t6 | p_c2_t8__c1_t4) R (!p_c2_t6 | p_c2_t8__c1_t4)) | p_c2_t6 R (!p_c5_t1 | p_c5_t11),graded,unknown,Search not completed
+rers2016-106-p18,p_c4_t17 R (!p_c4_t4 | p_c4_t17 | G F !p_c5_t8__c1_t2),feasible,unknown,Search not completed
+rers2016-106-p19,G !p_c0_t7 | G((!p_c0_t5 | G !p_c5_t5) & ((p_c0_t7 -> p_c2_t1__c0_t3) | F(p_c2_t1__c0_t3 <-> !p_c5_t5) | !p_c5_t5)),feasible,unknown,Search not completed
+rers2016-106-p19,G F((!p_c0_t5 | G !p_c5_t5 | p_c2_t1__c0_t3) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary,unknown,Search not completed
+rers2016-106-p19,F(p_c0_t5 -> p_c0_t7) U G((!p_c0_t5 | G !p_c5_t5) & F(p_c2_t1__c0_t3 | !p_c0_t7)),graded,unknown,Search not completed
+rers2016-106-p19,G !(p_c0_t7 | p_c2_t1__c0_t3) | G(!p_c0_t5 | G !p_c5_t5),graded,unknown,Search not completed
+rers2016-106-p18,(p_c4_t17 | p_c4_t4) R (!p_c4_t4 | p_c4_t17 | G F !p_c5_t8__c1_t2),feasible,unknown,Search not completed
+rers2016-106-p19,G(!(!p_c0_t7 -> p_c0_t5) | G !p_c5_t5 W G((p_c2_t1__c0_t3 -> !p_c5_t5) & !p_c0_t7) | !p_c0_t5),feasible,unknown,Search not completed
+rers2016-106-p19,G(!p_c0_t5 | G !p_c5_t5) | G !p_c0_t7,binary,unknown,Search not completed
+rers2016-106-p19,G(!p_c0_t7 | F p_c2_t1__c0_t3),feasible,unknown,Search not completed
+rers2016-106-p19,G(!p_c0_t7 & !p_c2_t1__c0_t3 | G(!p_c0_t5 | G !p_c5_t5)),binary,unknown,Search not completed
+rers2016-106-p19,G((!(p_c0_t5 & p_c0_t7) | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary graded,unknown,Search not completed
+rers2016-106-p19,G((!(p_c0_t5 & p_c2_t1__c0_t3) | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p19,G(!p_c0_t7 | G((!p_c0_t5 | G !p_c5_t5) & (p_c0_t5 -> !p_c5_t5))),binary,unknown,Search not completed
+rers2016-106-p19,G(!p_c2_t1__c0_t3 | G(!p_c0_t5 | G !p_c5_t5)),graded,unknown,Search not completed
+rers2016-106-p19,G(!p_c0_t7 | G(!p_c0_t5 | G !p_c5_t5)),graded,unknown,Search not completed
+rers2016-106-p19,G((!(p_c0_t5 & p_c5_t5) | G !p_c5_t5) & (!p_c0_t7 | p_c0_t5 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | !(p_c0_t7 | p_c2_t1__c0_t3) | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | !p_c0_t7 | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),feasible,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5) & (!(p_c0_t7 & !(p_c2_t1__c0_t3 | !p_c0_t7)) | F p_c2_t1__c0_t3)) | !p_c2_t1__c0_t3,graded,holds,
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5) & (!p_c0_t7 | F !(p_c2_t1__c0_t3 <-> p_c5_t5))) | !p_c0_t5,graded,holds,
+rers2016-106-p19,G((!p_c0_t5 | !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary feasible graded,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)) | !p_c5_t5,binary feasible graded,holds,
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5) & (p_c0_t5 | !p_c0_t7 | F p_c2_t1__c0_t3)) | !p_c0_t7,graded,holds,
+rers2016-106-p19,G((!p_c0_t5 | (G !p_c5_t5 | !p_c5_t5)) & (!p_c0_t7 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | F !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)) | F p_c2_t1__c0_t3,feasible,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | (G !p_c5_t5 | !p_c0_t7) | p_c2_t1__c0_t3) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary graded,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | F !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G !(p_c5_t5 & (p_c0_t5 | p_c0_t7))) & (!p_c0_t7 | F p_c2_t1__c0_t3)),feasible,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5 | !p_c2_t1__c0_t3) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5 | p_c2_t1__c0_t3) & (!p_c0_t7 | F p_c2_t1__c0_t3) | !p_c0_t7),binary graded,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5 W G !p_c0_t7) & (!p_c0_t7 | F p_c2_t1__c0_t3)),feasible,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3) | !p_c0_t7),binary,unknown,Search not completed
+rers2016-106-p19,G(G !p_c5_t5 & (!p_c0_t7 | F p_c2_t1__c0_t3)) | !p_c0_t5,graded,holds,
+rers2016-106-p19,G((!p_c0_t5 | G F !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary feasible graded,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t7 & !p_c2_t1__c0_t3 | G(p_c0_t5 -> !p_c5_t5)) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary,unknown,Search not completed
+rers2016-106-p19,G((!p_c0_t5 | G(!p_c5_t5 | !p_c0_t5 & !p_c2_t1__c0_t3)) & (!p_c0_t7 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p2,((p_c0_t5 -> p_c2_t5__c5_t7) | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),graded,holds,
+rers2016-106-p2,(!p_c2_t5__c5_t7 -> !p_c0_t5 | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),binary,holds,
+rers2016-106-p2,(p_c2_t5__c5_t7 | !p_c0_t5 | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5 & (!p_c0_t5 | p_c5_t6)),binary,holds,
+rers2016-106-p2,(p_c2_t5__c5_t7 | !p_c0_t5 | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),binary,holds,
+rers2016-106-p19,G((!p_c0_t5 | G F !p_c5_t5) & (p_c2_t1__c0_t3 | !p_c0_t7 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p2,(p_c2_t5__c5_t7 | (p_c0_t5 -> p_c5_t6)) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),feasible,holds,
+rers2016-106-p19,G((!p_c0_t5 | G(!p_c5_t5 | !p_c0_t7)) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary,unknown,Search not completed
+rers2016-106-p2,(p_c2_t5__c5_t7 | (p_c5_t6 | !(p_c5_t5 <-> !p_c0_t5))) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),graded,holds,
+rers2016-106-p2,(p_c2_t5__c5_t7 | p_c5_t6 | !p_c0_t5) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5) | p_c2_t5__c5_t7,graded,holds,
+rers2016-106-p2,(p_c2_t5__c5_t7 | (p_c5_t6 | !p_c0_t5)) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),binary feasible graded,holds,
+rers2016-106-p2,(p_c2_t5__c5_t7 | p_c5_t6 | !p_c0_t5) R (p_c5_t6 | p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),feasible,holds,
+rers2016-106-p19,G((!p_c0_t5 | G(!p_c5_t5 | !p_c2_t1__c0_t3)) & (!p_c0_t7 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p2,(p_c2_t5__c5_t7 | p_c5_t6 | !p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),graded,holds,
+rers2016-106-p2,(p_c2_t5__c5_t7 | p_c5_t6 | !p_c2_t5__c5_t7) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),binary,holds,
+rers2016-106-p2,p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5,binary feasible graded,holds,
+rers2016-106-p3,((p_c3_t7 <-> p_c3_t5) | p_c5_t6 | p_c3_t5) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),binary,holds,
+rers2016-106-p3,(p_c3_t5 | !p_c5_t11 | p_c5_t6) R ((p_c3_t5 | p_c5_t6) & p_c5_t11 | !p_c5_t11 | p_c3_t4 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),graded,holds,
+rers2016-106-p3,(p_c3_t5 | (p_c5_t6 & !p_c3_t5 | !p_c3_t7)) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),graded,holds,
+rers2016-106-p3,(p_c3_t5 | (p_c5_t6 | p_c3_t4) | !p_c3_t7) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | (p_c5_t11 -> p_c3_t7) R (!p_c3_t4 | p_c3_t7)),graded,holds,
+rers2016-106-p3,(p_c3_t5 | (p_c5_t6 | !p_c3_t5)) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),feasible,holds,
+rers2016-106-p3,(p_c3_t5 | p_c5_t6 | !p_c3_t7) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),binary,holds,
+rers2016-106-p3,(p_c3_t5 | p_c5_t6 | !p_c5_t11) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),binary,holds,
+rers2016-106-p3,(p_c3_t5 | p_c5_t6) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | (p_c3_t7 R (!p_c3_t4 | p_c3_t7) | p_c3_t7) & !p_c3_t5) | !p_c3_t7,binary,holds,
+rers2016-106-p3,p_c3_t5 | !p_c3_t4 | p_c5_t6 | p_c5_t11 | (p_c3_t5 | p_c5_t6) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),feasible,holds,
+rers2016-106-p3,p_c3_t5 | p_c5_t6 | !(p_c5_t11 & !p_c3_t7) | p_c3_t7 R (!p_c3_t4 | p_c3_t7),binary,holds,
+rers2016-106-p3,p_c3_t5 | p_c5_t6 | !p_c5_t11 | (p_c3_t7 R (!p_c3_t4 | p_c3_t7) | p_c3_t7),graded,holds,
+rers2016-106-p3,p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7),binary feasible graded,holds,
+rers2016-106-p3,p_c5_t6 | !p_c5_t11 | (p_c3_t5 | p_c5_t6) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),binary,holds,
+rers2016-106-p5,!(p_c5_t1 & !p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),binary,holds,
+rers2016-106-p5,(!p_c5_t1 | p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),binary feasible graded,holds,
+rers2016-106-p5,(p_c1_t5__c3_t10 | p_c5_t1 -> p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G(!(!p_c5_t1 -> p_c5_t9) | p_c5_t9)),graded,holds,
+rers2016-106-p5,(p_c5_t1 -> p_c5_t9) R (!p_c1_t5__c3_t10 | (p_c1_t5__c3_t10 -> p_c5_t9) | G !p_c5_t1),graded,holds,
+rers2016-106-p5,!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1,binary feasible graded,holds,
+rers2016-106-p5,(p_c5_t1 -> p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),binary feasible graded,holds,
+rers2016-106-p5,(p_c5_t1 -> p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G(p_c5_t1 -> p_c5_t9)),binary,holds,
+rers2016-106-p5,(p_c5_t1 -> p_c5_t9) R (p_c5_t9 | !p_c1_t5__c3_t10 | G !p_c5_t1),feasible,holds,
+rers2016-106-p5,(p_c5_t9 | !p_c5_t1) R (!(p_c1_t5__c3_t10 & !p_c5_t9) | G !p_c5_t1),binary,holds,
+rers2016-106-p5,(p_c5_t9 | !(p_c1_t5__c3_t10 | p_c5_t1)) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),graded,holds,
+rers2016-106-p5,(p_c5_t9 | !p_c5_t1) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),feasible,holds,
+rers2016-106-p5,p_c5_t9 R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1) | !p_c1_t5__c3_t10,graded,holds,
+rers2016-106-p5,p_c5_t9 R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1) | (p_c1_t5__c3_t10 <-> !p_c1_t5__c3_t10 <-> p_c5_t1),feasible,holds,
+rers2016-106-p7,!(!G !p_c2_t8__c1_t4 & (p_c1_t5__c3_t10 | p_c2_t8__c1_t4 | G((!p_c1_t5__c3_t10 <-> p_c2_t8__c1_t4) <-> !p_c3_t0))),feasible,holds,
+rers2016-106-p19,G((!p_c0_t5 | G(!p_c5_t5 | !p_c0_t5)) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary feasible graded,unknown,Search not completed
+rers2016-106-p7,!((p_c3_t0 | p_c1_t5__c3_t10) & G F p_c2_t8__c1_t4),feasible,holds,
+rers2016-106-p7,!(F !p_c1_t5__c3_t10 & (!p_c3_t0 -> p_c2_t8__c1_t4) U p_c2_t8__c1_t4),graded,holds,
+rers2016-106-p7,!p_c2_t8__c1_t4 & (!p_c1_t5__c3_t10 | !p_c3_t0),feasible,holds,
+rers2016-106-p7,(G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10)) | p_c1_t5__c3_t10) & G !p_c1_t5__c3_t10 | !p_c2_t8__c1_t4,graded,holds,
+rers2016-106-p7,(p_c1_t5__c3_t10 -> !p_c3_t0) & !p_c2_t8__c1_t4,feasible,holds,
+rers2016-106-p7,(p_c3_t0 | p_c1_t5__c3_t10 -> G((p_c3_t0 -> !p_c1_t5__c3_t10) & (p_c3_t0 -> !F(p_c3_t0 & p_c2_t8__c1_t4)))) & !p_c2_t8__c1_t4,feasible,holds,
+rers2016-106-p7,F(!p_c2_t8__c1_t4 & (!p_c3_t0 | (G !p_c1_t5__c3_t10 | !p_c1_t5__c3_t10))),binary,holds,
+rers2016-106-p7,F(!p_c2_t8__c1_t4 & (!p_c3_t0 | (G !p_c1_t5__c3_t10 | p_c1_t5__c3_t10))),binary,holds,
+rers2016-106-p7,F(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10)),binary feasible graded,holds,
+rers2016-106-p7,F(p_c3_t0 & G !p_c1_t5__c3_t10) W !p_c2_t8__c1_t4,graded,holds,
+rers2016-106-p7,G !(!p_c1_t5__c3_t10 -> p_c2_t8__c1_t4) | !p_c3_t0,binary,holds,
+rers2016-106-p7,G !p_c2_t8__c1_t4 | (!p_c1_t5__c3_t10 | p_c3_t0),feasible,holds,
+rers2016-106-p19,G((p_c5_t5 -> !p_c0_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),graded,unknown,Search not completed
+rers2016-106-p19,G(G(!p_c5_t5 | !p_c0_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary graded,unknown,Search not completed
+rers2016-106-p19,G(G !(p_c5_t5 & p_c0_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),binary,unknown,Search not completed
+rers2016-106-p7,!(G F p_c2_t8__c1_t4 & F(p_c3_t0 & !p_c1_t5__c3_t10)),feasible,unknown,Search not completed
+rers2016-106-p5,p_c5_t9 R (!p_c1_t5__c3_t10 | p_c5_t9 | G F !p_c5_t1),feasible,unknown,Search not completed
+rers2016-106-p7,G(!(!p_c2_t8__c1_t4 <-> p_c3_t0) | G !p_c1_t5__c3_t10) | !p_c2_t8__c1_t4,binary,holds,
+rers2016-106-p19,G(p_c0_t7 | G !p_c2_t1__c0_t3) U G((!p_c0_t5 | G !p_c5_t5) & (!p_c0_t7 | p_c2_t1__c0_t3 | F !p_c2_t1__c0_t3)),binary,unknown,Search not completed
+rers2016-106-p5,F(p_c5_t9 R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1)),binary graded,unknown,Search not completed
+rers2016-106-p7,F(!p_c2_t8__c1_t4 & ((p_c1_t5__c3_t10 <-> !p_c3_t0) | G !p_c1_t5__c3_t10)),binary,unknown,Search not completed
+rers2016-106-p7,G F !p_c1_t5__c3_t10 W G(!p_c2_t8__c1_t4 & !p_c3_t0),feasible,unknown,Search not completed
+rers2016-106-p7,G(!(p_c3_t0 | !p_c1_t5__c3_t10) & (p_c2_t8__c1_t4 | G !(p_c1_t5__c3_t10 & p_c2_t8__c1_t4))) | !p_c2_t8__c1_t4,feasible,holds,
+rers2016-106-p7,G(!p_c1_t5__c3_t10 & G !p_c2_t8__c1_t4) | !p_c3_t0,feasible,holds,
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & !p_c1_t5__c3_t10) | !p_c3_t0,binary feasible,holds,
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & !p_c3_t0 & G !p_c1_t5__c3_t10) | !p_c2_t8__c1_t4,binary,holds,
+rers2016-106-p2,(p_c2_t5__c5_t7 | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | F G !p_c0_t5),feasible,unknown,Search not completed
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10) & p_c2_t8__c1_t4) | !p_c2_t8__c1_t4,binary,holds,
+rers2016-106-p7,G F(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10 & (p_c2_t8__c1_t4 -> !p_c1_t5__c3_t10))),binary,unknown,Search not completed
+rers2016-106-p7,G F(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10)),binary graded,unknown,Search not completed
+rers2016-106-p7,G F(!p_c2_t8__c1_t4 & (p_c3_t0 | p_c1_t5__c3_t10 | G !p_c1_t5__c3_t10)),binary,unknown,Search not completed
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10)) & p_c1_t5__c3_t10 | !p_c2_t8__c1_t4,binary,holds,
+rers2016-106-p7,G(!p_c2_t8__c1_t4 | G !p_c1_t5__c3_t10) | !(p_c3_t0 & p_c1_t5__c3_t10 | p_c2_t8__c1_t4),feasible,holds,
+rers2016-106-p7,G(!p_c2_t8__c1_t4 | G p_c1_t5__c3_t10) | !(p_c1_t5__c3_t10 | p_c2_t8__c1_t4),feasible,holds,
+rers2016-106-p7,G(!(p_c2_t8__c1_t4 & (!p_c2_t8__c1_t4 | p_c3_t0)) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),binary,unknown,Search not completed
+rers2016-106-p7,G(!(p_c2_t8__c1_t4 & p_c3_t0) & (!p_c3_t0 | G(!(p_c1_t5__c3_t10 | !p_c2_t8__c1_t4) | !p_c1_t5__c3_t10))),graded,unknown,Search not completed
+rers2016-106-p7,G(!(p_c2_t8__c1_t4 & p_c1_t5__c3_t10 & p_c1_t5__c3_t10) & (!p_c3_t0 | G(p_c1_t5__c3_t10 -> !p_c1_t5__c3_t10))),binary,unknown,Search not completed
+rers2016-106-p7,G(!(p_c2_t8__c1_t4 & p_c1_t5__c3_t10) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),graded,unknown,Search not completed
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & !p_c3_t0 | G F !p_c1_t5__c3_t10),binary,unknown,Search not completed
+rers2016-106-p7,G F(!p_c2_t8__c1_t4 & (p_c2_t8__c1_t4 | G(!p_c1_t5__c3_t10 | !p_c3_t0))),binary,unknown,Search not completed
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10) | p_c2_t8__c1_t4 & !p_c1_t5__c3_t10),binary,unknown,Search not completed
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10) | (!p_c1_t5__c3_t10 <-> p_c2_t8__c1_t4)),binary,unknown,Search not completed
+rers2016-106-p7,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10) | !p_c3_t0),binary graded,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | !p_c3_t0 & p_c2_t8__c1_t4 | G !p_c1_t5__c3_t10) & !p_c2_t8__c1_t4,graded,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | G !(p_c2_t8__c1_t4 & p_c1_t5__c3_t10)) & G F(!p_c2_t8__c1_t4 & (!p_c3_t0 | G p_c3_t0)),feasible,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | (G !p_c1_t5__c3_t10 | !p_c3_t0)),feasible,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | G !p_c1_t5__c3_t10 & !p_c1_t5__c3_t10) & (p_c3_t0 <-> !(p_c3_t0 -> p_c2_t8__c1_t4)),feasible,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | G !p_c1_t5__c3_t10 & !p_c2_t8__c1_t4),binary,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | G !p_c1_t5__c3_t10),binary feasible graded,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | G !p_c1_t5__c3_t10) & !p_c2_t8__c1_t4,binary graded,unknown,Search not completed
+rers2016-106-p7,G((p_c1_t5__c3_t10 | !p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10)) | !p_c3_t0,binary,holds,
+rers2016-106-p7,G(!p_c3_t0 | G !p_c1_t5__c3_t10) & G F !p_c2_t8__c1_t4,feasible,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | G F(!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4)),graded,unknown,Search not completed
+rers2016-106-p7,G(!p_c3_t0 | G((p_c2_t8__c1_t4 & !p_c3_t0 | !p_c2_t8__c1_t4) & G !p_c1_t5__c3_t10)),graded,unknown,Search not completed
+rers2016-106-p7,G((p_c1_t5__c3_t10 -> !p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),graded,unknown,Search not completed
+rers2016-106-p7,G((p_c3_t0 <-> p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10)) | !p_c2_t8__c1_t4,binary,holds,
+rers2016-106-p7,G((!p_c1_t5__c3_t10 | !p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),graded,unknown,Search not completed
+rers2016-106-p7,p_c2_t8__c1_t4 -> !G(!(p_c3_t0 & p_c1_t5__c3_t10) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),binary,holds,
+rers2016-106-p7,p_c2_t8__c1_t4 -> G !p_c1_t5__c3_t10,binary,holds,
+rers2016-106-p7,G((!p_c2_t8__c1_t4 | !p_c1_t5__c3_t10) & (!p_c3_t0 | G !p_c1_t5__c3_t10 & (p_c1_t5__c3_t10 -> p_c3_t0))),graded,unknown,Search not completed
+rers2016-106-p7,G((p_c1_t5__c3_t10 -> !p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10 & !(p_c3_t0 -> p_c2_t8__c1_t4))),binary,unknown,Search not completed
+rers2016-106-p7,p_c3_t0 | p_c2_t8__c1_t4 -> G !(p_c1_t5__c3_t10 | p_c2_t8__c1_t4),feasible,holds,
+rers2016-106-p8,!p_c5_t10 | F G(p_c5_t10 | !p_c3_t2),feasible,holds,
+rers2016-106-p8,!p_c5_t10 | G !p_c3_t2,binary feasible,holds,
+rers2016-106-p8,F G !p_c3_t2 W !p_c5_t10,binary,holds,
+rers2016-106-p8,F G !p_c3_t2 | !p_c5_t10,feasible,holds,
+rers2016-106-p7,G((!p_c2_t8__c1_t4 | !(p_c3_t0 | !p_c2_t8__c1_t4)) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),graded,unknown,Search not completed
+rers2016-106-p7,G((p_c2_t8__c1_t4 -> !p_c3_t0) & (!p_c3_t0 | G !(!p_c3_t0 & p_c1_t5__c3_t10) & G !p_c1_t5__c3_t10)),binary,unknown,Search not completed
+rers2016-106-p7,G((p_c1_t5__c3_t10 | !p_c2_t8__c1_t4 -> !p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10 & !p_c2_t8__c1_t4)),feasible,unknown,Search not completed
+rers2016-106-p7,G((p_c3_t0 -> !p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),binary,unknown,Search not completed
+rers2016-106-p7,G((p_c3_t0 -> p_c2_t8__c1_t4 -> p_c1_t5__c3_t10) & (!p_c3_t0 | G !p_c1_t5__c3_t10)) & !p_c2_t8__c1_t4,graded,unknown,Search not completed
+rers2016-106-p8,F G(p_c5_t10 | !p_c3_t2) | !p_c5_t10,feasible,holds,
+rers2016-106-p8,G !p_c3_t2 | !p_c5_t10,binary feasible graded,holds,
+rers2016-106-p7,G((p_c2_t8__c1_t4 -> !p_c1_t5__c3_t10) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),binary,unknown,Search not completed
+rers2016-106-p7,G(F(!(p_c1_t5__c3_t10 | p_c2_t8__c1_t4) & (p_c2_t8__c1_t4 | G(!p_c1_t5__c3_t10 | !p_c3_t0))) | !p_c2_t8__c1_t4),binary,unknown,Search not completed
+rers2016-106-p8,F G F p_c5_t10 -> F G !p_c3_t2,feasible,unknown,Search not completed
+rers2016-106-p8,G(!p_c5_t10 | G !p_c3_t2) & !p_c3_t2 | !p_c5_t10,graded,holds,
+rers2016-106-p8,F G(p_c3_t2 -> G !p_c5_t10),binary,unknown,Search not completed
+rers2016-106-p8,G(!p_c5_t10 | G !p_c3_t2) | !p_c3_t2,binary feasible graded,holds,
+rers2016-106-p8,G(!p_c5_t10 | G !p_c3_t2) | !p_c5_t10,binary feasible graded,holds,
+rers2016-106-p8,!G !(F p_c3_t2 R G !p_c3_t2 | G !p_c5_t10),binary,unknown,Search not completed
+rers2016-106-p8,G(p_c3_t2 | !p_c5_t10 | G !p_c3_t2) | !p_c3_t2,binary,holds,
+rers2016-106-p8,F G !p_c3_t2 | G !p_c5_t10,feasible,unknown,Search not completed
+rers2016-106-p8,G(!G F p_c3_t2 | !p_c5_t10),binary,unknown,Search not completed
+rers2016-106-p8,G(!p_c3_t2 | G(!p_c5_t10 | G !p_c3_t2)),graded,unknown,Search not completed
+rers2016-106-p8,p_c3_t2 -> G(!p_c5_t10 | G !p_c3_t2),binary,holds,
+rers2016-106-p8,p_c5_t10 -> G !p_c3_t2,feasible graded,holds,
+rers2016-106-p8,p_c5_t10 -> G(!p_c5_t10 | G !p_c3_t2),binary,holds,
+rers2016-106-p8,p_c5_t10 | (p_c5_t10 | p_c3_t2) -> F G !p_c3_t2 | G !p_c5_t10,feasible,holds,
+rers2016-106-p8,F G(!p_c5_t10 | G !p_c3_t2),binary feasible graded,unknown,Search not completed
+rers2016-106-p8,F G(G !p_c3_t2 W !p_c5_t10),feasible,unknown,Search not completed
+rers2016-106-p8,F G(p_c5_t10 -> G !p_c3_t2),binary,unknown,Search not completed
+rers2016-106-p8,G(!p_c5_t10 | F G !p_c3_t2),binary,unknown,Search not completed
+rers2016-106-p8,G(!p_c5_t10 | G !p_c3_t2) W F G !p_c3_t2,graded,unknown,Search not completed
+rers2016-106-p8,G(p_c3_t2 | !p_c5_t10) | F G !p_c3_t2,graded,unknown,Search not completed
+rers2016-106-p8,G(G !p_c5_t10 | F G !p_c3_t2),feasible,unknown,Search not completed
+rers2016-106-p8,p_c3_t2 U G(F G !p_c3_t2 W !p_c5_t10),graded,unknown,Search not completed
