@@ -1,0 +1,52 @@
+diff --git i/src/oracle/tiered.rs w/src/oracle/tiered.rs
+index 417f350..1bb4308 100644
+--- i/src/oracle/tiered.rs
++++ w/src/oracle/tiered.rs
+@@ -111,7 +111,7 @@ impl<B: Backend> Oracle<B> {
+     fn implied_by_a_truth(&mut self, formula: &Formula) -> bool {
+         let survivors: Vec<Formula> = self.truths.may_imply(formula).cloned().collect();
+         let pairs: Vec<_> = survivors.iter().map(|truth| (truth, formula)).collect();
+-        self.spot(&pairs).contains(&true)
++        self.spot("lookup", &pairs).contains(&true)
+     }
+ 
+     /// Adds a back-end truth, and drops each stored truth it provably
+@@ -119,7 +119,7 @@ impl<B: Backend> Oracle<B> {
+     fn learn_truth(&mut self, truth: &Formula) {
+         let implied: Vec<Formula> = self.truths.may_be_implied_by(truth).cloned().collect();
+         let pairs: Vec<_> = implied.iter().map(|weaker| (truth, weaker)).collect();
+-        let proved = self.spot(&pairs);
++        let proved = self.spot("evict", &pairs);
+         self.truths.insert(truth.clone());
+         for (weaker, proved) in implied.iter().zip(proved) {
+             if proved {
+@@ -130,16 +130,27 @@ impl<B: Backend> Oracle<B> {
+ 
+     /// One `ltlfilt` exec over `pairs`, with "unknown" read as nothing
+     /// proved. No exec for an empty batch.
+-    fn spot(&mut self, pairs: &[(&Formula, &Formula)]) -> Vec<bool> {
++    fn spot(&mut self, purpose: &str, pairs: &[(&Formula, &Formula)]) -> Vec<bool> {
+         if pairs.is_empty() {
+             return Vec::new();
+         }
+         self.counters.spot_calls += 1;
+-        implications(pairs, self.spot_limits).unwrap_or_else(|_| {
++        let start = std::time::Instant::now();
++        let result = implications(pairs, self.spot_limits);
++        if let Some(path) = std::env::var_os("GAWAIN_SPOT_LOG") {
++            use std::io::Write;
++            let mut log = std::fs::OpenOptions::new().create(true).append(true).open(path).unwrap();
++            let r = match &result { Ok(v) => v.iter().map(|b| if *b {'1'} else {'0'}).collect::<String>(), Err(e) => format!("ERR {e}") };
++            writeln!(log, "BATCH\t{purpose}\t{}\t{:.6}\t{}\t{}", pairs.len(), start.elapsed().as_secs_f64(), self.truths_len(), r).unwrap();
++            for (a, b) in pairs { writeln!(log, "PAIR\t{a}\t{b}").unwrap(); }
++        }
++        result.unwrap_or_else(|_| {
+             self.counters.spot_errors += 1;
+             vec![false; pairs.len()]
+         })
+     }
++
++    fn truths_len(&self) -> usize { self.truths.may_imply(&Formula::tt()).count() }
+ }
+ 
+ #[cfg(test)]

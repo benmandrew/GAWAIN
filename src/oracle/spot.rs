@@ -2,12 +2,23 @@
 //! deciding ψ ⇒ φ for a batch of pairs in one `ltlfilt` exec.
 //!
 //! ψ ⇒ φ is valid iff `ψ & !φ` is unsatisfiable. So each pair becomes one
-//! line `(ψ) & !(φ)` on `ltlfilt`'s stdin, and
-//! `ltlfilt -F - -v --satisfiable --format=%L` prints the line number of each
-//! unsatisfiable line, that is, of each proved implication. A line that does
-//! not parse is skipped and so never reads as proved. Start-up dominates a
-//! single `ltlfilt` call (about 13 ms), so one exec per batch is the point;
-//! see "Implication from known truths" in `docs/dev/oracle-performance.md`.
+//! line `(ψ) & !(φ)` on `ltlfilt`'s stdin. Two checks read those lines.
+//!
+//! - [`implications`] runs `ltlfilt -F - -v --satisfiable --format=%L`,
+//!   which prints the line number of each unsatisfiable line. It is complete,
+//!   but it translates each line to an automaton, which on long formulas can
+//!   take minutes.
+//! - [`syntactic_implications`] runs `ltlfilt -F - -r2 --ap=0
+//!   --format=%L,%f`, which only rewrites each line with Spot's basic and
+//!   syntactic-implication rules and prints the lines that become a
+//!   constant. A line rewritten to `0` is proved. It builds no automaton, so
+//!   it answers in milliseconds where the complete check times out, and it
+//!   proves less.
+//!
+//! A line that does not parse is skipped and so never reads as proved.
+//! Start-up dominates a single `ltlfilt` call (about 13 ms), so one exec per
+//! batch is the point; see "Implication from known truths" in
+//! `docs/dev/oracle-performance.md`.
 
 use std::process::Command;
 
@@ -22,8 +33,32 @@ use crate::ltl::Formula;
 /// error or output that cannot be read. Callers must read it as "nothing
 /// proved". An empty batch starts no process.
 pub fn implications(pairs: &[(&Formula, &Formula)], limits: Limits) -> Result<Vec<bool>, String> {
+    let stdout = ltlfilt(pairs, &["-v", "--satisfiable", "--format=%L"], limits)?;
+    parse(&stdout, pairs.len(), str::is_empty)
+}
+
+/// For each pair `(ψ, φ)`, whether Spot's rewriting rules alone reduce
+/// `ψ & !φ` to false, which proves ψ ⇒ φ, in one `ltlfilt` exec. It proves
+/// a subset of what [`implications`] proves, and an `Err` means "nothing
+/// proved" as there.
+pub fn syntactic_implications(
+    pairs: &[(&Formula, &Formula)],
+    limits: Limits,
+) -> Result<Vec<bool>, String> {
+    let stdout = ltlfilt(pairs, &["-r2", "--ap=0", "--format=%L,%f"], limits)?;
+    // Each printed line is `N,0` or `N,1`: line N became a constant.
+    parse(&stdout, pairs.len(), |rest| rest == ",0")
+}
+
+/// Runs `ltlfilt -F - args` with one line `(ψ) & !(φ)` per pair on stdin
+/// and returns its stdout. An empty batch starts no process.
+fn ltlfilt(
+    pairs: &[(&Formula, &Formula)],
+    args: &[&str],
+    limits: Limits,
+) -> Result<String, String> {
     if pairs.is_empty() {
-        return Ok(Vec::new());
+        return Ok(String::new());
     }
     let mut input = String::new();
     for (psi, phi) in pairs {
@@ -36,29 +71,33 @@ pub fn implications(pairs: &[(&Formula, &Formula)], limits: Limits) -> Result<Ve
         input.push_str(&line);
     }
     let mut command = Command::new("ltlfilt");
-    command.args(["-F", "-", "-v", "--satisfiable", "--format=%L"]);
+    command.args(["-F", "-"]).args(args);
     let output = process::run(&mut command, &input, limits).map_err(|e| format!("ltlfilt: {e}"))?;
     // Exit 0: some line was printed; 1: none was; 2: an error was reported.
     match output.status.code() {
-        Some(0 | 1) => {}
-        _ => return Err(format!("ltlfilt: {}", output.stderr.trim())),
+        Some(0 | 1) => Ok(output.stdout),
+        _ => Err(format!("ltlfilt: {}", output.stderr.trim())),
     }
-    parse(&output.stdout, pairs.len())
 }
 
-/// Reads the 1-based line numbers of the proved pairs.
-fn parse(stdout: &str, n_pairs: usize) -> Result<Vec<bool>, String> {
+/// Reads the 1-based line number that starts each output line, and marks
+/// that pair proved when `proves` accepts the rest of the line.
+fn parse(stdout: &str, n_pairs: usize, proves: impl Fn(&str) -> bool) -> Result<Vec<bool>, String> {
     let mut proved = vec![false; n_pairs];
     for line in stdout.lines() {
-        let number: usize = line
-            .trim()
+        let line = line.trim();
+        let digits = line
+            .find(|c: char| !c.is_ascii_digit())
+            .unwrap_or(line.len());
+        let (number, rest) = line.split_at(digits);
+        let number: usize = number
             .parse()
             .map_err(|_| format!("ltlfilt: unexpected output {line:?}"))?;
         let slot = number
             .checked_sub(1)
             .and_then(|i| proved.get_mut(i))
             .ok_or_else(|| format!("ltlfilt: line {number} is out of range"))?;
-        *slot = true;
+        *slot = proves(rest);
     }
     Ok(proved)
 }
@@ -69,15 +108,28 @@ mod tests {
 
     #[test]
     fn line_numbers_mark_proved_pairs() {
-        assert_eq!(parse("1\n3\n", 4), Ok(vec![true, false, true, false]));
-        assert_eq!(parse("", 2), Ok(vec![false, false]));
+        assert_eq!(
+            parse("1\n3\n", 4, str::is_empty),
+            Ok(vec![true, false, true, false])
+        );
+        assert_eq!(parse("", 2, str::is_empty), Ok(vec![false, false]));
+    }
+
+    #[test]
+    fn only_a_line_rewritten_to_false_is_proved_syntactically() {
+        let falsity = |rest: &str| rest == ",0";
+        assert_eq!(
+            parse("1,0\n2,1\n", 3, falsity),
+            Ok(vec![true, false, false])
+        );
     }
 
     #[test]
     fn unreadable_output_is_an_error() {
-        assert!(parse("0\n", 2).is_err());
-        assert!(parse("3\n", 2).is_err());
-        assert!(parse("G a\n", 2).is_err());
+        assert!(parse("0\n", 2, str::is_empty).is_err());
+        assert!(parse("3\n", 2, str::is_empty).is_err());
+        assert!(parse("G a\n", 2, str::is_empty).is_err());
+        assert!(parse(",0\n", 2, |rest| rest == ",0").is_err());
     }
 
     #[test]
@@ -87,5 +139,6 @@ mod tests {
             memory_bytes: 1 << 20,
         };
         assert_eq!(implications(&[], limits), Ok(Vec::new()));
+        assert_eq!(syntactic_implications(&[], limits), Ok(Vec::new()));
     }
 }

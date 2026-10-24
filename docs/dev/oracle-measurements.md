@@ -130,11 +130,48 @@ Every query that returned a verdict, at any tier, timed around `Oracle::check`.
 | nuXmv pooled | fails | 1284 | 2.7e-05 | 2.36 | 1e-06–9.61 | 1.47–3.39 |
 | nuXmv pooled | both | 2067 | 0.000137 | 8.3 | 1e-06–124 | 7.07–9.58 |
 
-A lasso refutation costs about 20 µs and a tier 2 proof about 17 ms (one `ltlfilt` exec), so the median query is far below the median back-end call. The nuXmv mean for truths is inflated by one model. On production-cell, 131 of 196 back-end truths spent 60 s or more in the `ltlfilt` exec that evicts implied truths from the store, which hit its 60 s limit, against a median of 2.4 s in nuXmv itself. The eviction check has the same limit as tier 2 and no cheaper fallback, so on large formulas it costs more than the model checker it follows.
+A lasso refutation costs about 20 µs and a tier 2 proof about 17 ms (one `ltlfilt` exec), so the median query is far below the median back-end call. The nuXmv mean for truths is inflated by one model. On production-cell, 131 of 196 back-end truths spent 60 s or more in `ltlfilt`, against a median of 2.4 s in nuXmv itself: 76 of them hit the 60 s limit twice, once in the tier 2 lookup that failed before the back-end call and once in the exec that evicts implied truths after it. Spot's complete check on large formulas cost more than the model checker it stood in front of. "Tier 2 eviction" below diagnoses this and measures the fix.
+
+## Tier 2 eviction
+
+Tier 2 and eviction both asked Spot's complete check (`ltlfilt --satisfiable`, which translates `ψ & !φ` to an automaton) under the 60 s limit, with no cheaper step first. On production-cell that check cost minutes, and this section finds out why, then measures the replacement now in `src/oracle/tiered.rs`.
+
+**Diagnosis method.** A diagnostic patch (`bench/notes/tier2-spot-log.patch`, against commit 69992f2) makes the oracle log every `ltlfilt` batch: lookup or eviction, its pairs, its time, the store size and the result. The 10 production-cell jobs ran with it on av2 for 40 minutes at the old code and logged 263 batches, and a *fast set* of 134 jobs (RERS 2016 101–104 and 2017 101, and every LMCS model except production-cell, bc57-sensors, dme5 and dme6) ran to the end and logged 2,401. `bench/tier2_replay.py` then ran each distinct pair alone, once with the complete check under a 60 s limit and once with the rewriting-rule check described below. It replayed all 5,586 fast-set pairs and 1,261 of the 1,557 production-cell pairs before its 3-hour cap. The per-pair rows are in `bench/results/tier2-pairs-fast.csv` and `bench/results/tier2-pairs-production-cell.csv`.
+
+**Why production-cell stalls.** Its properties `p3` and `p4` and their negations are chains of 13 to 15 nested `U` over 24 to 33 atoms, and the mutants differ from them in one or two operands. The batches were small: a lookup held a median of 3 pairs (at most 22) and an eviction 6 (at most 19). Alone, the complete check proved a pair in a median of 8.8 ms (at most 1.14 s), but it refuted one in a median of 87 ms with a 97.5th percentile of 34 s, and 319 of the 1,261 pairs ran past 60 s. So 68 of 182 lookup batches and 54 of 81 eviction batches timed out. A timed-out batch held a pair that times out alone, or several slow refutations that summed past 60 s. One hard pair does stall the whole batch: 30 lookup pairs and 8 eviction pairs that the complete check proves alone sat in batches that timed out. Failed evictions also let the store grow to 26 truths, which made later batches larger. Only `p3`, `p4` and their negations stalled, and the fast set had no timed-out batch.
+
+**The rewriting rules.** `ltlfilt -r2` rewrites a formula with Spot's basic rules and its *syntactic implication* rules, and builds no automaton. A line `(ψ) & !(φ)` that it rewrites to `0` proves ψ ⇒ φ, and `--ap=0 --format=%L,%f` prints only the lines that became a constant (`syntactic_implications` in `src/oracle/spot.rs`). On every replayed pair it answered in at most 18 ms. On production-cell it proved 340 pairs, every pair the complete check proved there and 22 on which the complete check timed out. On the fast set it missed 481 of the 5,435 pairs the complete check proved (426 lookup pairs and 55 eviction pairs), all of them proved by the complete check in at most 17 ms.
+
+**Policies.** `bench/tier2_simulate.py` replayed each logged batch under each policy, timing a batch as one start-up plus the solo time of each pair, and a batch that passes its limit as proving nothing. The table counts batches that proved at least one pair, which for a lookup is a tier 2 hit, over the 168 production-cell lookup batches whose pairs were all replayed and all 2,101 fast-set lookup batches.
+
+| Policy | Production-cell hits | Production-cell mean time | Fast-set hits | Fast-set mean time |
+|---|---|---|---|---|
+| Complete check, 60 s (old) | 102 | 19.8 s | 2,083 | 8.10 ms |
+| Rules only | 119 | 9.87 ms | 1,897 | 7.82 ms |
+| Rules, then complete check for 250 ms | 119 | 73.3 ms | 2,083 | 8.63 ms |
+| Rules, then complete check for 1 s | 119 | 253 ms | 2,083 | 8.63 ms |
+| Rules, then complete check for 60 s | 119 | 13.7 s | 2,083 | 8.63 ms |
+
+Rules alone lose 186 fast-set hits (9%), and each lost hit becomes a back-end call of about 0.6 s on RERS. So a lookup runs the rules first and the complete check only when the rules prove nothing, for at most 250 ms (`COMPLETE_CHECK_BUDGET`), about 15 times the slowest proof the rules missed (17 ms). On eviction the complete check made 33 more fast-set batches evict something and none on production-cell, where its 69 replayed eviction batches cost 2,798 s at the 60 s limit and 11.4 s with a 250 ms budget, against 0.69 s for the rules. Eviction runs the rules only, since a store that keeps an implied truth still answers correctly. The store never grew past 14 truths on the fast set, so a size bound was not needed. Splitting batches per pair would have rescued the 38 stalled proofs, but the rules already prove all of them in one exec.
+
+**Rerun.** The full job set ran again at the new code on av2 (14 jobs at once; the load average was 0.9 before the diagnosis runs and about 14 during the rerun), with the settings in "Method". The rows are in `bench/results/oracle-bench-spin-eviction.csv` and `bench/results/oracle-bench-nuxmv-eviction.csv`; the earlier CSVs are unchanged. `python3 bench/oracle_compare.py BEFORE AFTER` matched every row on bench, property and sequence number: every candidate was the same, and all 5,900 SPIN and 2,067 nuXmv queries that both runs decided got the same verdict. `bench/oracle_overhead.py` gives the time outside the back end. The query medians and means in this table include the queries that ended `Unknown`, unlike those in "Time of a whole query".
+
+| Group | Run | Implication | Back end | Median query (s) | Mean query (s) | Total query (s) | Outside the back end (s) | Tier 2 answer, median (ms) |
+|---|---|---|---|---|---|---|---|---|
+| production-cell | before | 16.9% | 34.2% | 0.0136 | 22.9 | 13,787 | 12,734 | 16.4 |
+| production-cell | after | 24.0% | 27.0% | 0.00804 | 1.09 | 658 | 25 | 8.3 |
+| nuXmv pooled | before | 17.2% | 24.3% | 0.000146 | 11.4 | 23,753 | 12,753 | 16.4 |
+| nuXmv pooled | after | 19.2% | 22.1% | 0.000144 | 4.24 | 8,854 | 30 | 8.3 |
+| SPIN pooled | before | 28.9% | 27.4% | 0.0116 | 13.8 | 91,198 | 38.9 | 16.7 |
+| SPIN pooled | after | 28.9% | 27.4% | 0.00811 | 13.6 | 90,071 | 21.0 | 8.3 |
+
+On production-cell the 153 back-end truths now cost a median of 2.38 s and a mean of 3.40 s per query, against 64.8 s and 68.6 s before, and no query spent more than 0.30 s outside nuXmv. Tier 2 proved 43 more production-cell queries, which no longer reach nuXmv, and its hit rate rose from 16.9% to 24.0%. The nuXmv mean for truths fell from 18.0 s to 1.29 s. On SPIN the hit rates are unchanged except for one query on rers2016-105, whose stream lacked a truth because an earlier SPIN call timed out in one run and not the other. A tier 2 answer costs 8.3 ms instead of 16.4–16.7 ms, since a rules exec skips the automaton translation. The back-end medians moved too (SPIN truths 0.819 s before, 0.508 s after), but the code did not touch the back ends, so that difference is host load: the earlier SPIN run shared av2 with another user's jobs at load averages up to 30.8, and the earlier nuXmv run was on av3.
+
+**Process start-up.** The rest of the query path now costs 30 s of 8,854 s on nuXmv (0.34%) and 21 s of 90,071 s on SPIN (0.02%), over 763 and 2,341 `ltlfilt` execs. A long-lived `ltlfilt` would save at most the 8 ms start-up per exec, about 6 s and 19 s, under 0.1% of either total. The bench does not justify it, so the oracle still starts one process per batch.
 
 ## Unknown verdicts
 
-Every `Unknown` was a back-end timeout. SPIN gave 721: 80 on rers2016-105, 103 on 106, and 96, 140, 155 and 147 on rers2017-102 to 105. nuXmv gave 22: 4 on bc57-sensors (all on `p3`) and 18 on dme6. No candidate contained X, since no RERS property uses it and `ltlgrind` never introduced it, so SPIN's X refusal never fired.
+Every `Unknown` was a back-end timeout. SPIN gave 721: 80 on rers2016-105, 103 on 106, and 96, 140, 155 and 147 on rers2017-102 to 105. nuXmv gave 22: 4 on bc57-sensors (all on `p3`) and 18 on dme6. The rerun in "Tier 2 eviction" gave 719 and 18. No candidate contained X, since no RERS property uses it and `ltlgrind` never introduced it, so SPIN's X refusal never fired.
 
 ## Caveats
 
