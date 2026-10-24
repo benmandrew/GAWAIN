@@ -7,7 +7,7 @@
 //! search_bench --backend nuxmv|explicit|spin|tapaal --model PATH
 //!     [--atoms a,b,...] [--ltl 'φ'] [--property ID]
 //!     --seed N --generations G --population P --status graded|binary
-//!     [--timeout SECS] [--memory-mb MB]
+//!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
 //! ```
 //!
 //! - `nuxmv`: `--model` is an SMV file, `--atoms` its DEFINEs and `--ltl`
@@ -22,7 +22,10 @@
 //!
 //! Every group keeps only φ's atoms, since mutation draws no other.
 //! `--timeout` and `--memory-mb` bound each back-end call (default 120 s
-//! and 4096 MB). The JSON line holds the instance class, the repairs with
+//! and 4096 MB). A degenerate instance (M ⊨ ¬φ) is classified and not
+//! searched, unless `--degenerate search` is given: CEGIW's case studies
+//! include degenerate ones, and `bench/baselines_cegiw.py` compares the
+//! two tools there too. The JSON line holds the instance class, the repairs with
 //! their similarities, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
 
@@ -45,7 +48,7 @@ use gawain::oracle::{Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status graded|binary [--timeout SECS] [--memory-mb MB]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status graded|binary [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -76,6 +79,7 @@ struct Args {
     status: Option<Status>,
     timeout: u64,
     memory_mb: u64,
+    search_degenerate: bool,
 }
 
 fn parse_args() -> Result<Args, String> {
@@ -117,6 +121,13 @@ fn parse_args() -> Result<Args, String> {
             }
             "--timeout" => args.timeout = number()?,
             "--memory-mb" => args.memory_mb = number()?,
+            "--degenerate" => {
+                args.search_degenerate = match value.as_str() {
+                    "search" => true,
+                    "skip" => false,
+                    _ => return Err(format!("--degenerate {value}: skip or search")),
+                }
+            }
             _ => return Err(format!("unknown flag {flag}")),
         }
     }
@@ -228,7 +239,7 @@ fn search_on<B: Backend>(
     let mut grading = Default::default();
     let mut search_wall = 0.0;
     let mut gate_wall = 0.0;
-    if class.starts_with("proper") {
+    if class.starts_with("proper") || (args.search_degenerate && class == "degenerate") {
         let params = Params {
             generations: args.generations,
             population: args.population,

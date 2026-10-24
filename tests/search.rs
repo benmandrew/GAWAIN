@@ -322,6 +322,38 @@ fn weaken_refuses_a_property_that_holds() {
     assert_eq!(output.status.code(), Some(1));
 }
 
+#[test]
+fn search_bench_searches_a_degenerate_instance_only_when_asked() {
+    let test = "search_bench_searches_a_degenerate_instance_only_when_asked";
+    if !have(&["nuXmv", "ltlfilt", "ltl2tgba"], test) {
+        return;
+    }
+    // x alternates from FALSE, so every run violates G p: M ⊨ ¬φ.
+    let model = write_model(
+        "toggle.smv",
+        "MODULE main\nVAR x : boolean;\nASSIGN init(x) := FALSE; next(x) := !x;\nDEFINE p := x;\n",
+    );
+    let run = |degenerate: &str| {
+        let output = Command::new(env!("CARGO_BIN_EXE_search_bench"))
+            .args(["--backend", "nuxmv", "--model"])
+            .arg(&model)
+            .args(["--atoms", "p", "--ltl", "G p", "--seed", "1"])
+            .args(["--generations", "5", "--population", "8"])
+            .args(["--status", "binary"])
+            .args(["--degenerate", degenerate])
+            .output()
+            .expect("run search_bench");
+        assert!(output.status.success(), "{output:?}");
+        let stdout = String::from_utf8(output.stdout).unwrap();
+        assert!(stdout.contains("\"instance\":\"degenerate\""), "{stdout}");
+        stdout
+    };
+    assert!(run("skip").contains("\"repairs\":[]"));
+    let searched = run("search");
+    say(&searched);
+    assert!(!searched.contains("\"repairs\":[]"), "{searched}");
+}
+
 /// DEFINEs naming the propositions of abp4 `p2false`, appended to its last
 /// module, `main`.
 const ABP4_DEFINES: &str = "

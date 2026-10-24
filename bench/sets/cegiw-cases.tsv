@@ -1,0 +1,10 @@
+name	model	atoms	mtl	interval	de_bruijn
+forage-response	cegiw:foraging-robots.smv	resting_p	G(resting_p -> F{I}(resting_p))	[1,3]	0,1
+forage-absence	cegiw:foraging-robots.smv	resting_p	G((resting_p & X (!resting_p)) -> G{I}(!resting_p))	[1,15]	0,1
+forage-limit-response	cegiw:foraging-robots-limit-search.smv	resting_p	G(resting_p -> F{I}(resting_p))	[1,3]	0,1
+forage-limit-absence	cegiw:foraging-robots-limit-search.smv	resting_p	G((resting_p & X (!resting_p)) -> G{I}(!resting_p))	[1,15]	0,1
+minimal-response	cegiw:minimal.smv	a_p	G(a_p -> F{I}(a_p))	[1,2]	0,1
+minimal-absence	cegiw:minimal.smv	a_p	G((a_p & X (!a_p)) -> G{I}(!a_p))	[1,15]	0,1
+minimal-limit-response	cegiw:minimal-limit-search.smv	a_p	G(a_p -> F{I}(a_p))	[1,2]	0,1
+minimal-limit-absence	cegiw:minimal-limit-search.smv	a_p	G((a_p & X (!a_p)) -> G{I}(!a_p))	[1,15]	0,1
+abp4-p2false	graded:abp4-defines.smv	s_get,s_wait,s_abp,r_ack0,r_ack1	G(s_get -> F{I}(!s_get U (s_wait & ((!s_abp & r_ack0) | (s_abp & r_ack1)))))	[1,1]	0,1
