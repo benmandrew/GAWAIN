@@ -112,10 +112,13 @@ impl Grader {
     ) {
         let start = Instant::now();
         for scored in pool.iter_mut().filter(|s| !s.holds()) {
-            let share = *self.shares.entry(scored.formula.clone()).or_insert_with(|| {
-                self.counts.evaluations += 1;
-                count(&scored.formula).map_or(0.0, |(h, n)| h as f64 / (n + 1) as f64)
-            });
+            let share = *self
+                .shares
+                .entry(scored.formula.clone())
+                .or_insert_with(|| {
+                    self.counts.evaluations += 1;
+                    count(&scored.formula).map_or(0.0, |(h, n)| h as f64 / (n + 1) as f64)
+                });
             scored.objectives[STATUS] = share;
         }
         self.counts.rescores += 1;

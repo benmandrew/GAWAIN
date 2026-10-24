@@ -521,13 +521,19 @@ mod tests {
     fn a_random_lasso_is_a_run_of_the_structure() {
         // a, then b and c in either order forever.
         let k = kripke(&[(Some(0), &[1, 2]), (Some(1), &[2, 1]), (Some(2), &[1])]);
-        let limits = Limits { timeout: std::time::Duration::from_secs(1), memory_bytes: 1 << 30 };
+        let limits = Limits {
+            timeout: std::time::Duration::from_secs(1),
+            memory_bytes: 1 << 30,
+        };
         let backend = Explicit::new(k, limits);
         let runs = backend.random_lassos(20, 10, &mut Rng::new(1));
         assert_eq!(runs.len(), 20);
         for run in &runs {
             assert_eq!(run.prefix().first(), Some(&word(&["a"])[0]));
-            assert!(run.satisfies(&"a & X G (b | c)".parse().unwrap()), "{run:?}");
+            assert!(
+                run.satisfies(&"a & X G (b | c)".parse().unwrap()),
+                "{run:?}"
+            );
         }
     }
 

@@ -52,6 +52,16 @@ const SPOT_LIMITS: Limits = Limits {
     timeout: Duration::from_secs(120),
     memory_bytes: 4 << 30,
 };
+/// Each Spot exec of the search and of the gate's pruning, as in `weaken`.
+const SEARCH_LIMITS: Limits = Limits {
+    timeout: Duration::from_secs(2),
+    memory_bytes: 4 << 30,
+};
+/// Each exec of the gate's proof of φ ⇒ φ', as in `weaken`.
+const GATE_LIMITS: Limits = Limits {
+    timeout: Duration::from_secs(10),
+    memory_bytes: 4 << 30,
+};
 
 #[derive(Default)]
 struct Args {
@@ -159,7 +169,15 @@ fn run() -> Result<(), String> {
         "spin" => {
             let phi = need_phi()?;
             let backend = Spin::stepwise(&args.model, &args.atoms, limits)?;
-            search_on(&args, backend, phi, &args.atoms, Vec::new(), Vec::new(), start)
+            search_on(
+                &args,
+                backend,
+                phi,
+                &args.atoms,
+                Vec::new(),
+                Vec::new(),
+                start,
+            )
         }
         "tapaal" => {
             let dir = PathBuf::from(&args.model);
@@ -174,7 +192,15 @@ fn run() -> Result<(), String> {
                 .ok_or(format!("{id}: not in {exam}.xml"))?;
             let atoms: Vec<String> = property.atoms.iter().map(|(a, _)| a.to_string()).collect();
             let backend = Tapaal::new(&pnml, net, property.atoms, limits);
-            search_on(&args, backend, property.formula, &atoms, Vec::new(), Vec::new(), start)
+            search_on(
+                &args,
+                backend,
+                property.formula,
+                &atoms,
+                Vec::new(),
+                Vec::new(),
+                start,
+            )
         }
         other => Err(format!("unknown back end {other}")),
     }
@@ -196,7 +222,11 @@ fn search_on<B: Backend>(
     }
     let groups: Vec<Vec<Arc<str>>> = groups
         .into_iter()
-        .map(|g| g.into_iter().filter(|a| used.contains(a)).collect::<Vec<_>>())
+        .map(|g| {
+            g.into_iter()
+                .filter(|a| used.contains(a))
+                .collect::<Vec<_>>()
+        })
         .filter(|g| g.len() > 1)
         .collect();
     let invariant = invariant(&groups);
@@ -233,7 +263,7 @@ fn search_on<B: Backend>(
             status: args.status.unwrap_or_default(),
         };
         let mut rng = Rng::new(args.seed);
-        let mut counter = Counter::new(&phi, SPOT_LIMITS);
+        let mut counter = Counter::new(&phi, oracle.semantics(), SEARCH_LIMITS);
         let searched = Instant::now();
         let (population, counts) = search(
             &phi,
@@ -241,14 +271,22 @@ fn search_on<B: Backend>(
             &mut counter,
             &invariant,
             params,
-            SPOT_LIMITS,
+            SEARCH_LIMITS,
             &mut rng,
         );
         search_wall = searched.elapsed().as_secs_f64();
         grading = counts;
         let k = counter.counts();
-        field(&mut out, "count_time", &format!("{:.3}", k.time.as_secs_f64()));
-        field(&mut out, "count_wait", &format!("{:.3}", k.wait.as_secs_f64()));
+        field(
+            &mut out,
+            "count_time",
+            &format!("{:.3}", k.time.as_secs_f64()),
+        );
+        field(
+            &mut out,
+            "count_wait",
+            &format!("{:.3}", k.wait.as_secs_f64()),
+        );
         let best = population
             .iter()
             .filter(|s| !s.holds())
@@ -258,7 +296,14 @@ fn search_on<B: Backend>(
         let holding = population.iter().filter(|s| s.holds()).count();
         field(&mut out, "holding", &holding.to_string());
         let gated = Instant::now();
-        let outcome = gate(&phi, &population, &invariant, &mut oracle, SPOT_LIMITS);
+        let outcome = gate(
+            &phi,
+            &population,
+            &invariant,
+            &mut oracle,
+            GATE_LIMITS,
+            SEARCH_LIMITS,
+        );
         gate_wall = gated.elapsed().as_secs_f64();
         for (i, repair) in outcome.repairs.iter().enumerate() {
             if i > 0 {

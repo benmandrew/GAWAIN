@@ -755,9 +755,13 @@ spin: trail ends after 6 steps
     fn an_unsound_trail_is_an_error() {
         let p_a = atoms(&["p_a"]);
         let no_cycle = TRAIL.replace("      <<<<<START OF CYCLE>>>>>\n", "");
-        assert!(lasso(&no_cycle, &p_a, false).unwrap_err().contains("no cycle"));
+        assert!(lasso(&no_cycle, &p_a, false)
+            .unwrap_err()
+            .contains("no cycle"));
         let open = TRAIL.replace("last = a\nspin", "last = none\nspin");
-        assert!(lasso(&open, &p_a, false).unwrap_err().contains("does not return"));
+        assert!(lasso(&open, &p_a, false)
+            .unwrap_err()
+            .contains("does not return"));
         let hidden = TRAIL.replace("[((x==1))]\n\t\tlast = b", "[((x==1))]\n\t\tlast = a");
         assert!(lasso(&hidden, &p_a, false)
             .unwrap_err()

@@ -133,9 +133,7 @@ pub fn search<B: Backend>(
     // one set before it is ranked.
     let mut regrade = |pool: &mut Vec<Scored>, oracle: &mut Oracle<B>| match params.status {
         Status::Graded => grader.rescore(pool, oracle.lassos()),
-        Status::States => {
-            grader.rescore_states(pool, |f| oracle.backend_mut().holding_states(f))
-        }
+        Status::States => grader.rescore_states(pool, |f| oracle.backend_mut().holding_states(f)),
         Status::Binary => {}
     };
     let mut population = score(vec![phi.clone()], phi, oracle, counter);
