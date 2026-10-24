@@ -61,6 +61,15 @@ pub const EXHAUSTIVE_ATOMS: usize = 16;
 /// costs tens; see "Slow implication batches" in `docs/dev/trace-sets.md`.
 pub const LABEL_TABLE_ATOMS: usize = 20;
 
+/// The most memory, in bytes, that one lasso count's transition monoid
+/// may take, as estimated by its bookkeeping. A count that would pass it
+/// fails, and its candidate scores 0, as on a translation timeout. The
+/// monoid of an automaton can grow exponentially with its states: one
+/// 85-state automaton of an MCC run reached 4.6 million relations at loop
+/// length 7 and took the whole search past 16 GB. See "Bounded monoid" in
+/// `docs/dev/search.md`.
+pub const MONOID_BYTES: usize = 1 << 30;
+
 /// What a [`Counter`] has spent.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Counts {
@@ -293,6 +302,16 @@ impl Counter {
     /// rescaled to a maximum of 1 after each step, the scale kept as a
     /// logarithm, so no product overflows.
     fn log_count(&mut self, automaton: &Raw, universe: usize) -> Result<f64, String> {
+        self.log_count_within(automaton, universe, MONOID_BYTES)
+    }
+
+    /// [`Counter::log_count`] with the monoid limited to `budget` bytes.
+    fn log_count_within(
+        &mut self,
+        automaton: &Raw,
+        universe: usize,
+        budget: usize,
+    ) -> Result<f64, String> {
         let n = automaton.edges.len();
         let graph = edge_graph(automaton);
         let live = accepting_reach(&graph, automaton.all_marks);
@@ -345,6 +364,13 @@ impl Counter {
                         next.resize(to + 1, 0.0);
                     }
                     next[to] += weight * letter.models;
+                }
+                if monoid.bytes > budget {
+                    return Err(format!(
+                        "the transition monoid passed {} MiB at {} relations, loop length {length}",
+                        budget >> 20,
+                        monoid.relations.len()
+                    ));
                 }
             }
             let top = next.iter().copied().fold(0.0, f64::max);
@@ -668,6 +694,9 @@ fn bits(set: &[u64]) -> impl Iterator<Item = usize> + '_ {
 /// step of a row by a letter is computed once and kept in a table. A
 /// step of a relation is then one table lookup per state. Each
 /// relation's set of accepting states, a bitset, is interned too.
+///
+/// `bytes` estimates the memory held, so that a count can stop before a
+/// monoid that grows without bound exhausts the process.
 struct Monoid {
     n: usize,
     words: usize,
@@ -684,7 +713,13 @@ struct Monoid {
     good_of: Vec<Option<usize>>,
     good_ids: HashMap<Vec<u64>, usize>,
     goods: Vec<Vec<u64>>,
+    bytes: usize,
 }
+
+/// The estimated bytes per interned row or relation besides its payload:
+/// the allocation header, the pointers in the list and in the hash map,
+/// and the per-relation slots of `steps`, `good_of` and the loop weights.
+const ENTRY_BYTES: usize = 160;
 
 impl Monoid {
     fn new(n: usize, all_marks: Marks, letters: &[Letter]) -> Self {
@@ -719,6 +754,7 @@ impl Monoid {
             good_of: Vec::new(),
             good_ids: HashMap::new(),
             goods: Vec::new(),
+            bytes: 0,
         }
     }
 
@@ -726,6 +762,7 @@ impl Monoid {
         if let Some(&id) = self.row_ids.get(row) {
             return id;
         }
+        self.bytes += 8 * row.len() + 4 * self.letters.len() + ENTRY_BYTES;
         let row: Rc<[u64]> = row.into();
         let id = self.rows.len() as u32;
         self.rows.push(row.clone());
@@ -739,6 +776,7 @@ impl Monoid {
         if let Some(&id) = self.ids.get(relation) {
             return id;
         }
+        self.bytes += 4 * relation.len() + 8 * self.letters.len() + ENTRY_BYTES;
         let relation: Rc<[u32]> = relation.into();
         self.relations.push(relation.clone());
         self.ids.insert(relation, self.relations.len() - 1);
@@ -1150,6 +1188,12 @@ mod tests {
         close(count(&infinitely, 1), (k * top - top + 1.0).log2());
         // Far past f64's range the logarithm is still finite: k 2^(100 k).
         close(count(&marked, 100), 100.0 * k + k.log2());
+        // A monoid past its budget is a failed count, not a wrong one.
+        let error = counter
+            .log_count_within(&infinitely, 1, ENTRY_BYTES)
+            .unwrap_err();
+        assert!(error.contains("transition monoid"), "{error}");
+        assert!(counter.log_count_within(&infinitely, 1, 4096).is_ok());
     }
 
     #[test]

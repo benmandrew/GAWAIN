@@ -1,0 +1,29 @@
+diff --git i/src/count/mod.rs w/src/count/mod.rs
+index 8626f78..c7e5a1b 100644
+--- i/src/count/mod.rs
++++ w/src/count/mod.rs
+@@ -320,6 +320,8 @@ impl Counter {
+             return Ok(f64::NEG_INFINITY);
+         }
+         let letters = self.letters(automaton, &live, universe)?;
++        let t0 = Instant::now();
++        eprintln!("COUNT start n={} letters={} universe={}", n, letters.len(), universe);
+         // Ordered maps throughout, so the sums run in the same order on
+         // every run.
+         let mut prefixes: Vec<(BTreeMap<Vec<u32>, f64>, f64)> = Vec::with_capacity(BOUND);
+@@ -344,6 +346,7 @@ impl Counter {
+             prefixes.push((std::mem::replace(&mut weights, next), scale));
+             scale += top;
+         }
++        eprintln!("COUNT prefixes subsets={} t={:.3}", prefixes.iter().map(|p| p.0.len()).max().unwrap_or(0), t0.elapsed().as_secs_f64());
+         let mut monoid = Monoid::new(n, automaton.all_marks, &letters);
+         // The loops of each length by relation id. The monoid is finite,
+         // so the ids stop growing and each step is a sparse product over
+@@ -379,6 +382,7 @@ impl Counter {
+                 scale += top.log2();
+             }
+             loops = next;
++            eprintln!("COUNT len={} relations={} rows={} t={:.3}", length, monoid.relations.len(), monoid.rows.len(), t0.elapsed().as_secs_f64());
+             // The loops by the states that accept their ω-power.
+             let mut by_good = vec![0.0; monoid.goods.len()];
+             for (relation, &weight) in loops.iter().enumerate() {

@@ -276,6 +276,7 @@ fn search_on<B: Backend>(
             "count_wait",
             &format!("{:.3}", k.wait.as_secs_f64()),
         );
+        field(&mut out, "count_failures", &k.failures.to_string());
         let best = population
             .iter()
             .filter(|s| !s.holds())

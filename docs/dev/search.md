@@ -184,6 +184,45 @@ Five other ideas were measured and left out.
 
 The remaining ideas were not built. The v-DP is already computed once per automaton, independent of u. Symmetry between atoms would merge letters, but the letters are already classes of valuations that move the automaton the same way.
 
+### Bounded monoid
+
+The transition monoid of an automaton can grow exponentially with its states, and until this change nothing bounded it. MedleyA-PT-09 `LTLCardinality-09` ran out of memory on every seed of the graded ablation ("Graded status against binary"), at 8 GB and again at 32 GB. One seed was rerun on av2 under `bench/mcc_memory.sh`, which samples once a second the scope's memory and the peak resident set (`VmHWM`) of every process in it. At a 16 GB cap the scope was killed after 702 s, and the process holding the memory was `search_bench` itself, at 16,120 MB. Its children stayed small: `verifypn` peaked at 1,150 MB under its 4 GB address-space limit, the `-p` confirmation of a TRUE answer at 276 MB, and `ltl2tgba` at 21 MB. The search's own memory sat between 35 and 77 MB for its first 300 s, then grew in steps of 1 to 4 GB while the oracle waited on `verifypn`, which is when the counting thread runs.
+
+The diagnostic patch `bench/notes/count-monoid-log.patch` prints each count's automaton size and, after each loop length, the monoid's relations and the time. With it, one automaton of the same run, with 85 states and 16 letters, had 304,654 relations at loop length 5, 1,409,192 at 6 and 4,567,696 at 7, after 36 s, and was killed at a 4 GB cap on its way to length 20. The subset construction over the prefixes stays small: no count in any run below held more than 2,805 subsets.
+
+Each `Monoid` now keeps an estimate of the bytes it holds: per relation 4 bytes per state for its row ids, 8 per letter for its successors and 160 for the hash map, the lists and the loop weights, and per row its bit planes, 4 bytes per letter and the same 160. When the estimate passes `MONOID_BYTES`, 1 GiB, the count fails and its candidate scores 0, the rule already applied to a translation that times out (`Counter::similarities`; `search_bench` reports the failures as `count_failures`). The estimate tracks the real memory: on AutoFlight-PT-02a seed 2 the largest monoid, 4,468,330 relations over 64 states and 8 letters, was estimated at 2,050 MiB, and the search's peak resident set was 2,162 MB. The bound is on bookkeeping, so a seeded run makes the same search under any load, which a wall-clock limit would not. 1 GiB leaves room under the ablation's 8 GB scope for `verifypn`, which may reach its 4 GB limit, and for the allocator, which does not return every freed count to the system.
+
+The pattern is not specific to MedleyA. Every MCC instance of the ablation ran with seeds 1 to 3 on av2, before and after the change, both built with the diagnostic patch, at the ablation's budget (30 × 40, 120 s and 4 GB per back-end call, 3600 s per run) in an 8 GB scope each (`bench/mcc_memory.sh`, 2 or 3 runs at a time; other users' jobs kept the load average between 7 and 29 on 32 cores). `bench/mcc_memory_stats.py` gives the table below, and the rows are in `bench/results/mcc-memory.csv`. Before the change, five instances built a monoid estimated at more than 1 GiB: AutoFlight, CircadianClock, FireWire, MedleyA-PT-09 and Railroad. Here FireWire seed 3, Railroad seed 2 and two seeds of MedleyA-PT-09 ran out of memory, and CircadianClock seed 1 reached the 3600 s cap at 5.9 GB, inside one count over an automaton of 2,144 states. In the table, the search peak is the largest `VmHWM` of the search process over the three seeds, the largest monoid counts relations, and a count is cut when the bound stopped it.
+
+| Instance | Before: runs | Before: search peak (MB) | Before: largest monoid | After: runs | After: search peak (MB) | After: counts cut |
+|---|---|---|---|---|---|---|
+| AirplaneLD-PT-0010-LTLFireability-04 | 3 ok | 63 | 147,536 | 3 ok | 62 | 0 |
+| AutoFlight-PT-02a-LTLFireability-02 | 3 ok | 2,162 | 4,468,330 | 3 ok | 1,652 | 2 |
+| BridgeAndVehicles-PT-V10P10N10-LTLFireability-13 | 3 ok | 24 | 34,132 | 3 ok | 22 | 0 |
+| CO4-PT-05-LTLFireability-04 | 3 ok | 12 | 19,720 | 3 ok | 12 | 0 |
+| CircadianClock-PT-000010-LTLFireability-02 | 2 ok, 1 timeout | 5,915 | 705,502 | 3 ok | 1,033 | 1 |
+| CloudDeployment-PT-4a-LTLCardinality-15 | 3 ok | 15 | 30,942 | 3 ok | 15 | 0 |
+| Diffusion2D-PT-D05N010-LTLCardinality-01 | 3 ok | 439 | 1,000,649 | 3 ok | 438 | 0 |
+| FireWire-PT-01-LTLCardinality-07 | 2 ok, 1 OOM | 8,109 | 6,995,889 | 3 ok | 931 | 1 |
+| MedleyA-PT-03-LTLFireability-08 | 3 ok | 10 | 6,685 | 3 ok | 10 | 0 |
+| MedleyA-PT-09-LTLCardinality-09 | 2 OOM, 1 timeout | 7,493 | 12,138,401 | 3 timeout | 1,119 | 10 |
+| ParamProductionCell-PT-1-LTLCardinality-13 | 3 ok | 303 | 609,614 | 3 ok | 302 | 0 |
+| Peterson-PT-2-LTLFireability-09 | 3 ok | 7 | 3,133 | 3 ok | 7 | 0 |
+| Peterson-PT-4-LTLCardinality-01 | 3 ok | 206 | 12,120 | 3 ok | 209 | 0 |
+| Railroad-PT-010-LTLCardinality-01 | 2 ok, 1 OOM | 8,161 | 14,661,684 | 3 ok | 1,232 | 5 |
+| ResAllocation-PT-R003C005-LTLCardinality-13 | 3 ok | 10 | 877 | 3 ok | 10 | 0 |
+| ResAllocation-PT-R010C002-LTLCardinality-01 | 3 ok | 12 | 2,480 | 3 ok | 12 | 0 |
+| ShieldPPPt-PT-001B-LTLCardinality-04 | 3 ok | 75 | 39,746 | 3 ok | 74 | 0 |
+| SieveSingleMsgMbox-PT-d2m06-LTLFireability-00 | 3 ok | 64 | 11,505 | 3 ok | 64 | 0 |
+| StigmergyElection-PT-02a-LTLFireability-12 | 3 ok | 651 | 835,660 | 3 ok | 650 | 0 |
+| TCPcondis-PT-05-LTLFireability-14 | 3 ok | 18 | 1,147 | 3 ok | 18 | 0 |
+
+After the change no run ran out of memory, and the search's peak resident set fell from at most 8,161 MB to at most 1,652 MB. That maximum is above 1 GiB because a sequence of counts, each under the bound, can leave the heap larger than any one of them. No child came near the scope's cap in either arm: `verifypn` peaked at 1,689 MB, its `-p` confirmation at 1,261 MB and `ltl2tgba` at 133 MB, and no Ganak call ran. The bound changes the search only through a count it cuts. Of the 54 runs that finished in both arms, 53 gave the same repairs with the same similarities, and Railroad seed 3, where one count was cut, found a stronger best repair (similarity 0.9876 against 0.9861). Wall times moved per instance by between −42 s and +75 s in the median, with no consistent sign, under that shared load, so the runs make no claim about time.
+
+MedleyA-PT-09 now keeps its search under 1,119 MB, and its scope under 1,475 MB, but at this budget it still gives no result within 3600 s, on any seed. A separate run of seed 1 that logged every `verifypn` call spent 3,508 s in 269 calls, 3,362 s of it in 28 calls that reached the 120 s limit. The instance has 2.3 × 10⁸ reachable markings, and `bench/graded_prep.py` chose it because φ and ¬φ each take under 1 s; its mutants do not. That cost is the back end's, and the 120 s limit already reports it as unknown.
+
+The bound limits memory, not time. A count that stays under 1 GiB can still be slow, and on AutoFlight seed 2 the search waited 507 s of its 538 s on the counter. The slowest case is CircadianClock's 2,144-state automaton: each relation's accepting states come from Warshall's closure, which costs n³/64 word operations per relation, so the count took 361 s to reach loop length 10. A deterministic bound on work, or a closure by strongly connected components in time linear in the relation's edges, would remove that cost; neither was built.
+
 ## The output gate
 
 The gate (`search::gate`) runs once, on the final population.
@@ -292,7 +331,7 @@ Each run is one `search_bench` process (release build), with 120 s and 4 GB per 
 | Back-end calls | 67 [54.5, 81] | 67 [56.25, 78.5] | +0.5 [−1, 1] | 0.50 | 44 / 37 / 5 |
 | Net subsumption share | | | 0.000 [−0.088, 0.000] | 0.34 | 24 / 36 / 26 |
 
-The 86 instances are those where both arms have at least one paired seed. MedleyA-PT-09 `LTLCardinality-09` ran out of memory on every seed of both arms, and six large BEEM instances (anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4) ran only seeds 1 to 3, of which most reached the 3600 s cap without a result. Over the whole sweep 76 binary and 75 graded runs gave no result, at a cap of 8 GB. A rerun of those at 32 GB recovered 11; the rest were killed by the out-of-memory killer again, in a Spot or Ganak child. The losses are spread evenly over the arms.
+The 86 instances are those where both arms have at least one paired seed. MedleyA-PT-09 `LTLCardinality-09` ran out of memory on every seed of both arms, and six large BEEM instances (anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4) ran only seeds 1 to 3, of which most reached the 3600 s cap without a result. Over the whole sweep 76 binary and 75 graded runs gave no result, at a cap of 8 GB. A rerun of those at 32 GB recovered 11; the rest were killed by the out-of-memory killer again, in a Spot or Ganak child. The losses are spread evenly over the arms. On the MCC instances the memory was later traced to the search process itself, in the lasso count's transition monoid, which is now bounded (see "Bounded monoid").
 
 By family, the drop in candidates that hold is −3.0 on RERS (47 of 52 instances lower), −7.0 on MCC (16 of 19) and −1.0 on BEEM (12 of 14), each at p < 0.004. MCC is the one family where the drop reaches the gate: graded found a median of 0.5 fewer repairs (p = 0.024) and its net subsumption share was −0.10 [−0.17, 0.00] (p = 0.070, 4 instances stronger and 12 weaker). On BEEM graded ran 1.1 s longer (p = 0.0001, all 14 instances) and made 1.75 more back-end calls (p = 0.021). Nothing else differs at p < 0.05.
 
