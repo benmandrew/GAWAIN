@@ -50,9 +50,25 @@ const NUXMV_LIMITS: Limits = Limits {
     timeout: Duration::from_secs(600),
     memory_bytes: 8 << 30,
 };
-/// Each `ltlfilt` batch.
+/// Each `ltlfilt` batch of the oracle.
 const SPOT_LIMITS: Limits = Limits {
     timeout: Duration::from_secs(120),
+    memory_bytes: 4 << 30,
+};
+/// Each Spot exec of the search's validity filter, of the counter and of
+/// the gate's pruning of dominated repairs. A
+/// batch that fails is retried one formula per exec, so one hard formula
+/// costs two of these limits and stays unfiltered or uncounted, and the
+/// rest are still decided; see "Slow implication batches" in
+/// `docs/dev/trace-sets.md`.
+const SEARCH_LIMITS: Limits = Limits {
+    timeout: Duration::from_secs(2),
+    memory_bytes: 4 << 30,
+};
+/// Each `ltlfilt` exec of the output gate's proof of φ ⇒ φ', which runs
+/// once, and whose undecided pair drops a repair.
+const GATE_LIMITS: Limits = Limits {
+    timeout: Duration::from_secs(10),
     memory_bytes: 4 << 30,
 };
 
@@ -266,19 +282,26 @@ fn run<B: Backend>(
     println!("input: {phi}");
     println!("instance: proper time={check_wall:.2}s");
     let mut rng = Rng::new(args.seed);
-    let mut counter = Counter::new(phi, oracle.semantics(), SPOT_LIMITS);
+    let mut counter = Counter::new(phi, oracle.semantics(), SEARCH_LIMITS);
     let population = search(
         phi,
         &mut oracle,
         &mut counter,
         &invariant,
         args.params,
-        SPOT_LIMITS,
+        SEARCH_LIMITS,
         &mut rng,
     );
     let search_counters = oracle.counters();
     let gate_start = Instant::now();
-    let outcome = gate(phi, &population, &invariant, &mut oracle, SPOT_LIMITS);
+    let outcome = gate(
+        phi,
+        &population,
+        &invariant,
+        &mut oracle,
+        GATE_LIMITS,
+        SEARCH_LIMITS,
+    );
     let gate_wall = gate_start.elapsed().as_secs_f64();
     for error in &outcome.errors {
         eprintln!("weaken: output gate: {error}");

@@ -44,7 +44,7 @@ It gave 388 instances (`python3 -I bench/traces_summary.py instances bench/resul
 
 A run counts as *stronger* when some repair is strictly stronger than ψ, which is a better answer than the known one. It counts as *equivalent* when some repair is equivalent to ψ and none is stronger. 46 of the 98 runs with a repair matched or beat ψ. Every repair holds on all positives, since the oracle checks each one. The best repair of each run rejects a median of 98.75% of the negatives, all of them in 49 runs and none in 6, although the search never sees the negatives.
 
-Across the 109 runs that finished, the oracle answered 78,631 queries: 20,679 from the memo and 57,952 from the back end, with no Spot exec. The back end costs microseconds per call, so it is not what limits the search. All 17 time-outs are in the LTLf families with the largest formulas: every DoubleCounter and Nim run, 4 of 5 SingleCounter runs, and 1 each in RandomBooleanCombinationsofFactors, Random_Conjuncts_from_Basis and Subword. On DoubleCounter `2_5_64_42`, 2 generations took 120.8 s, of which the oracle's 59 back-end calls and the 0.24 s gate are a negligible part. The remainder is `drop_valid`, whose per-generation `ltlfilt --from-ltlf` batch over a 13-atom formula ran into the 120 s Spot limit. A failed batch drops nothing, so the search stays correct, and each generation still pays the full limit. Making that filter cheaper on large LTLf formulas is left open.
+Across the 109 runs that finished, the oracle answered 78,631 queries: 20,679 from the memo and 57,952 from the back end, with no Spot exec. The back end costs microseconds per call, so it is not what limits the search. All 17 time-outs are in the LTLf families with the largest formulas: every DoubleCounter and Nim run, 4 of 5 SingleCounter runs, and 1 each in RandomBooleanCombinationsofFactors, Random_Conjuncts_from_Basis and Subword. "Slow implication batches" below finds the cause and measures the fix.
 
 ## Memo only against the full oracle
 
@@ -72,3 +72,21 @@ The pairs were the 196 LTLf instances of `trace_bench instances`, each a φ and 
 | lassos, `ltl2tgba -D` | 191 | 18.3 ms | 1.64 s | 458 s | 757 s |
 
 Neither count ranked any φ above its ψ. The lasso count gave no value for 5 pairs, 2 of them killed at the memory limit and 1 at the time limit, and its slow tail is the translation: on 61 DoubleCounter formulas `ltl2tgba -D` took 408 s in all and `ltlf2dfa -Ht` 1.4 s. The finite-word count is therefore both the right semantics and the cheaper one, so `weaken --traces` on an LTLf set uses it, and the lasso count stays the only count under LTL. `tests/count.rs` checks the finite count against closed forms and for monotonicity under LTLf implication.
+
+## Slow implication batches
+
+The 10 DoubleCounter and Nim time-outs of "Search on a sample" come from Spot and Ganak calls outside the oracle. The other 7 time-outs, in families with smaller formulas, were not rerun. Each run below is `bench/traces_run.py` with seed 1, 30 generations, a population of 30 and two runs at a time, on `ben` with a load average of 1.2–5.0, in one `systemd-run` scope with `MemoryMax=16G`.
+
+**Cause.** The validity filter sent each generation's offspring to `ltlfilt` in one batch under the oracle's 120 s limit. On DoubleCounter `2_5_64_42`, generation 2 had 29 pairs: alone, 28 of them took a median of 20 ms and at most 0.56 s, and one was still undecided after 60 s. That one pair held the batch to its limit, the batch failed, and the filter lost all 29 answers after 120 s. The counter did the same with its translations: one generation's batch timed out at 120 s, and the 61 formulas retried one at a time took a median of 5.4 s each, 544 s for the generation. The gate had the pattern too: its pruning batch asked 342 ordered pairs of survivors and, under a 10 s limit, took 575 s on retries.
+
+**Fix.** `implications_each` retries a failed batch one pair per exec, four execs at a time, and a pair whose own exec fails reads as not proved, so it stays unfiltered while the rest are filtered. The filter now runs after scoring and asks only about candidates that hold on M, since M ⊨ I makes the others not valid modulo I. The filter, the counter and the gate's pruning give each exec 2 s, and the gate's proof of φ ⇒ φ', whose undecided pair drops a repair, gives it 10 s. On `2_5_64_42` these steps went from no finished run (killed at 471 s within 3 generations) through 11 generations in 600 s with 10 s limits, to all 30 generations and the gate in 868 s with 19 repairs, 575 s of it in the gate's pruning, and to 456 s with the same 19 repairs once pruning used 2 s.
+
+**Ganak.** After the fix, two Nim runs (`heaps=1tokens=4`) still ran past 1,200 s. Their φ has 17 atoms, so many DFA labels mention more than PEREDUR's 16-atom truth-table limit and went to Ganak: one generation made 1,086 Ganak calls and spent 79.5 s in the counter. Counting each such label by truth table up to 20 atoms (`LABEL_TABLE_ATOMS`) gives the same counts with no Ganak call, and the generation took 9.8 s.
+
+| Build | Time-outs | Total wall | Gate | Repairs |
+|---|---|---|---|---|
+| before, 300 s limit (`trace-sets-search.csv`) | 10 | — | — | — |
+| batch retries, 1,200 s limit (`trace-sets-dcnim-ganak.csv`) | 2 | 5,399 s | 518 s | 52 |
+| and 20-atom label tables (`trace-sets-dcnim.csv`) | 0 | 4,456 s | 520 s | 52 |
+
+Before the fix all 10 runs timed out at 300 s, and an intermediate build with 10 s limits and one retry at a time still timed out on 8 of them at 600 s, finishing the two `heaps=1tokens=1` Nim runs in 410 s and 408 s. Those two now take 53 s and 34 s. Every run now finishes, in 34–841 s with a median of 484 s. The DoubleCounter runs are unchanged by the label tables, since their labels are narrow. Four runs report no repair: DoubleCounter `2_100_32_42`, Nim `heaps=2tokens=2_100_32_42` and both Nim `heaps=1tokens=4` runs.

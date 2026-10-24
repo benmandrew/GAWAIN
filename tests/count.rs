@@ -69,9 +69,9 @@ fn ganak_counts_a_label_wider_than_the_truth_table() {
     ) {
         return;
     }
-    // φ = a0 & … & a16 over 17 atoms: its label mentions all 17, past the
-    // truth table's 16. φ fixes the first letter, so each split has
-    // 2^(17 (k-1)) lassos, and the candidate a0 & … & a15, which φ
+    // φ = a0 & … & a20 over 21 atoms: its label mentions all 21, past the
+    // truth table's 20. φ fixes the first letter, so each split has
+    // 2^(21 (k-1)) lassos, and the candidate a0 & … & a19, which φ
     // implies, has twice as many.
     let all = |n: usize| -> Formula {
         let body = (0..n)
@@ -80,10 +80,10 @@ fn ganak_counts_a_label_wider_than_the_truth_table() {
             .join(" & ");
         parse(&body)
     };
-    let phi = all(17);
+    let phi = all(21);
     let mut counter = Counter::new(&phi, Semantics::Infinite, LIMITS);
-    let found = counter.similarities(&[all(16)]);
-    let narrow = splits(17.0 * (BOUND as f64 - 1.0));
+    let found = counter.similarities(&[all(20)]);
+    let narrow = splits(21.0 * (BOUND as f64 - 1.0));
     let expected = similarity_from_logs(narrow, narrow + 1.0, narrow);
     let counts = counter.counts();
     assert_eq!(counts.failures, 0, "{counts:?}");

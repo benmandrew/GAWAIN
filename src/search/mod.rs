@@ -23,7 +23,7 @@ pub use rng::Rng;
 use crate::count::Counter;
 use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 use crate::oracle::process::Limits;
-use crate::oracle::{implications, Backend, Oracle, Semantics, Verdict};
+use crate::oracle::{implications_each, Backend, Oracle, Semantics, Verdict};
 
 /// The chance that an offspring is crossed with a parent, PEREDUR's
 /// `crossover_rate` default.
@@ -126,8 +126,13 @@ pub fn search<B: Backend>(
     let mut population = select(seed, params.population);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
-        let offspring = drop_valid(offspring, invariant, oracle.semantics(), spot_limits);
-        population.extend(score(offspring, phi, oracle, counter));
+        let scored = score(offspring, phi, oracle, counter);
+        population.extend(drop_valid(
+            scored,
+            invariant,
+            oracle.semantics(),
+            spot_limits,
+        ));
         population = select(population, params.population);
     }
     population
@@ -176,23 +181,34 @@ pub fn filter(offspring: Vec<Formula>, phi: &Formula) -> Vec<Formula> {
 /// reported was valid, such as `G (ack -> X φ | ack)` and `a W (ψ | !a)`,
 /// and a valid candidate holds on every model, so it crowds the front. With
 /// no exclusive groups the invariant is `true` and this is plain validity.
-/// A batch with no answer drops nothing, so the verdict never depends on
+/// A candidate with no answer is kept, so the verdict never depends on
 /// machine load. Validity is under `semantics`, the model's.
+///
+/// M satisfies the invariant, so a candidate that fails on M is not valid
+/// modulo it, and only the scored candidates that hold go to Spot. On
+/// large LTLf formulas validity is the expensive question, and this asks
+/// it of fewer formulas; see "Slow implication batches" in
+/// `docs/dev/trace-sets.md`.
 pub fn drop_valid(
-    offspring: Vec<Formula>,
+    scored: Vec<Scored>,
     invariant: &Formula,
     semantics: Semantics,
     limits: Limits,
-) -> Vec<Formula> {
-    let pairs: Vec<(&Formula, &Formula)> = offspring.iter().map(|c| (invariant, c)).collect();
-    let Ok(valid) = implications(&pairs, semantics, limits) else {
-        return offspring;
-    };
-    offspring
+) -> Vec<Scored> {
+    let holding: Vec<&Scored> = scored.iter().filter(|s| s.holds()).collect();
+    let pairs: Vec<(&Formula, &Formula)> =
+        holding.iter().map(|s| (invariant, &s.formula)).collect();
+    let (proved, _) = implications_each(&pairs, semantics, limits);
+    let valid: Vec<&Formula> = holding
+        .iter()
+        .zip(proved)
+        .filter(|&(_, valid)| valid)
+        .map(|(s, _)| &s.formula)
+        .collect();
+    let valid: HashSet<Formula> = valid.into_iter().cloned().collect();
+    scored
         .into_iter()
-        .zip(valid)
-        .filter(|(_, valid)| !valid)
-        .map(|(candidate, _)| candidate)
+        .filter(|s| !valid.contains(&s.formula))
         .collect()
 }
 
@@ -328,19 +344,21 @@ pub fn vacuity<B: Backend>(
 
 /// The output gate. From `population`, keeps the distinct candidates that M
 /// satisfies, that `phi` implies and that Spot does not prove valid modulo
-/// the encoding `invariant` (one batch; if it fails, no weakening is proved
-/// and every candidate drops). Then it keeps only the maximal ones: a
-/// candidate implied by another survivor is dropped (one more batch). Of
-/// two equivalent survivors the one more similar to φ stays, then the
-/// smaller in formula order. "Not proved" never counts as proved. Last, it
-/// flags where each repair is [`vacuity`]-vacuous on M, through `oracle`.
-/// Every implication is decided under the oracle's [`Semantics`].
+/// the encoding `invariant` (one batch under `limits`; a candidate whose
+/// pair Spot cannot decide drops). Then it keeps only the maximal ones: a
+/// candidate implied by another survivor is dropped (one more batch, under
+/// `pruning`, since an undecided pair only keeps a candidate). Of two
+/// equivalent survivors the one more similar to φ stays, then the smaller
+/// in formula order. "Not proved" never counts as proved. Last, it flags
+/// where each repair is [`vacuity`]-vacuous on M, through `oracle`. Every
+/// implication is decided under the oracle's [`Semantics`].
 pub fn gate<B: Backend>(
     phi: &Formula,
     population: &[Scored],
     invariant: &Formula,
     oracle: &mut Oracle<B>,
     limits: Limits,
+    pruning: Limits,
 ) -> Gate {
     let mut gate = Gate::default();
     let semantics = oracle.semantics();
@@ -356,10 +374,8 @@ pub fn gate<B: Backend>(
         .iter()
         .flat_map(|s| [(phi, &s.formula), (invariant, &s.formula)])
         .collect();
-    let proved = implications(&pairs, semantics, limits).unwrap_or_else(|e| {
-        gate.errors.push(e);
-        vec![false; pairs.len()]
-    });
+    let (proved, error) = implications_each(&pairs, semantics, limits);
+    gate.errors.extend(error);
     let mut candidates: Vec<Repair> = holding
         .iter()
         .zip(proved.chunks(2))
@@ -385,10 +401,8 @@ pub fn gate<B: Backend>(
         .iter()
         .map(|&(i, j)| (&candidates[i].formula, &candidates[j].formula))
         .collect();
-    let proved = implications(&pairs, semantics, limits).unwrap_or_else(|e| {
-        gate.errors.push(e);
-        vec![false; pairs.len()]
-    });
+    let (proved, error) = implications_each(&pairs, semantics, pruning);
+    gate.errors.extend(error);
     let mut implies = vec![vec![false; n]; n];
     for (&(i, j), proved) in index.iter().zip(proved) {
         implies[i][j] = proved;

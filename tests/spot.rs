@@ -18,7 +18,7 @@ use std::time::{Duration, Instant};
 use common::{have, mutant, parse, Rng};
 use gawain::ltl::Formula;
 use gawain::oracle::process::Limits;
-use gawain::oracle::{implications, syntactic_implications, Semantics};
+use gawain::oracle::{implications, implications_each, syntactic_implications, Semantics};
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(60),
@@ -199,4 +199,31 @@ fn the_rewriting_rules_prove_a_long_chain_at_once() {
         "{:?}",
         start.elapsed()
     );
+}
+
+#[test]
+fn a_hard_pair_leaves_the_rest_of_its_batch_decided() {
+    if !have(
+        &["ltlfilt"],
+        "a_hard_pair_leaves_the_rest_of_its_batch_decided",
+    ) {
+        return;
+    }
+    // The complete check runs past the limit on the long chain, which
+    // fails the batch, and the retry still proves the easy pairs.
+    let limits = Limits {
+        timeout: Duration::from_secs(2),
+        ..LIMITS
+    };
+    let strong = long_chain("(a0 & !b0)");
+    let weak = long_chain("!b0");
+    let (a, a_or_b, g_a) = (parse("a"), parse("a | b"), parse("G a"));
+    let pairs = [(&a, &a_or_b), (&strong, &weak), (&a_or_b, &a), (&g_a, &a)];
+    assert!(implications(&pairs, Semantics::Infinite, limits).is_err());
+    let (proved, error) = implications_each(&pairs, Semantics::Infinite, limits);
+    assert_eq!(proved, vec![true, false, false, true]);
+    assert!(error.is_some());
+    let easy = [pairs[0], pairs[2]];
+    let (proved, error) = implications_each(&easy, Semantics::Infinite, limits);
+    assert_eq!((proved, error), (vec![true, false], None));
 }

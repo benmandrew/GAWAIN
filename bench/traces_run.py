@@ -8,13 +8,15 @@ Usage:
 
 INSTANCES.csv is the output of `trace_bench instances`. K instances are drawn
 per family (source and directory) with Python's random.Random(S). Each run
-writes one row to OUT.csv: the repair count, the wall and gate times, the
+writes one row to OUT.csv as it finishes: the repair count, the wall and gate times, the
 oracle counters, the most negatives any repair rejects, and how the
 repairs compare with ψ, the source formula and known weakening of φ:
 `stronger` when some repair is strictly stronger than ψ, `equivalent`
 when one is equivalent to it and none is stronger, else `weaker` when
 every repair is implied by ψ, else `incomparable`. The comparison is one
-`ltlfilt` exec per run, with `--from-ltlf` for finite traces. A run still
+`ltlfilt` exec per run, with `--from-ltlf` for finite traces; when that
+exec runs past 60 s, each pair gets its own 60 s exec, and a pair whose
+exec fails reads as not proved, as in `implications_each`. A run still
 going after SECONDS (default 600) has its process group killed and is
 recorded with exit `timeout`.
 """
@@ -41,6 +43,15 @@ def family(path):
 
 def implied(pairs, finite):
     """For each (a, b), whether Spot proves a -> b."""
+    try:
+        return implied_batch(pairs, finite)
+    except (subprocess.TimeoutExpired, RuntimeError):
+        if len(pairs) == 1:
+            return [False]
+        return [implied([pair], finite)[0] for pair in pairs]
+
+
+def implied_batch(pairs, finite):
     if not pairs:
         return []
     lines = "".join(f"({a}) & !({b})\n" for a, b in pairs)
@@ -48,7 +59,7 @@ def implied(pairs, finite):
     if finite:
         command.insert(1, f"--from-ltlf={ALIVE}")
     out = subprocess.run(command, input=lines, capture_output=True, text=True,
-                         timeout=300)
+                         timeout=60)
     if out.returncode not in (0, 1):
         raise RuntimeError(out.stderr)
     proved = {int(l) for l in out.stdout.split()}
@@ -139,13 +150,15 @@ def main():
     for name in sorted(groups):
         members = groups[name]
         sample += rng.sample(members, min(args.per_family, len(members)))
-    with concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
-        results = list(pool.map(lambda r: run(r, args), sample))
-    with open(args.out, "w", newline="") as f:
+    with open(args.out, "w", newline="") as f, \
+            concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
         writer = csv.DictWriter(f, FIELDS, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(results)
-    print(f"{len(results)} runs", file=sys.stderr)
+        runs = [pool.submit(run, r, args) for r in sample]
+        for done in concurrent.futures.as_completed(runs):
+            writer.writerow(done.result())
+            f.flush()
+    print(f"{len(runs)} runs", file=sys.stderr)
 
 
 if __name__ == "__main__":

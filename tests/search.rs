@@ -108,7 +108,14 @@ fn the_gate_keeps_maximal_proved_weakenings() {
         scored("G (a -> X b | b)", false, &phi),
         scored("G (a -> F b)", true, &phi),
     ];
-    let outcome = gate(&phi, &population, &Formula::tt(), &mut oracle, LIMITS);
+    let outcome = gate(
+        &phi,
+        &population,
+        &Formula::tt(),
+        &mut oracle,
+        LIMITS,
+        LIMITS,
+    );
     assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
     let kept: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
     assert_eq!(kept, [parse("G (a -> X b | X X b)")]);
@@ -157,12 +164,19 @@ fn the_gate_drops_validity_modulo_the_encoding_and_flags_vacuity() {
         assert_eq!(oracle.check(&candidate.formula), Verdict::Holds);
     }
     // Without the invariant the first candidate is a repair.
-    let plain = gate(&phi, &population, &Formula::tt(), &mut oracle, LIMITS);
+    let plain = gate(
+        &phi,
+        &population,
+        &Formula::tt(),
+        &mut oracle,
+        LIMITS,
+        LIMITS,
+    );
     assert!(plain
         .repairs
         .iter()
         .any(|r| r.formula == population[0].formula));
-    let outcome = gate(&phi, &population, &invariant, &mut oracle, LIMITS);
+    let outcome = gate(&phi, &population, &invariant, &mut oracle, LIMITS, LIMITS);
     assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
     let flags: Vec<(Formula, Vec<Formula>)> = outcome
         .repairs

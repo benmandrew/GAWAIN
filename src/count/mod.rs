@@ -26,9 +26,10 @@
 //! than `ltl2tgba -D` builds the lasso ones for the same formulas; see
 //! "Model counts under LTLf" in `docs/dev/trace-sets.md`.
 //!
-//! Labels mentioning at most [`EXHAUSTIVE_ATOMS`] atoms are counted by a
-//! truth table in process, and wider ones by Ganak (submodule `ganak`), as
-//! in PEREDUR. Counts are kept as base-2 logarithms, so no bound overflows.
+//! Labels mentioning at most [`EXHAUSTIVE_ATOMS`] atoms are split into
+//! letters by truth table in process, as in PEREDUR. A single label or
+//! letter mentioning at most [`LABEL_TABLE_ATOMS`] atoms is counted by
+//! truth table too, and a wider one by Ganak (submodule `ganak`). Counts are kept as base-2 logarithms, so no bound overflows.
 //! All the translations of one [`Counter::similarities`] call go through
 //! one exec. See "Model-counting similarity" in
 //! `docs/dev/search.md`.
@@ -50,9 +51,15 @@ use crate::oracle::Semantics;
 /// The trace length, PEREDUR's `default_model_counting_bound`.
 pub const BOUND: usize = 20;
 
-/// The widest label counted by truth table, in mentioned atoms, PEREDUR's
-/// `k_exhaustive_count_max_atoms`. Wider labels go to Ganak.
+/// The widest set of labels split into letters by truth table, in
+/// mentioned atoms, PEREDUR's `k_exhaustive_count_max_atoms`.
 pub const EXHAUSTIVE_ATOMS: usize = 16;
+
+/// The widest single label or letter counted by truth table, in mentioned
+/// atoms. Wider ones go to Ganak. A table over 20 atoms is 16,384 words,
+/// which one label evaluates in about a millisecond, where one Ganak exec
+/// costs tens; see "Slow implication batches" in `docs/dev/trace-sets.md`.
+pub const LABEL_TABLE_ATOMS: usize = 20;
 
 /// What a [`Counter`] has spent.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -550,7 +557,7 @@ impl Counter {
             ));
         }
         let free = 2f64.powi((universe - mentioned) as i32);
-        if mentioned <= EXHAUSTIVE_ATOMS {
+        if mentioned <= LABEL_TABLE_ATOMS {
             return Ok(truth_table_models(&local, mentioned) as f64 * free);
         }
         let models = match self.ganak.get(&local) {
@@ -986,7 +993,7 @@ fn renumber_all(guards: &[Guard]) -> (Vec<Guard>, usize) {
 }
 
 /// The models of `guard` over APs `0..n`, `n` at most
-/// [`EXHAUSTIVE_ATOMS`], by a truth table 64 assignments to a word: bit `j`
+/// [`LABEL_TABLE_ATOMS`], by a truth table 64 assignments to a word: bit `j`
 /// of the table is the value under assignment `j`, whose bit `i` is AP `i`.
 fn truth_table_models(guard: &Guard, n: usize) -> u64 {
     let table = evaluate(guard, table_words(n));

@@ -20,6 +20,13 @@
 //! batch is the point; see "Implication from known truths" in
 //! `docs/dev/oracle-performance.md`.
 //!
+//! One hard pair can hold a whole batch past its time limit.
+//! [`implications_each`] retries a failed batch one pair per exec, so the
+//! hard pair reads as not proved and the rest are still decided; see "Slow
+//! implication batches" in `docs/dev/trace-sets.md`. The oracle's tier 2
+//! calls [`implications`] directly, since a failed batch there only falls
+//! through to the back end.
+//!
 //! Under [`Semantics::Finite`] each exec adds `--from-ltlf`, which rewrites
 //! each line into LTL over a fresh atom ([`ALIVE`]) that holds on a finite
 //! prefix and never after, so satisfiability, and with it implication, is
@@ -28,6 +35,7 @@
 //! word where `a` is false, since `X` is weak there.
 
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use super::process::{self, Limits};
 use super::Semantics;
@@ -36,6 +44,10 @@ use crate::ltl::Formula;
 /// The atom `--from-ltlf` adds to mark the positions of a finite word. A
 /// trace set must not use it.
 pub const ALIVE: &str = "gawain_alive";
+
+/// The `ltlfilt` execs that run at once when [`implications_each`] retries
+/// a failed batch one pair per exec.
+const RETRY_THREADS: usize = 4;
 
 /// For each pair `(ψ, φ)`, whether Spot proved ψ ⇒ φ under `semantics`, in
 /// one `ltlfilt` exec. `false` means only "not proved": the implication may
@@ -56,6 +68,48 @@ pub fn implications(
         limits,
     )?;
     parse(&stdout, pairs.len(), str::is_empty)
+}
+
+/// [`implications`], but a batch that fails is retried one pair per exec,
+/// four at a time, each under the same `limits`, and a pair
+/// whose own exec fails reads as not proved. One hard pair then costs one
+/// more limit and leaves the rest decided. The error of the failed batch,
+/// if any, comes back with the answers.
+pub fn implications_each(
+    pairs: &[(&Formula, &Formula)],
+    semantics: Semantics,
+    limits: Limits,
+) -> (Vec<bool>, Option<String>) {
+    let error = match implications(pairs, semantics, limits) {
+        Ok(proved) => return (proved, None),
+        Err(error) => error,
+    };
+    let next = AtomicUsize::new(0);
+    let mut proved = vec![false; pairs.len()];
+    std::thread::scope(|scope| {
+        let workers: Vec<_> = (0..RETRY_THREADS.min(pairs.len()))
+            .map(|_| {
+                scope.spawn(|| {
+                    let mut found = Vec::new();
+                    loop {
+                        let i = next.fetch_add(1, Ordering::Relaxed);
+                        let Some(&pair) = pairs.get(i) else {
+                            return found;
+                        };
+                        if implications(&[pair], semantics, limits).is_ok_and(|p| p[0]) {
+                            found.push(i);
+                        }
+                    }
+                })
+            })
+            .collect();
+        for worker in workers {
+            for i in worker.join().expect("a retry thread") {
+                proved[i] = true;
+            }
+        }
+    });
+    (proved, Some(error))
 }
 
 /// For each pair `(ψ, φ)`, whether Spot's rewriting rules alone reduce
