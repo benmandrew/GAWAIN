@@ -40,6 +40,17 @@
 //! steps are the model's actions, decides those. Every lasso is still checked
 //! with [`Lasso::satisfies`] before it is returned, and one that satisfies
 //! its formula becomes `Verdict::Unknown`.
+//!
+//! # Stepwise models
+//!
+//! [`Spin::stepwise`] reads a different model shape, the one
+//! `bench/beem/dve.py` writes for BEEM: one process whose every step is one
+//! `d_step`, the first of which sets the initial values. There every SPIN
+//! step is a position of the model, so `X` is exact. A position is the state
+//! after a step, and the replay prints every statement inside a `d_step`
+//! under the step's number, so the globals after its last statement give
+//! the position. The state before the first step is not a position, so the
+//! claim for φ is `X (φ)`.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -78,6 +89,8 @@ pub struct Spin {
     claims_per_build: usize,
     limits: Limits,
     dir: PathBuf,
+    /// Whether every step is a position (see "Stepwise models").
+    stepwise: bool,
 }
 
 /// An interface atom `name`, defined as `var == value`.
@@ -114,7 +127,20 @@ impl Spin {
             claims_per_build,
             limits,
             dir: scratch_dir()?,
+            stepwise: false,
         })
+    }
+
+    /// A back end for a stepwise model (see "Stepwise models"), with the
+    /// same atoms as [`Spin::new`]. Formulas with `X` are decided.
+    pub fn stepwise(
+        model: impl AsRef<Path>,
+        atoms: impl IntoIterator<Item = impl AsRef<str>>,
+        limits: Limits,
+    ) -> Result<Self, String> {
+        let mut spin = Spin::new(model, atoms, limits)?;
+        spin.stepwise = true;
+        Ok(spin)
     }
 
     /// How many claims one build holds: [`MAX_CLAIMS`] less the model's
@@ -124,8 +150,8 @@ impl Spin {
     }
 
     /// Decides every formula, one verdict per formula in order. A formula
-    /// with `X` or with an atom outside the interface is answered
-    /// `Verdict::Unknown`. Each call to a tool runs under the back end's
+    /// with an atom outside the interface is answered `Verdict::Unknown`,
+    /// and so is one with `X` unless the model is stepwise. Each call to a tool runs under the back end's
     /// limits.
     pub fn check_all(&mut self, formulas: &[Formula]) -> Vec<Verdict> {
         let mut verdicts: Vec<Option<Verdict>> = vec![None; formulas.len()];
@@ -134,7 +160,7 @@ impl Spin {
             if let Some(name) = self.foreign_atom(formula) {
                 let reason = format!("SPIN: atom {name} is not in the interface");
                 verdicts[i] = Some(Verdict::Unknown(reason));
-            } else if has_next(formula) {
+            } else if !self.stepwise && has_next(formula) {
                 let reason = "SPIN: X counts SPIN steps, not the model's positions".to_string();
                 verdicts[i] = Some(Verdict::Unknown(reason));
             } else {
@@ -181,7 +207,13 @@ impl Spin {
     fn build(&self, formulas: &[&Formula]) -> Result<(), String> {
         let mut ltl = self.model.clone();
         for (k, formula) in formulas.iter().enumerate() {
-            let _ = writeln!(ltl, "ltl c{k} {{ {} }}", formula.to_spin());
+            let claim = formula.to_spin();
+            let claim = if self.stepwise {
+                format!("X ({claim})")
+            } else {
+                claim
+            };
+            let _ = writeln!(ltl, "ltl c{k} {{ {claim} }}");
         }
         let never = self.dir.join("_spin_nvr.tmp");
         let _ = fs::remove_file(&never);
@@ -224,7 +256,7 @@ impl Spin {
 
     fn replay(&self) -> Result<Lasso, String> {
         let output = self.tool("spin", &["-t", "-p", "-g", "-w", "-b", "claims.pml"])?;
-        lasso(&output.stdout, &self.atoms)
+        lasso(&output.stdout, &self.atoms, self.stepwise)
     }
 
     fn write(&self, name: &str, text: &str) -> Result<(), String> {
@@ -419,17 +451,20 @@ fn search_result(stdout: &str) -> Result<bool, String> {
     }
 }
 
-/// One step of a replayed trail: does it receive into an atom variable, and
+/// One step of a replayed trail: its number, does it open a position, and
 /// the globals printed after it.
 #[derive(Default)]
-struct Step {
+struct Step<'a> {
+    number: &'a str,
     observable: bool,
     globals: BTreeMap<String, String>,
 }
 
 /// Parses a `spin -t -p -g -w` replay into a lasso over the observable
-/// positions; see the module documentation.
-fn lasso(stdout: &str, atoms: &[Atom]) -> Result<Lasso, String> {
+/// positions; see the module documentation. In a `stepwise` model every
+/// step is a position, and the statements printed under one step number
+/// are one step.
+fn lasso(stdout: &str, atoms: &[Atom], stepwise: bool) -> Result<Lasso, String> {
     let mut steps: Vec<Step> = Vec::new();
     let mut cycle_step = None;
     for line in stdout.lines() {
@@ -441,12 +476,17 @@ fn lasso(stdout: &str, atoms: &[Atom]) -> Result<Lasso, String> {
             if let Some(step) = steps.last_mut() {
                 step.globals.insert(name.to_owned(), value.to_owned());
             }
-        } else if let Some(statement) = statement(line) {
-            let observable = statement.split_once('?').is_some_and(|(_, target)| {
-                let target = target.trim_start_matches('?');
-                atoms.iter().any(|a| a.var == target)
-            });
+        } else if let Some((number, statement)) = statement(line) {
+            if stepwise && steps.last().is_some_and(|s| s.number == number) {
+                continue;
+            }
+            let observable = stepwise
+                || statement.split_once('?').is_some_and(|(_, target)| {
+                    let target = target.trim_start_matches('?');
+                    atoms.iter().any(|a| a.var == target)
+                });
             steps.push(Step {
+                number,
                 observable,
                 globals: BTreeMap::new(),
             });
@@ -478,8 +518,9 @@ fn lasso(stdout: &str, atoms: &[Atom]) -> Result<Lasso, String> {
             .collect::<Result<Vec<_>, _>>()?;
         let last = positions.last();
         // A receive needs an earlier send, so the first step never writes an
-        // atom variable and its globals are the initial ones.
-        if last.is_none() && step.observable {
+        // atom variable and its globals are the initial ones. In a stepwise
+        // model the first step sets them.
+        if last.is_none() && step.observable && !stepwise {
             return Err("the trail's first step writes an atom variable".into());
         }
         if last.is_none() || step.observable {
@@ -522,9 +563,9 @@ fn global(line: &str) -> Option<(&str, &str)> {
     Some((name.trim(), value.trim()))
 }
 
-/// The statement of a process step, `  12:\tproc  1 (Listener:1) m.pml:38
-/// (state 1)\t[act?lastAction]`.
-fn statement(line: &str) -> Option<&str> {
+/// The step number and statement of a process step, `  12:\tproc  1
+/// (Listener:1) m.pml:38 (state 1)\t[act?lastAction]`.
+fn statement(line: &str) -> Option<(&str, &str)> {
     let (number, rest) = line.trim_start().split_once(':')?;
     if number.is_empty() || !number.bytes().all(|b| b.is_ascii_digit()) {
         return None;
@@ -532,7 +573,7 @@ fn statement(line: &str) -> Option<&str> {
     let rest = rest.trim_start().strip_prefix("proc ")?;
     let open = rest.find("\t[")?;
     let text = &rest[open + 2..];
-    Some(text.strip_suffix(']').unwrap_or(text))
+    Some((number, text.strip_suffix(']').unwrap_or(text)))
 }
 
 #[cfg(test)]
@@ -656,7 +697,7 @@ spin: trail ends after 10 steps
 
     #[test]
     fn a_trail_becomes_a_lasso_of_receives() {
-        let lasso = lasso(TRAIL, &atoms(&["p_a", "p_b"])).unwrap();
+        let lasso = lasso(TRAIL, &atoms(&["p_a", "p_b"]), false).unwrap();
         assert_eq!(lasso.prefix(), [set(&[]), set(&["p_a"])]);
         assert_eq!(lasso.cycle(), [set(&["p_b"]), set(&["p_a"])]);
     }
@@ -668,20 +709,61 @@ spin: trail ends after 10 steps
             "spin: trail ends",
             "      <<<<<START OF CYCLE>>>>>\nspin: trail ends",
         );
-        let lasso = lasso(&trail, &atoms(&["p_a"])).unwrap();
+        let lasso = lasso(&trail, &atoms(&["p_a"]), false).unwrap();
         assert_eq!(lasso.prefix(), [set(&[]), set(&["p_a"]), set(&[])]);
         assert_eq!(lasso.cycle(), [set(&["p_a"])]);
+    }
+
+    /// A stepwise replay: the initialising `d_step` sets `a_p`, the next
+    /// one clears it, and the model then deadlocks, so SPIN stutters.
+    const STEPWISE_TRAIL: &str = "starting claim 1
+Never claim moves to line 3\t[(1)]
+  2:\tproc  0 (dve:1) m.pml:4 (state 3)\t[x = 1]
+\t\ta_p = 0
+\t\tx = 1
+  2:\tproc  0 (dve:1) m.pml:4 (state 2)\t[a_p = 1]
+\t\ta_p = 1
+\t\tx = 1
+Never claim moves to line 7\t[(1)]
+  4:\tproc  0 (dve:1) m.pml:6 (state 7)\t[((a_p==1))]
+\t\ta_p = 1
+\t\tx = 1
+  4:\tproc  0 (dve:1) m.pml:6 (state 6)\t[a_p = 0]
+\t\ta_p = 0
+\t\tx = 2
+  <<<<<START OF CYCLE>>>>>
+Never claim moves to line 11\t[(!((a_p==1)))]
+spin: trail ends after 6 steps
+";
+
+    #[test]
+    fn a_stepwise_trail_has_one_position_per_step() {
+        let p = [Atom {
+            name: Arc::from("p"),
+            var: "a_p".into(),
+            value: "1".into(),
+        }];
+        let run = lasso(STEPWISE_TRAIL, &p, true).unwrap();
+        assert_eq!(run.prefix(), [set(&["p"])]);
+        assert_eq!(run.cycle(), [set(&[])]);
+        // Read for receives, the atom variable changes at a plain step.
+        let error = lasso(STEPWISE_TRAIL, &p, false).unwrap_err();
+        assert!(error.contains("outside a receive"), "{error}");
     }
 
     #[test]
     fn an_unsound_trail_is_an_error() {
         let p_a = atoms(&["p_a"]);
         let no_cycle = TRAIL.replace("      <<<<<START OF CYCLE>>>>>\n", "");
-        assert!(lasso(&no_cycle, &p_a).unwrap_err().contains("no cycle"));
+        assert!(lasso(&no_cycle, &p_a, false)
+            .unwrap_err()
+            .contains("no cycle"));
         let open = TRAIL.replace("last = a\nspin", "last = none\nspin");
-        assert!(lasso(&open, &p_a).unwrap_err().contains("does not return"));
+        assert!(lasso(&open, &p_a, false)
+            .unwrap_err()
+            .contains("does not return"));
         let hidden = TRAIL.replace("[((x==1))]\n\t\tlast = b", "[((x==1))]\n\t\tlast = a");
-        assert!(lasso(&hidden, &p_a)
+        assert!(lasso(&hidden, &p_a, false)
             .unwrap_err()
             .contains("outside a receive"));
         let other = [Atom {
@@ -689,7 +771,7 @@ spin: trail ends after 10 steps
             var: "other".into(),
             value: "1".into(),
         }];
-        assert!(lasso(TRAIL, &other)
+        assert!(lasso(TRAIL, &other, false)
             .unwrap_err()
             .contains("not a printed global"));
     }

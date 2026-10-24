@@ -431,6 +431,65 @@ fn spin_lassos_violate_their_formula() {
     }
 }
 
+/// A stepwise model in the shape of `bench/beem/dve.py`: one process, one
+/// `d_step` per step, the first of which sets the initial values and the
+/// shadow bits of the atoms. From the initial position p, the run
+/// alternates p and q, and from any q it may deadlock in a state where
+/// neither holds, where SPIN stutters. The state before the first step,
+/// where neither bit is set yet, is not a position.
+const STEPWISE: &str = "byte s;
+bit a_p;
+bit a_q;
+active proctype dve() {
+  d_step { s = 0; a_p = (s == 0); a_q = (s == 1) };
+  do
+  :: d_step { s == 0 -> s = 1; a_p = (s == 0); a_q = (s == 1) }
+  :: d_step { s == 1 -> s = 0; a_p = (s == 0); a_q = (s == 1) }
+  :: d_step { s == 1 -> s = 2; a_p = (s == 0); a_q = (s == 1) }
+  od
+}
+#define p_p (a_p == 1)
+#define p_q (a_q == 1)
+";
+
+const STEPWISE_VERDICTS: &[(&str, bool)] = &[
+    ("p_p", true),
+    ("!p_q", true),
+    ("X p_q", true),
+    ("X X (p_p | !p_q)", true),
+    ("X X X p_q", false),
+    ("G (p_p -> X p_q)", true),
+    ("G (p_q -> X p_p)", false),
+    ("G (p_q -> X (p_p | G !(p_p | p_q)))", true),
+    ("G F p_p", false),
+    ("F G !p_q", false),
+    ("p_p U p_q", true),
+];
+
+/// Every SPIN step of a stepwise model is a position, so `X` is decided,
+/// and every counterexample violates its formula when replayed.
+#[test]
+fn spin_stepwise_model_decides_x() {
+    if !have(&["spin", "gcc"], "spin_stepwise_model_decides_x") {
+        return;
+    }
+    let path = scratch("stepwise.pml");
+    std::fs::write(&path, STEPWISE).expect("write model");
+    let mut backend =
+        Spin::stepwise(path, ["p_p", "p_q"], LIMITS).unwrap_or_else(|e| panic!("{e}"));
+    for (text, expected) in STEPWISE_VERDICTS {
+        let formula = parse(text);
+        match backend.check(&formula) {
+            Verdict::Holds => assert!(expected, "SPIN proved {formula}"),
+            Verdict::Fails(lasso) => {
+                assert!(!expected, "SPIN refuted {formula}");
+                assert!(!lasso.satisfies(&formula), "{formula} holds on {lasso:?}");
+            }
+            Verdict::Unknown(reason) => panic!("{formula}: {reason}"),
+        }
+    }
+}
+
 #[test]
 fn spin_lasso_has_one_position_per_action() {
     if !have(&["spin", "gcc"], "spin_lasso_has_one_position_per_action") {
