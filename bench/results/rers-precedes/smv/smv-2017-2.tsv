@@ -1,0 +1,118 @@
+# year=2017 problem=2 engine=ic3 timeout=2400 sessions=2 build_s=0.1 0.1
+prop	formula	official	verdict	seconds
+-1	bounds	holds	holds	0.0
+1	phi	fails	fails	175.6
+1	negphi		holds	53.3
+1	fix		fails	204.0
+1	negfix		fails	167.4
+44	phi	fails	fails	184.8
+44	negphi		unknown (timeout)	nan
+44	fix		holds	1759.4
+44	negfix		unknown (timeout)	nan
+55	phi	fails	unknown (timeout)	nan
+55	negphi		unknown (timeout)	nan
+55	fix		unknown (timeout)	nan
+55	negfix		unknown (timeout)	nan
+68	phi	fails	unknown (timeout)	nan
+68	negphi		unknown (timeout)	nan
+68	fix		unknown (timeout)	nan
+68	negfix		unknown (timeout)	nan
+87	phi	fails	unknown (timeout)	nan
+87	negphi		unknown (timeout)	nan
+87	fix		unknown (timeout)	nan
+87	negfix		unknown (timeout)	nan
+0	phi	holds	unknown (timeout)	nan
+2	phi	fails	unknown (timeout)	nan
+3	phi	holds	unknown (timeout)	nan
+4	phi	fails	unknown (timeout)	nan
+5	phi	holds	unknown (timeout)	nan
+6	phi	fails	unknown (timeout)	nan
+7	phi	holds	unknown (timeout)	nan
+8	phi	fails	unknown (timeout)	nan
+9	phi	fails	unknown (timeout)	nan
+10	phi	holds	unknown (timeout)	nan
+11	phi	fails	unknown (timeout)	nan
+12	phi	fails	unknown (timeout)	nan
+13	phi	fails	unknown (timeout)	nan
+14	phi	holds	unknown (timeout)	nan
+15	phi	fails	unknown (timeout)	nan
+16	phi	holds	unknown (timeout)	nan
+17	phi	fails	unknown (timeout)	nan
+18	phi	holds	unknown (timeout)	nan
+19	phi	holds	unknown (timeout)	nan
+20	phi	fails	unknown (timeout)	nan
+21	phi	fails	unknown (timeout)	nan
+22	phi	fails	unknown (timeout)	nan
+23	phi	fails	unknown (timeout)	nan
+24	phi	holds	unknown (timeout)	nan
+25	phi	fails	unknown (timeout)	nan
+26	phi	fails	unknown (timeout)	nan
+27	phi	holds	unknown (timeout)	nan
+28	phi	holds	unknown (timeout)	nan
+29	phi	fails	unknown (timeout)	nan
+30	phi	holds	unknown (timeout)	nan
+31	phi	fails	unknown (timeout)	nan
+32	phi	fails	unknown (timeout)	nan
+33	phi	holds	unknown (timeout)	nan
+34	phi	fails	unknown (timeout)	nan
+35	phi	fails	unknown (timeout)	nan
+36	phi	holds	unknown (timeout)	nan
+37	phi	fails	unknown (timeout)	nan
+38	phi	fails	unknown (timeout)	nan
+39	phi	holds	unknown (timeout)	nan
+40	phi	fails	unknown (timeout)	nan
+41	phi	holds	unknown (timeout)	nan
+42	phi	holds	unknown (timeout)	nan
+43	phi	fails	unknown (timeout)	nan
+45	phi	holds	unknown (timeout)	nan
+46	phi	holds	unknown (timeout)	nan
+47	phi	fails	unknown (timeout)	nan
+48	phi	holds	unknown (timeout)	nan
+49	phi	fails	unknown (timeout)	nan
+50	phi	holds	unknown (timeout)	nan
+51	phi	holds	unknown (timeout)	nan
+52	phi	holds	unknown (timeout)	nan
+53	phi	holds	unknown (timeout)	nan
+54	phi	holds	unknown (timeout)	nan
+56	phi	holds	unknown (timeout)	nan
+57	phi	holds	unknown (timeout)	nan
+58	phi	fails	unknown (timeout)	nan
+59	phi	fails	unknown (timeout)	nan
+60	phi	fails	unknown (timeout)	nan
+61	phi	holds	unknown (timeout)	nan
+62	phi	holds	unknown (timeout)	nan
+63	phi	holds	unknown (timeout)	nan
+64	phi	holds	unknown (timeout)	nan
+65	phi	holds	unknown (timeout)	nan
+66	phi	holds	unknown (timeout)	nan
+67	phi	holds	unknown (timeout)	nan
+69	phi	fails	unknown (timeout)	nan
+70	phi	fails	unknown (timeout)	nan
+71	phi	holds	unknown (timeout)	nan
+72	phi	holds	unknown (timeout)	nan
+73	phi	holds	unknown (timeout)	nan
+74	phi	fails	unknown (timeout)	nan
+75	phi	holds	unknown (timeout)	nan
+76	phi	holds	unknown (timeout)	nan
+77	phi	holds	unknown (timeout)	nan
+78	phi	holds	unknown (timeout)	nan
+79	phi	holds	unknown (timeout)	nan
+80	phi	holds	unknown (timeout)	nan
+81	phi	holds	unknown (timeout)	nan
+82	phi	holds	unknown (timeout)	nan
+83	phi	holds	unknown (timeout)	nan
+84	phi	fails	unknown (timeout)	nan
+85	phi	holds	unknown (timeout)	nan
+86	phi	holds	unknown (timeout)	nan
+88	phi	fails	unknown (timeout)	nan
+89	phi	holds	unknown (timeout)	nan
+90	phi	fails	unknown (timeout)	nan
+91	phi	holds	unknown (timeout)	nan
+92	phi	holds	unknown (timeout)	nan
+93	phi	fails	unknown (timeout)	nan
+94	phi	fails	unknown (timeout)	nan
+95	phi	fails	unknown (timeout)	nan
+96	phi	fails	unknown (timeout)	nan
+97	phi	fails	unknown (timeout)	nan
+98	phi	holds	unknown (timeout)	nan
+99	phi	holds	unknown (timeout)	nan

@@ -1,0 +1,5 @@
+# year=2016 problem=6 complete=False program_states=300002 automaton_states=603901 lassos=63 real_lassos=46 explore_s=21.6 total_s=297.5 invalid=end
+prop	official	phi	phi_sat	phi_sat_spot	fix	fix_sat	fix_official	fix_sat_official
+13	fails	fails	unknown	no	fails	yes	unknown	unknown
+85	fails	fails	unknown	no	unknown	yes	holds	unknown
+95	fails	fails	unknown	no	fails	yes	unknown	unknown
