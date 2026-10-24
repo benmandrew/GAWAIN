@@ -5,20 +5,26 @@
 //! 0. a memo of earlier verdicts, keyed on [`Formula::canonical`];
 //! 1. the stored runs of M ([`LassoCache::refutes`]), which can only refute;
 //! 2. the known truths of M: the fingerprint prefilter
-//!    ([`KnownTruths::may_imply`]), then one Spot exec ([`implications`]) for
-//!    the truths that survive it, which can only prove;
+//!    ([`KnownTruths::may_imply`]), then Spot on the truths that survive it:
+//!    its rewriting rules first ([`syntactic_implications`]), and the
+//!    complete check ([`implications`]) under [`COMPLETE_CHECK_BUDGET`] only
+//!    when the rules prove nothing. This tier can only prove;
 //! 3. the back end.
 //!
 //! Every answer feeds the tiers in front of it. A failure's lasso goes into
 //! the lasso cache, and a back-end truth into the known truths, from which it
-//! evicts every stored truth Spot proves it implies. `Unknown` is never
-//! memoised. See "Recommended oracle" in `docs/dev/oracle-performance.md` and
-//! `docs/dev/oracle.md`.
+//! evicts every stored truth Spot's rewriting rules prove it implies.
+//! Eviction only keeps the store small, so it never runs the complete check,
+//! which on long formulas costs more than the model checker. `Unknown` is
+//! never memoised. See "Recommended oracle" in
+//! `docs/dev/oracle-performance.md`, `docs/dev/oracle.md` and the eviction
+//! measurements in `docs/dev/oracle-measurements.md`.
 
 use std::collections::HashMap;
+use std::time::Duration;
 
 use super::process::Limits;
-use super::spot::implications;
+use super::spot::{implications, syntactic_implications};
 use super::{Backend, KnownTruths, LassoCache, Verdict, Words};
 use crate::ltl::Formula;
 
@@ -108,18 +114,32 @@ impl<B: Backend> Oracle<B> {
     }
 
     /// Tier 2: does Spot prove that some known truth implies `formula`?
+    /// The rewriting rules go first; the complete check runs only when they
+    /// prove nothing, and for at most [`COMPLETE_CHECK_BUDGET`].
     fn implied_by_a_truth(&mut self, formula: &Formula) -> bool {
         let survivors: Vec<Formula> = self.truths.may_imply(formula).cloned().collect();
         let pairs: Vec<_> = survivors.iter().map(|truth| (truth, formula)).collect();
-        self.spot(&pairs).contains(&true)
+        if self
+            .spot(syntactic_implications, &pairs, self.spot_limits)
+            .contains(&true)
+        {
+            return true;
+        }
+        let limits = Limits {
+            timeout: self.spot_limits.timeout.min(COMPLETE_CHECK_BUDGET),
+            ..self.spot_limits
+        };
+        self.spot(implications, &pairs, limits).contains(&true)
     }
 
-    /// Adds a back-end truth, and drops each stored truth it provably
-    /// implies, so the store stays an antichain as far as Spot can tell.
+    /// Adds a back-end truth, and drops each stored truth that Spot's
+    /// rewriting rules prove it implies. A stored truth that the new one
+    /// implies but the rules miss stays: that costs a larger store and never
+    /// a wrong answer.
     fn learn_truth(&mut self, truth: &Formula) {
         let implied: Vec<Formula> = self.truths.may_be_implied_by(truth).cloned().collect();
         let pairs: Vec<_> = implied.iter().map(|weaker| (truth, weaker)).collect();
-        let proved = self.spot(&pairs);
+        let proved = self.spot(syntactic_implications, &pairs, self.spot_limits);
         self.truths.insert(truth.clone());
         for (weaker, proved) in implied.iter().zip(proved) {
             if proved {
@@ -128,19 +148,29 @@ impl<B: Backend> Oracle<B> {
         }
     }
 
-    /// One `ltlfilt` exec over `pairs`, with "unknown" read as nothing
-    /// proved. No exec for an empty batch.
-    fn spot(&mut self, pairs: &[(&Formula, &Formula)]) -> Vec<bool> {
+    /// One `ltlfilt` exec of `check` over `pairs`, with "unknown" read as
+    /// nothing proved. No exec for an empty batch.
+    fn spot(&mut self, check: Check, pairs: &[(&Formula, &Formula)], limits: Limits) -> Vec<bool> {
         if pairs.is_empty() {
             return Vec::new();
         }
         self.counters.spot_calls += 1;
-        implications(pairs, self.spot_limits).unwrap_or_else(|_| {
+        check(pairs, limits).unwrap_or_else(|_| {
             self.counters.spot_errors += 1;
             vec![false; pairs.len()]
         })
     }
 }
+
+/// [`implications`] or [`syntactic_implications`].
+type Check = fn(&[(&Formula, &Formula)], Limits) -> Result<Vec<bool>, String>;
+
+/// The longest a tier 2 lookup waits on Spot's complete check. On the LMCS
+/// and RERS candidate streams every proof it found that the rewriting rules
+/// missed took at most 17 ms, while its refutations of long production-cell
+/// formulas ran to the 60 s limit, far past the model checker it stands in
+/// front of. See "Tier 2 eviction" in `docs/dev/oracle-measurements.md`.
+const COMPLETE_CHECK_BUDGET: Duration = Duration::from_millis(250);
 
 #[cfg(test)]
 mod tests {
@@ -261,10 +291,7 @@ mod tests {
 
     #[test]
     fn spot_proves_from_a_truth_and_evicts_weaker_truths() {
-        let on_path = std::env::var_os("PATH")
-            .is_some_and(|p| std::env::split_paths(&p).any(|d| d.join("ltlfilt").is_file()));
-        if !on_path {
-            eprintln!("skipping spot_proves_from_a_truth_and_evicts_weaker_truths: no ltlfilt");
+        if !have_ltlfilt("spot_proves_from_a_truth_and_evicts_weaker_truths") {
             return;
         }
         let mut oracle = oracle();
@@ -284,5 +311,54 @@ mod tests {
         // A truth Spot cannot prove implies the stored one does not evict it.
         assert_eq!(oracle.check(&f("F !a")), Verdict::Holds);
         assert_eq!(truths(&oracle), [f("a & !b"), f("F !a")]);
+    }
+
+    fn have_ltlfilt(test: &str) -> bool {
+        let on_path = std::env::var_os("PATH")
+            .is_some_and(|p| std::env::split_paths(&p).any(|d| d.join("ltlfilt").is_file()));
+        if !on_path {
+            eprintln!("skipping {test}: no ltlfilt");
+        }
+        on_path
+    }
+
+    /// `STRONG` implies `G !b`, and both hold on the fake model, but only
+    /// Spot's complete check proves the implication, not its rewriting rules.
+    const STRONG: &str = "a & !b & G (!b -> X !b)";
+
+    #[test]
+    fn eviction_runs_only_the_rewriting_rules() {
+        if !have_ltlfilt("eviction_runs_only_the_rewriting_rules") {
+            return;
+        }
+        let mut oracle = oracle();
+        assert_eq!(oracle.check(&f("G !b")), Verdict::Holds);
+        // The fingerprint rules out `G !b` => STRONG, so the back end
+        // answers, and one exec of the rules fails to prove STRONG => G !b.
+        assert_eq!(oracle.check(&f(STRONG)), Verdict::Holds);
+        let counters = oracle.counters();
+        assert_eq!(counters.backend_calls, 2);
+        assert_eq!(counters.spot_calls, 1);
+        // So the implied truth stays, which is sound, only larger.
+        assert_eq!(truths(&oracle), [f("G !b"), f(STRONG)]);
+    }
+
+    #[test]
+    fn a_lookup_falls_back_to_the_complete_check() {
+        if !have_ltlfilt("a_lookup_falls_back_to_the_complete_check") {
+            return;
+        }
+        let mut oracle = oracle();
+        assert_eq!(oracle.check(&f(STRONG)), Verdict::Holds);
+        // The rules prove nothing, so the complete check runs and proves it.
+        assert_eq!(oracle.check(&f("G !b")), Verdict::Holds);
+        let counters = oracle.counters();
+        assert_eq!(counters.implication_hits, 1);
+        assert_eq!(counters.backend_calls, 1);
+        assert_eq!(counters.spot_calls, 2);
+        // When the rules prove it, the complete check never runs.
+        assert_eq!(oracle.check(&f("a | X b")), Verdict::Holds);
+        assert_eq!(oracle.counters().spot_calls, 3);
+        assert_eq!(oracle.counters().implication_hits, 2);
     }
 }

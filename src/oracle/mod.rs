@@ -23,7 +23,7 @@ use crate::ltl::Formula;
 
 pub use implication::{Fingerprint, KnownTruths, Words};
 pub use lasso::LassoCache;
-pub use spot::implications;
+pub use spot::{implications, syntactic_implications};
 pub use tiered::{Counters, Oracle};
 
 /// The atoms that hold at one position of a run.
