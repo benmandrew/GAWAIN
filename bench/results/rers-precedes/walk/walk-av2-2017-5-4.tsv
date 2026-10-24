@@ -1,0 +1,4 @@
+# seed=4 walks=1000000 steps=20000 cycle_states=20000
+year	problem	prop	pattern	verdict	seconds	bad_points	lasso
+2017	5	26	chain	unknown	4592.9	0	
+2017	5	87	chain	unknown	4237.3	0	

@@ -19,9 +19,11 @@
  * the state after the step in hex. bench/rers_seq.py uses this to check
  * that a lasso from the official solutions is a real run.
  *
- * Usage: explore MAX_STATES [count] > edges.txt
+ * Usage: explore MAX_STATES [count|dump] > edges.txt
  *        explore replay < inputs.txt
- * With `count`, only the END/LIMIT line is printed. Progress goes to stderr
+ * With `count`, only the END/LIMIT line is printed. With `dump`, each
+ * state's edges are preceded by `S K HEX`, its number and bytes in hex;
+ * bench/rers_seq_abs.py uses this to check its abstraction. Progress goes to stderr
  * every million states.
  */
 #include <stdint.h>
@@ -127,6 +129,7 @@ int main(int argc, char **argv) {
     width = (size_t)(__stop_rers_state - __start_rers_state);
     char *scratch = malloc(width);
     int quiet = argc > 2 && strcmp(argv[2], "count") == 0;
+    int dump = argc > 2 && strcmp(argv[2], "dump") == 0;
     int ninputs = rers_input_count();
     fprintf(stderr, "state width %zu bytes, %d inputs\n", width, ninputs);
     intern(live);
@@ -136,6 +139,12 @@ int main(int argc, char **argv) {
         if (count > max_states) {
             printf("LIMIT states=%zu\n", count);
             return 3;
+        }
+        if (dump) {
+            printf("S %zu ", k);
+            for (size_t i = 0; i < width; i++)
+                printf("%02x", (unsigned char)arena[k * width + i]);
+            putchar('\n');
         }
         for (int j = 0; j < ninputs; j++) {
             memcpy(live, arena + k * width, width);

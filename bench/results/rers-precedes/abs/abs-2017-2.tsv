@@ -1,0 +1,117 @@
+# year=2017 problem=2 abstract_globals=1 cells=3 states=43 expansions=62 edges=61 complete=True oob_reads=0 explore_s=0.0 official_true_proved=54/54 official_false_proved=0 total_s=3.0
+prop	formula	official	verdict
+0	phi	holds	holds
+1	phi	fails	unknown
+1	negphi		holds
+1	fix		fails
+1	negfix		fails
+2	phi	fails	unknown
+3	phi	holds	holds
+4	phi	fails	unknown
+5	phi	holds	holds
+6	phi	fails	unknown
+7	phi	holds	holds
+8	phi	fails	unknown
+9	phi	fails	unknown
+10	phi	holds	holds
+11	phi	fails	unknown
+12	phi	fails	unknown
+13	phi	fails	unknown
+14	phi	holds	holds
+15	phi	fails	unknown
+16	phi	holds	holds
+17	phi	fails	unknown
+18	phi	holds	holds
+19	phi	holds	holds
+20	phi	fails	unknown
+21	phi	fails	unknown
+22	phi	fails	unknown
+23	phi	fails	unknown
+24	phi	holds	holds
+25	phi	fails	unknown
+26	phi	fails	unknown
+27	phi	holds	holds
+28	phi	holds	holds
+29	phi	fails	unknown
+30	phi	holds	holds
+31	phi	fails	unknown
+32	phi	fails	unknown
+33	phi	holds	holds
+34	phi	fails	unknown
+35	phi	fails	unknown
+36	phi	holds	holds
+37	phi	fails	unknown
+38	phi	fails	unknown
+39	phi	holds	holds
+40	phi	fails	unknown
+41	phi	holds	holds
+42	phi	holds	holds
+43	phi	fails	unknown
+44	phi	fails	unknown
+44	negphi		holds
+44	fix		holds
+44	negfix		fails
+45	phi	holds	holds
+46	phi	holds	holds
+47	phi	fails	unknown
+48	phi	holds	holds
+49	phi	fails	unknown
+50	phi	holds	holds
+51	phi	holds	holds
+52	phi	holds	holds
+53	phi	holds	holds
+54	phi	holds	holds
+55	phi	fails	unknown
+55	negphi		holds
+55	fix		holds
+55	negfix		fails
+56	phi	holds	holds
+57	phi	holds	holds
+58	phi	fails	unknown
+59	phi	fails	unknown
+60	phi	fails	unknown
+61	phi	holds	holds
+62	phi	holds	holds
+63	phi	holds	holds
+64	phi	holds	holds
+65	phi	holds	holds
+66	phi	holds	holds
+67	phi	holds	holds
+68	phi	fails	unknown
+68	negphi		holds
+68	fix		holds
+68	negfix		fails
+69	phi	fails	unknown
+70	phi	fails	unknown
+71	phi	holds	holds
+72	phi	holds	holds
+73	phi	holds	holds
+74	phi	fails	unknown
+75	phi	holds	holds
+76	phi	holds	holds
+77	phi	holds	holds
+78	phi	holds	holds
+79	phi	holds	holds
+80	phi	holds	holds
+81	phi	holds	holds
+82	phi	holds	holds
+83	phi	holds	holds
+84	phi	fails	unknown
+85	phi	holds	holds
+86	phi	holds	holds
+87	phi	fails	unknown
+87	negphi		holds
+87	fix		fails
+87	negfix		fails
+88	phi	fails	unknown
+89	phi	holds	holds
+90	phi	fails	unknown
+91	phi	holds	holds
+92	phi	holds	holds
+93	phi	fails	unknown
+94	phi	fails	unknown
+95	phi	fails	unknown
+96	phi	fails	unknown
+97	phi	fails	unknown
+98	phi	holds	holds
+99	phi	holds	holds

@@ -23,11 +23,16 @@ RERS gloss.) For each affected property the script
   2. checks with Spot that phi implies the fix and that the fix does not
      imply phi, both in plain LTL and under the RERS trace assumption that
      exactly one event holds at each position;
-  3. merges the verdicts on M of phi, !phi, the fix and !fix from two
+  3. merges the verdicts on M of phi, !phi, the fix and !fix from these
      sound routes, and stops if they disagree: bench/rers_seq.py (explicit
      search plus the official lassos, and implication from officially true
-     properties) and bench/rers_seq_smv.py (nuXmv IC3 on a translation of
-     the C program, used only when it matches the official verdicts);
+     properties), bench/rers_seq_smv.py (nuXmv IC3 on a translation of
+     the C program, used only when it matches the official verdicts),
+     bench/rers_seq_abs.py (an interval abstraction of the program, with
+     abstract counterexamples kept only when they replay), the output
+     alphabet (outputs that no printf in the program can print are false
+     on every run) and bench/rers_seq_walk.py (random walks that close a
+     lasso, kept only when the lasso replays and Spot accepts it);
   4. shows phi degenerate (M |= !phi) with Spot: phi is unsatisfiable on
      any infinite run with one event per position and infinitely many
      inputs and outputs, which every run of M is.
@@ -38,10 +43,13 @@ has the G(Q & ...) shape, so the set is sequential only.
 Columns: `phi` is the shipped formula and `weakening` the fix, both in
 Spot syntax; `*_verdict` is holds, fails or unknown on M; `degenerate`
 and `weakening_degenerate` say whether M |= !phi and M |= !fix; each
-`*_route` names the routes (spot, explicit, nuxmv, official) that agree
-on the value next to it.
+`*_route` names the routes (spot, explicit, nuxmv, abstract, alphabet, walk,
+official)
+that agree on the value next to it.
 
-Usage: rers_precedes.py EXPLICIT_DIR SMV_DIR   (the --out-dir of each check)
+Usage: rers_precedes.py EXPLICIT_DIR SMV_DIR ABS_DIR WALK_DIR   (the
+output directories of rers_seq.py, rers_seq_smv.py, rers_seq_abs.py and
+rers_seq_walk.py)
 """
 
 import csv
@@ -130,6 +138,51 @@ def smv_verdicts(path, official):
     return {k: v for k, v in got.items() if v in ("holds", "fails")}
 
 
+def abs_verdicts(path, official):
+    """The decided verdicts of bench/rers_seq_abs.py, as {(prop, kind):
+    verdict}, or {} when the abstract search did not finish or saw an
+    out-of-bounds array read. An abstract `holds` on an officially false
+    property stops the build."""
+    rows, header = read_table(path)
+    if not rows or "complete=True" not in header or "oob_reads=0" not in header:
+        return {}
+    got = {(int(r["prop"]), r["formula"]): r["verdict"] for r in rows}
+    for (n, kind), v in got.items():
+        if kind == "phi" and v == "holds":
+            assert official[n] == "holds", (path, n)
+    return {k: v for k, v in got.items() if v in ("holds", "fails")}
+
+
+def printed_outputs(year, prob):
+    """The output values the program can print: the constants of its
+    `printf("%d\\n", K)` calls. Stops on any other printf, so no output
+    can come from a computed value."""
+    text = rers_seq.problem_source(year, prob).read_text()
+    calls = re.findall(r"\bf?printf\s*\(([^;]*)\);", text)
+    printed = set()
+    for c in calls:
+        m = re.fullmatch(r'"%d\\n",\s*(\d+)', c.strip())
+        if m:
+            printed.add(int(m.group(1)))
+        else:
+            assert c.startswith("stderr,"), (year, prob, c)
+    return printed
+
+
+def walk_verdicts(walk_dir):
+    """The counterexamples of bench/rers_seq_walk.py in every walk-*.tsv of
+    walk_dir, as {(year, problem, prop): "fails"}. The walk reports a fix
+    as failing only for a lasso that replays and that Spot accepts in the
+    automaton of !fix."""
+    got = {}
+    for path in sorted(Path(walk_dir).glob("walk-*.tsv")):
+        rows, _ = read_table(path)
+        for r in rows:
+            if r["verdict"] == "fails":
+                got[(int(r["year"]), int(r["problem"]), int(r["prop"]))] = "fails"
+    return got
+
+
 def decide(claims, what):
     """Merge (route, answer) claims; all decided routes must agree."""
     claims = [(r, a) for r, a in claims if a is not None]
@@ -140,8 +193,10 @@ def decide(claims, what):
     return answers.pop(), "+".join(sorted({r for r, _ in claims}))
 
 
-def main(explicit_dir, smv_dir):
+def main(explicit_dir, smv_dir, abs_dir, walk_dir):
+    walks = walk_verdicts(walk_dir)
     rows = []
+    alphabet_proved = {}
     for year in (2016, 2017):
         for prob in range(1, 10):
             atoms, props = rers_seq.load_properties(year, prob)
@@ -150,9 +205,21 @@ def main(explicit_dir, smv_dir):
             ex, _ = read_table(Path(explicit_dir) / f"{year}-{prob}.tsv")
             ex = {int(r["prop"]): r for r in ex}
             sm = smv_verdicts(Path(smv_dir) / f"smv-{year}-{prob}.tsv", official)
+            ab = abs_verdicts(Path(abs_dir) / f"abs-{year}-{prob}.tsv", official)
             mutex = one_event(atoms)
             ins = " | ".join(a for a in atoms if a[0] == "i")
             outs = " | ".join(a for a in atoms if a[0] == "o")
+            printed = printed_outputs(year, prob)
+            never = " & ".join(f"G !{a}" for a in atoms
+                               if a[0] == "o" and ord(a[1]) - 64 not in printed) or "true"
+            runs = f"({mutex}) & GF({ins}) & GF({outs}) & {never}"
+            # Validate the alphabet route on every shipped property: it may
+            # prove no officially false one.
+            if never != "true":
+                for n, _, f in props:
+                    if unsat(f"{runs} & !({rers_seq.to_spot(f)})"):
+                        assert official[n] == "holds", (year, prob, n, "alphabet")
+                        alphabet_proved[official[n]] = alphabet_proved.get(official[n], 0) + 1
             for n, gloss, f in props:
                 fixed = rers_seq.corrected(f)
                 if fixed is None:
@@ -171,6 +238,7 @@ def main(explicit_dir, smv_dir):
 
                 hv = {"holds": "holds", "fails": "fails"}
                 phi_v, phi_r = decide([("nuxmv", hv.get(sm.get((n, "phi")))),
+                                       ("abstract", ab.get((n, "phi"))),
                                        ("explicit", ex_answer("phi", hv))], (year, prob, n))
                 assert phi_v in ("fails", "unknown"), (year, prob, n, phi_v)
                 # Degenerate: M |= !phi. Spot shows it for every model whose
@@ -179,14 +247,22 @@ def main(explicit_dir, smv_dir):
                 yes = {"holds": "yes", "fails": "no"}
                 deg, deg_r = decide([("spot", "yes" if spot else None),
                                      ("nuxmv", yes.get(sm.get((n, "negphi")))),
+                                     ("abstract", yes.get(ab.get((n, "negphi")))),
                                      ("explicit", ex_answer("phi_sat", {"no": "yes",
                                                                         "yes": "no"}))],
                                     (year, prob, n, "degenerate"))
-                fix_v, fix_r = decide([("nuxmv", hv.get(sm.get((n, "fix")))),
+                # Alphabet: an output the program never prints is false on
+                # every run, and the fix may hold on every such word.
+                alpha = "holds" if unsat(f"{runs} & !({fix})") else None
+                fix_v, fix_r = decide([("alphabet", alpha),
+                                       ("nuxmv", hv.get(sm.get((n, "fix")))),
+                                       ("abstract", ab.get((n, "fix"))),
+                                       ("walk", walks.get((year, prob, n))),
                                        ("explicit", ex_answer("fix", hv)),
                                        ("official", ex_answer("fix_official", hv))],
                                       (year, prob, n, "fix"))
                 wdeg, wdeg_r = decide([("nuxmv", yes.get(sm.get((n, "negfix")))),
+                                     ("abstract", yes.get(ab.get((n, "negfix")))),
                                      ("explicit", ex_answer("fix_sat", {"no": "yes",
                                                                         "yes": "no"})),
                                      ("official", ex_answer("fix_sat_official", {"no": "yes"}))],
@@ -205,6 +281,8 @@ def main(explicit_dir, smv_dir):
         w.writeheader()
         w.writerows(rows)
     print(f"{len(rows)} rows -> {OUT}", file=sys.stderr)
+    print("shipped properties the alphabet route proves, by official verdict:",
+          alphabet_proved, file=sys.stderr)
     for key in ("weakening_verdict", "weakening_degenerate", "degenerate"):
         counts = {}
         for r in rows:
@@ -213,4 +291,4 @@ def main(explicit_dir, smv_dir):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    main(*sys.argv[1:5])
