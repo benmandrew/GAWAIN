@@ -59,3 +59,16 @@ The same search ran three times on a second sample, 2 instances per family with 
 The times and counts cover the 43 runs that finished under all three builds, and in each build the memo answered 8,589 of the 30,110 queries. The packed evaluator changes nothing under the full oracle, since the back end answers only 7% of queries there and Spot's 4,834 execs dominate the time. Memo only cut the total wall time 7.1×, with a median speed-up per run of 3.2× and a range of 0.87× to 68×. All 43 runs reported the same number of repairs, with the same comparison to ψ, under the full oracle and under memo only. Memo only also finished the 2 runs that timed out under the full oracle.
 
 These measurements show that a trace set needs only the memo in front of it. The remaining cost of the search lies in the Spot calls outside the oracle.
+
+## Model counts under LTLf
+
+The similarity objective needs a model count, and the lasso count of `src/count/mod.rs` counts ultimately periodic infinite words. Under LTLf it measures the wrong language. On one atom it gives `X[!] true` the same count as `true`, although no one-position word satisfies the first, and it gives `X false` no words, although under LTLf's weak `X` the one-position words all satisfy it. Two options were measured: the lasso count as it stands, and a count of the finite words of length 1 to 20 accepted by the DFA that `ltlf2dfa -Ht` builds, which `src/count/mod.rs` now counts by state with each edge weighted by the models of its label.
+
+The pairs were the 196 LTLf instances of `trace_bench instances`, each a φ and the known weakening ψ that φ implies under LTLf. `trace_bench counts` counted φ and ψ under both semantics, one pair per process, each in its own `systemd-run` scope with a 600 s limit and `MemoryMax=6G`, on `ben` with a load average of 3–5. The rows are in `bench/results/trace-sets-counts.csv`.
+
+| Count | Pairs counted | Median | p90 | Max | Total |
+|---|---|---|---|---|---|
+| finite words, `ltlf2dfa` | 196 | 16.6 ms | 37.6 ms | 3.0 s | 10.3 s |
+| lassos, `ltl2tgba -D` | 191 | 18.3 ms | 1.64 s | 458 s | 757 s |
+
+Neither count ranked any φ above its ψ. The lasso count gave no value for 5 pairs, 2 of them killed at the memory limit and 1 at the time limit, and its slow tail is the translation: on 61 DoubleCounter formulas `ltl2tgba -D` took 408 s in all and `ltlf2dfa -Ht` 1.4 s. The finite-word count is therefore both the right semantics and the cheaper one, so `weaken --traces` on an LTLf set uses it, and the lasso count stays the only count under LTL. `tests/count.rs` checks the finite count against closed forms and for monotonicity under LTLf implication.

@@ -266,7 +266,7 @@ fn run<B: Backend>(
     println!("input: {phi}");
     println!("instance: proper time={check_wall:.2}s");
     let mut rng = Rng::new(args.seed);
-    let mut counter = Counter::new(phi, SPOT_LIMITS);
+    let mut counter = Counter::new(phi, oracle.semantics(), SPOT_LIMITS);
     let population = search(
         phi,
         &mut oracle,

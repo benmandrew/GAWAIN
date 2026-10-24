@@ -15,11 +15,22 @@
 //! harmonic mean of `log shared / log count(φ)` and
 //! `log shared / log count(φ')`, each clamped to [0, 1].
 //!
+//! Under LTLf ([`Semantics::Finite`]) the count is instead the number of
+//! finite words over the universe, of each length from 1 to [`BOUND`], that
+//! satisfy the formula. A larger LTLf language accepts every word a smaller
+//! one does, so this count is monotone under LTLf implication, which the
+//! lasso count is not. The automaton is the transition-based DFA of
+//! `ltlf2dfa`, which accepts a word when its last transition is accepting,
+//! so the words are counted by the state they reach, with no subset
+//! construction. `ltlf2dfa` builds these automata hundreds of times faster
+//! than `ltl2tgba -D` builds the lasso ones for the same formulas; see
+//! "Model counts under LTLf" in `docs/dev/trace-sets.md`.
+//!
 //! Labels mentioning at most [`EXHAUSTIVE_ATOMS`] atoms are counted by a
 //! truth table in process, and wider ones by Ganak (submodule `ganak`), as
 //! in PEREDUR. Counts are kept as base-2 logarithms, so no bound overflows.
-//! All the `ltl2tgba` translations of one [`Counter::similarities`] call go
-//! through one exec. See "Model-counting similarity" in
+//! All the translations of one [`Counter::similarities`] call go through
+//! one exec. See "Model-counting similarity" in
 //! `docs/dev/search.md`.
 
 mod ganak;
@@ -34,6 +45,7 @@ use std::time::{Duration, Instant};
 use crate::ltl::{BinaryOp, Formula};
 use crate::oracle::hoa::{self, Guard, Marks, Raw};
 use crate::oracle::process::{self, Limits};
+use crate::oracle::Semantics;
 
 /// The trace length, PEREDUR's `default_model_counting_bound`.
 pub const BOUND: usize = 20;
@@ -49,7 +61,7 @@ pub struct Counts {
     pub queries: u64,
     /// Candidates answered from the similarity cache.
     pub hits: u64,
-    /// `ltl2tgba` execs, batches and retries together.
+    /// `ltl2tgba` or `ltlf2dfa` execs, batches and retries together.
     pub translations: u64,
     /// Formulas translated.
     pub formulas: u64,
@@ -70,6 +82,7 @@ pub struct Counts {
 /// Scores candidates against one fixed φ, caching every count.
 pub struct Counter {
     phi: Formula,
+    semantics: Semantics,
     phi_atoms: BTreeSet<Arc<str>>,
     limits: Limits,
     /// log2 counts by canonical formula and universe size; `None` when the
@@ -83,11 +96,14 @@ pub struct Counter {
 }
 
 impl Counter {
-    /// A counter for candidates against `phi`. `limits` apply to each
-    /// `ltl2tgba` and Ganak exec.
-    pub fn new(phi: &Formula, limits: Limits) -> Self {
+    /// A counter for candidates against `phi`, counting lassos under
+    /// [`Semantics::Infinite`] and finite words under
+    /// [`Semantics::Finite`]. `limits` apply to each translation and Ganak
+    /// exec.
+    pub fn new(phi: &Formula, semantics: Semantics, limits: Limits) -> Self {
         Counter {
             phi: phi.canonical(),
+            semantics,
             phi_atoms: phi.atoms(),
             limits,
             logs: HashMap::new(),
@@ -103,7 +119,7 @@ impl Counter {
     }
 
     /// The log2 count of each formula over the atoms of φ and the formula,
-    /// in one `ltl2tgba` exec, or `None` where the count failed.
+    /// in one translation exec, or `None` where the count failed.
     pub fn log_counts(&mut self, formulas: &[Formula]) -> Vec<Option<f64>> {
         let entries: Vec<(Formula, usize)> = formulas
             .iter()
@@ -187,7 +203,7 @@ impl Counter {
         Formula::binary(BinaryOp::And, self.phi.clone(), candidate.clone()).canonical()
     }
 
-    /// Fills `logs` for every entry of `needed`: one `ltl2tgba` exec for
+    /// Fills `logs` for every entry of `needed`: one translation exec for
     /// all, and if that fails, one exec per formula.
     fn count_all(&mut self, needed: Vec<(Formula, usize)>) {
         if needed.is_empty() {
@@ -202,9 +218,10 @@ impl Counter {
                 .collect::<Vec<_>>(),
         };
         for ((formula, universe), automaton) in needed.into_iter().zip(automata) {
-            let log = automaton
-                .ok()
-                .and_then(|a| self.log_count(&a, universe).ok());
+            let log = automaton.ok().and_then(|a| match self.semantics {
+                Semantics::Infinite => self.log_count(&a, universe).ok(),
+                Semantics::Finite => self.log_count_finite(&a, universe).ok(),
+            });
             if log.is_none() {
                 self.counts.failures += 1;
             }
@@ -212,7 +229,8 @@ impl Counter {
         }
     }
 
-    /// The automata of `formulas`, in order, from one `ltl2tgba` exec.
+    /// The automata of `formulas`, in order, from one exec: `ltl2tgba -D`
+    /// for lassos, `ltlf2dfa` for finite words.
     fn translate(&mut self, formulas: &[&Formula]) -> Result<Vec<Raw>, String> {
         self.counts.translations += 1;
         self.counts.formulas += formulas.len() as u64;
@@ -224,14 +242,18 @@ impl Counter {
             }
             input.push_str(&line);
         }
-        let mut command = Command::new("ltl2tgba");
-        command.args(["-D", "-H", "-F", "-"]);
+        let (tool, options) = match self.semantics {
+            Semantics::Infinite => ("ltl2tgba", &["-D", "-H"][..]),
+            Semantics::Finite => ("ltlf2dfa", &["-Ht"][..]),
+        };
+        let mut command = Command::new(tool);
+        command.args(options).args(["-F", "-"]);
         let start = Instant::now();
         let output = process::run(&mut command, &input, self.limits);
         self.counts.tool_time += start.elapsed();
-        let output = output.map_err(|e| format!("ltl2tgba: {e}"))?;
+        let output = output.map_err(|e| format!("{tool}: {e}"))?;
         if !output.status.success() {
-            return Err(format!("ltl2tgba: {}", output.stderr.trim()));
+            return Err(format!("{tool}: {}", output.stderr.trim()));
         }
         let automata = output
             .stdout
@@ -241,7 +263,7 @@ impl Counter {
             .collect::<Result<Vec<_>, _>>()?;
         if automata.len() != formulas.len() {
             return Err(format!(
-                "ltl2tgba: {} automata for {} formulas",
+                "{tool}: {} automata for {} formulas",
                 automata.len(),
                 formulas.len()
             ));
@@ -355,6 +377,51 @@ impl Counter {
         }
         Ok(top + terms.iter().map(|t| (t - top).exp2()).sum::<f64>().log2())
     }
+
+    /// The log2 count of the finite words of length 1 to [`BOUND`] over a
+    /// universe of `universe` atoms that the DFA `automaton` accepts, a
+    /// word being accepted when its last transition is. The edges out of a
+    /// state of a DFA hold on disjoint valuations, so the words reaching
+    /// each state are counted by state, each edge weighted by its own
+    /// models, with no subsets and no letter classes. Each label is
+    /// counted over the atoms it mentions, so few go to Ganak.
+    fn log_count_finite(&mut self, automaton: &Raw, universe: usize) -> Result<f64, String> {
+        let mut edges = Vec::new();
+        for (source, out) in automaton.edges.iter().enumerate() {
+            for edge in out {
+                let models = self.guard_models(&edge.guard, universe)?;
+                let marked = edge.marks | automaton.state_marks[source] != 0;
+                edges.push((source as u32, edge.target, models, marked));
+            }
+        }
+        let mut weights = BTreeMap::from([(automaton.start, 1.0)]);
+        let mut scale = 0.0;
+        let mut terms = Vec::with_capacity(BOUND);
+        for _ in 0..BOUND {
+            let mut next: BTreeMap<u32, f64> = BTreeMap::new();
+            let mut accepted = 0.0;
+            for &(source, target, models, marked) in &edges {
+                if let Some(weight) = weights.get(&source) {
+                    *next.entry(target).or_default() += weight * models;
+                    if marked {
+                        accepted += weight * models;
+                    }
+                }
+            }
+            if accepted > 0.0 {
+                terms.push(f64::log2(accepted) + scale);
+            }
+            let (next, top) = rescaled(next);
+            scale += top;
+            weights = next;
+        }
+        let top = terms.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        if top == f64::NEG_INFINITY {
+            return Ok(top);
+        }
+        Ok(top + terms.iter().map(|t| (t - top).exp2()).sum::<f64>().log2())
+    }
+
     /// The letters of `automaton` over the universe: the classes of
     /// valuations that enable the same edges between live states, each
     /// with its edges and its number of valuations. A class that enables
@@ -1026,7 +1093,7 @@ mod tests {
             timeout: Duration::from_secs(1),
             memory_bytes: 1 << 30,
         };
-        let mut counter = Counter::new(&Formula::tt(), limits);
+        let mut counter = Counter::new(&Formula::tt(), Semantics::Infinite, limits);
         let mut count = |a: &Raw, universe: usize| counter.log_count(a, universe).unwrap();
         let k = BOUND as f64;
         let close = |found: f64, expected: f64| {
@@ -1076,6 +1143,64 @@ mod tests {
         close(count(&infinitely, 1), (k * top - top + 1.0).log2());
         // Far past f64's range the logarithm is still finite: k 2^(100 k).
         close(count(&marked, 100), 100.0 * k + k.log2());
+    }
+
+    #[test]
+    fn finite_words_count_when_their_last_transition_accepts() {
+        let edge = |guard: Guard, target: u32, marks: Marks| RawEdge {
+            guard,
+            target,
+            marks,
+        };
+        let automaton = |edges: Vec<Vec<RawEdge>>| Raw {
+            aps: vec!["a".into()],
+            start: 0,
+            all_marks: 1,
+            state_marks: vec![0; edges.len()],
+            edges,
+        };
+        let limits = Limits {
+            timeout: Duration::from_secs(1),
+            memory_bytes: 1 << 30,
+        };
+        let mut counter = Counter::new(&Formula::tt(), Semantics::Finite, limits);
+        let mut count = |a: &Raw, universe: usize| counter.log_count_finite(a, universe).unwrap();
+        let sum = |terms: &dyn Fn(i32) -> f64| (1..=BOUND as i32).map(terms).sum::<f64>().log2();
+        let close = |found: f64, expected: f64| {
+            assert!(
+                (found - expected).abs() < 1e-9,
+                "{found} against {expected}"
+            );
+        };
+        // ltlf2dfa's automaton of X a: every word of length 1, and of the
+        // longer ones those whose second letter is a.
+        let next = automaton(vec![
+            vec![edge(Guard::True, 1, 1)],
+            vec![edge(Guard::Ap(0), 2, 1)],
+            vec![edge(Guard::True, 2, 1)],
+        ]);
+        close(
+            count(&next, 1),
+            (2.0 + (2..=BOUND as i32).map(|n| 2f64.powi(n - 1)).sum::<f64>()).log2(),
+        );
+        // An unmarked last step rejects: X[!] true has every word but those
+        // of length 1.
+        let strong = automaton(vec![
+            vec![edge(Guard::True, 1, 0)],
+            vec![edge(Guard::True, 1, 1)],
+        ]);
+        close(
+            count(&strong, 1),
+            sum(&|n| if n == 1 { 0.0 } else { 2f64.powi(n) }),
+        );
+        // A free atom doubles each letter, and disjoint edges add up.
+        let split = automaton(vec![vec![
+            edge(Guard::Ap(0), 0, 1),
+            edge(Guard::Not(ap(0)), 0, 1),
+        ]]);
+        close(count(&split, 2), sum(&|n| 4f64.powi(n)));
+        let none = automaton(vec![vec![edge(Guard::True, 0, 0)]]);
+        assert_eq!(count(&none, 1), f64::NEG_INFINITY);
     }
 
     #[test]

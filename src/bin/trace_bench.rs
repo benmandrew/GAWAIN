@@ -4,6 +4,7 @@
 //! ```text
 //! trace_bench check DIR...
 //! trace_bench instances --seed N DIR...
+//! trace_bench counts PAIRS.tsv
 //! ```
 //!
 //! Both walk each `DIR` for `*.trace` files (`bench/traces_fetch.py` writes
@@ -20,6 +21,12 @@
 //! [`monotone_rewrite`]s that fails on some positive trace (M ⊭ φ) and holds
 //! on another (M ⊭ ¬φ, so φ is not degenerate). Spot must prove φ ⇒ ψ under
 //! the file's semantics, so ψ is a known weakening of φ that holds on M.
+//!
+//! `counts` reads `file<TAB>ψ<TAB>φ` lines with φ ⇒ ψ, and prints one row
+//! per semantics: the log2 [`Counter`] counts of φ and ψ over their atoms,
+//! and the milliseconds the pair took. A count that is monotone under the
+//! file's implication gives φ at most ψ's count.
+//!
 //! Up to 20 drafts are tried per file, and Spot gets 30 s per file; a file
 //! with none left is reported with an empty φ and the reason.
 
@@ -28,13 +35,15 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use gawain::count::Counter;
 use gawain::ltl::Formula;
 use gawain::oracle::process::Limits;
 use gawain::oracle::traces::TraceSet;
 use gawain::oracle::{implications, Backend, Semantics, Verdict};
 use gawain::search::{monotone_rewrite, Direction, Rng};
 
-const USAGE: &str = "usage: trace_bench check DIR... | trace_bench instances --seed N DIR...";
+const USAGE: &str =
+    "usage: trace_bench check DIR... | trace_bench instances --seed N DIR... | trace_bench counts PAIRS.tsv";
 const RUNS: usize = 21;
 const DRAFTS: usize = 20;
 const SPOT_LIMITS: Limits = Limits {
@@ -52,6 +61,10 @@ fn main() -> ExitCode {
                 Err(e) => Err(format!("--seed {seed}: {e}")),
             },
             _ => Err("instances needs --seed N".into()),
+        },
+        Some("counts") => match &args[1..] {
+            [path] => counts(path),
+            _ => Err("counts needs one file".into()),
         },
         _ => Err("unknown command".into()),
     };
@@ -225,6 +238,31 @@ fn instance(
         .ok_or("Spot proved no draft implies ψ")?;
     let rejected = set.rejected(&phi);
     Ok((set, phi, accepted, rejected))
+}
+
+fn counts(path: &str) -> Result<(), String> {
+    let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+    println!("file,semantics,phi,psi,ms");
+    for line in text.lines().filter(|l| !l.is_empty()) {
+        let fields: Vec<&str> = line.split('\t').collect();
+        let [file, psi, phi] = fields[..] else {
+            return Err(format!("{path}: expected three fields in {line:?}"));
+        };
+        let parse = |f: &str| f.parse::<Formula>().map_err(|e| format!("{file}: {e}"));
+        let (psi, phi) = (parse(psi)?, parse(phi)?);
+        for semantics in [Semantics::Finite, Semantics::Infinite] {
+            let mut counter = Counter::new(&psi, semantics, SPOT_LIMITS);
+            let start = Instant::now();
+            let logs = counter.log_counts(&[phi.clone(), psi.clone()]);
+            let ms = start.elapsed().as_secs_f64() * 1e3;
+            let mut row = format!("{file},{semantics:?}");
+            for log in logs {
+                row += &log.map_or(",".into(), |l| format!(",{l:.6}"));
+            }
+            println!("{row},{ms:.1}");
+        }
+    }
+    Ok(())
 }
 
 /// A formula as a CSV field.
