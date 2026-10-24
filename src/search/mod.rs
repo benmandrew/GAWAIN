@@ -5,10 +5,11 @@
 //! One generation breeds one offspring per population slot (crossover, then
 //! mutation, then `simplify`), filters them (repeats, bloat, validity),
 //! scores the survivors (status, syntactic and model-counting similarity),
-//! pools
-//! them with their parents and keeps the population size by PEREDUR's
-//! `nsga2-apportion` step. See `docs/dev/search.md`.
+//! pools them with their parents, regrades the pool's status against the
+//! runs of M stored so far ([`grade`]), and keeps the population size by
+//! PEREDUR's `nsga2-apportion` step. See `docs/dev/search.md`.
 
+pub mod grade;
 pub mod nsga2;
 mod operators;
 mod rng;
@@ -17,6 +18,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Instant;
 
+pub use grade::{GradeCounts, Grader, Status};
 pub use operators::{crossover, monotone_rewrite, mutate, Direction};
 pub use rng::Rng;
 
@@ -34,7 +36,8 @@ const MUTATION_RATE: f64 = 1.0;
 /// bloat-cap default.
 const BLOAT_RATIO: usize = 2;
 
-/// The index of the status objective: 1 when M satisfies the candidate.
+/// The index of the status objective: 1 when M satisfies the candidate,
+/// below 1 otherwise (see [`Status`]).
 pub const STATUS: usize = 0;
 /// The index of the syntactic-similarity objective.
 pub const SIMILARITY: usize = 1;
@@ -49,6 +52,8 @@ pub struct Params {
     pub generations: usize,
     /// Individuals in the population, at least 1.
     pub population: usize,
+    /// How a candidate that does not hold is scored.
+    pub status: Status,
 }
 
 /// A candidate with its objective vector, indexed by [`STATUS`],
@@ -62,8 +67,8 @@ pub struct Scored {
 }
 
 impl Scored {
-    /// Whether the oracle proved M ⊨ φ'. An unknown verdict scores 0, so it
-    /// reads as false here.
+    /// Whether the oracle proved M ⊨ φ'. Any other verdict scores below 1,
+    /// so it reads as false here.
     pub fn holds(&self) -> bool {
         self.objectives[STATUS] == 1.0
     }
@@ -109,8 +114,9 @@ pub fn score<B: Backend>(
         .collect()
 }
 
-/// Runs the search from `phi` and returns the final population, best first.
-/// Mutation draws atoms from `phi`'s atoms only.
+/// Runs the search from `phi` and returns the final population, best first,
+/// with the cost of grading the status. Mutation draws atoms from `phi`'s
+/// atoms only.
 pub fn search<B: Backend>(
     phi: &Formula,
     oracle: &mut Oracle<B>,
@@ -119,11 +125,20 @@ pub fn search<B: Backend>(
     params: Params,
     spot_limits: Limits,
     rng: &mut Rng,
-) -> Vec<Scored> {
+) -> (Vec<Scored>, GradeCounts) {
     assert!(params.population >= 1, "the population needs a member");
     let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
-    let seed = score(vec![phi.clone()], phi, oracle, counter);
-    let mut population = select(seed, params.population);
+    let mut grader = Grader::new(phi);
+    // The stored lassos only grow, so the whole pool is regraded against
+    // one set before it is ranked.
+    let mut regrade = |pool: &mut Vec<Scored>, oracle: &Oracle<B>| {
+        if params.status == Status::Graded {
+            grader.rescore(pool, oracle.lassos());
+        }
+    };
+    let mut population = score(vec![phi.clone()], phi, oracle, counter);
+    regrade(&mut population, oracle);
+    population = select(population, params.population);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
         let scored = score(offspring, phi, oracle, counter);
@@ -133,9 +148,10 @@ pub fn search<B: Backend>(
             oracle.semantics(),
             spot_limits,
         ));
+        regrade(&mut population, oracle);
         population = select(population, params.population);
     }
-    population
+    (population, grader.counts())
 }
 
 /// One offspring per slot of the best-first `parents`. Each starts as its

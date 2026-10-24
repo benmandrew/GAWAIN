@@ -133,6 +133,11 @@ impl LassoCache {
     pub fn refutes(&self, formula: &Formula) -> Option<&Lasso> {
         self.lassos.iter().find(|lasso| !lasso.satisfies(formula))
     }
+
+    /// Every stored run, oldest first. The list only grows.
+    pub fn lassos(&self) -> &[Lasso] {
+        &self.lassos
+    }
 }
 
 #[cfg(test)]

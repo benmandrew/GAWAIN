@@ -44,11 +44,28 @@ Crossover is one side of `tlsf_crossover`. On a fair coin, a subformula of the f
 
 `score` takes one generation's survivors and returns three objectives for each, all higher-is-better.
 
-- **Status.** 1 if the oracle answers `Holds`, 0 if it answers `Fails` or `Unknown`. The oracle never memoises `Unknown`, so a candidate that timed out is asked again if it is bred again.
+- **Status.** 1 if the oracle answers `Holds`, 0 if it answers `Fails` or `Unknown`. The oracle never memoises `Unknown`, so a candidate that timed out is asked again if it is bred again. A graded alternative was measured and not adopted; see "Graded status" below.
 - **Syntactic similarity** to φ (`Formula::syntactic_similarity`).
 - **Model-counting similarity** to φ (`count::Counter`, next section), the measure of strength that PLAN.md ranks repairs by. A candidate whose counts fail scores 0, the worst value.
 
 The NSGA-II functions take objective vectors of any width, so nothing else changed. No trait was introduced for the objectives, because each has one implementation. The `weaken` binary prints both similarities on each repair line, as `repair<TAB>syntactic<TAB>semantic<TAB>vacuity<TAB>formula`.
+
+### Graded status
+
+`Status::Graded` (`src/search/grade.rs`) replaces the 0 of a candidate that is not proved with a grade. Let n be the number of lassos the oracle has stored that violate φ, and k the number of those that φ' satisfies. A candidate the oracle proves scores 1, and any other scores k / (n + 1). φ satisfies none of its own counterexamples, so it scores 0, and for a fixed set of lassos the grade is monotone under implication. It costs no back-end call, since the lassos are runs of M that tier 1 already keeps, and it works on every back end that returns counterexamples.
+
+Three choices fix the grade.
+
+- **The +1.** A `Fails` or `Unknown` candidate can satisfy all n stored counterexamples, because M's run that refutes it may not be stored yet. The denominator n + 1 keeps every such candidate below 1, so a proved candidate always beats one that is merely consistent with the stored runs. With no stored lasso the grade is 0, the binary value.
+- **No deduplication.** Tier 1 stores a back-end counterexample only when no stored lasso already refutes the query, so a second copy of a stored lasso can never be added. Lassos that differ but agree on every candidate still count separately, and the grade does not try to merge them.
+- **Rescoring.** The set only grows, so a grade computed in generation 3 is out of date in generation 10. Before each selection `Grader::rescore` sorts the new lassos into those that violate φ and regrades every member of the pool that does not hold, parents included, against one set.
+
+The ablation under "Measured runs" found that the grade crowds out the candidates that hold. Under the binary status φ itself (status 0, both similarities 1) dominates every candidate that fails, so the front holds φ plus the candidates that hold. Under the grade a failing candidate that satisfies some counterexample has status above 0, so φ no longer dominates it, and it takes a place on the front. The final population held a median of 3.25 fewer proved candidates out of 40, while the found-repair rate and the strength of the repairs did not change. The default is therefore `Status::Binary`, and `search_bench --status graded` keeps the grade for the ablation. The `weaken` binary has no flag for it.
+
+Two variants were also measured on RERS and dropped. Their code is at commit `ddd9648` on the unmerged branch `exp/graded-arms` (`src/oracle/explicit.rs` there).
+
+- **B with random runs.** Before the search, 64 random walks of M (seeded from the run's seed, at most 10,000 steps each) were stored in the oracle, so the grade had more counterexamples to work with from generation 0. Few walks violate φ (a median of 7 refuting lassos per run against 3), and the crowding was the same.
+- **Option C, the share of states.** The status was h / (N + 1), where h is the number of M's N states from which φ' holds, from a product of M with ¬φ' and a backward pass over its bad strongly connected components. The share does not depend on φ, so it rewards formulas that are not weakenings of φ at all. On RERS 2016 103 p7, seed 1, the gate kept none of the 21 candidates that held. Each new formula costs one Spot translation and one product, which took a median of 70% of the search's wall time.
 
 ## Model-counting similarity
 
@@ -229,6 +246,48 @@ Earlier runs at lower load (rows `ab` and `monotone`) gave the same repairs and 
 - abp4. ⊤ scores 0.9598. The lasso count finds `G(s_get & r_ack0 -> X(!s_get U (s_wait & (…))))` and the same with `r_ack1`, both at 0.9821, the highest score of any arm. The first implies the `G(s_get & r_ack0 -> …)` repairs of the two-objective arm (0.9734) and the path arm (0.9751): it keeps φ's `!s_get` where they weaken it. No other repair scores above 0.9751. The prefix arm's `F(…)` repair scores 0.9598, a tie with ⊤, and the path arm's `G(s_get -> X(… | s_get))` 0.9599.
 
 On abp4 the lasso count gives the strongest repairs found by any arm, and no repair of its own ties with ⊤. Two seeds are too few to judge the objective in general.
+
+### Graded status against binary
+
+The ablation compares the binary status with the graded one (option B, "Graded status" above) at a fixed budget of 30 generations of 40, over 10 seeds per instance. The instance set comes from `bench/graded_prep.py` and has 93 instances.
+
+- LMCS-2006 abp4 `p2false` on nuXmv. Every other LMCS failure that survives the filter uses past-time operators, which the formula core lacks.
+- 52 RERS 2016 parallel properties (problems 101 to 106, every filter survivor) on the explicit back end.
+- The 20 BEEM pairs of `bench/beem/search_models.py` on SPIN, in its stepwise mode.
+- 20 MCC LTL properties on TAPAAL, one per instance, drawn with seed 1 from those with at least two atoms whose two checks each take under 1 s.
+
+Each run is one `search_bench` process (release build), with 120 s and 4 GB per back-end call and 3600 s per run, in its own systemd scope capped at 8 GB (`bench/graded_run.py`). The runs went to av3, except BEEM and option C, which went to av2, at 14 concurrent runs per host, seed-major with the arms interleaved, so both arms of a pair ran on the same host under the same load. Other users' jobs were not controlled, so wall times compare pairs and not hosts. The code was this change on `main` at `76966b1`, before the slow-call limits of `6d5590a`; the check after the rebase is at the end of this section. `bench/graded_stats.py` pairs the arms by seed, takes each instance's median over its seeds, and reports the median over instances with a bootstrap 95% confidence interval (10,000 resamples), the median paired difference with its interval, and a Wilcoxon signed-rank test over instances. Repair strength follows PEREDUR. Each arm's repairs of an instance are pooled over seeds and reduced to the maximal set, and the net subsumption share is the share of binary's maximal set strictly implied by a graded repair, minus the converse, so it is positive when graded is stronger. The results are in `bench/results/graded-runs.csv` (one row per run) and `bench/results/graded-instances.csv` (one row per instance).
+
+| Measure (86 instances) | Binary | Graded | Difference (graded − binary) | p | Graded higher / lower / tie |
+|---|---|---|---|---|---|
+| Found-repair rate | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 0.00 [0.00, 0.00] | 0.74 | 8 / 10 / 68 |
+| Best semantic similarity | 0.999 [0.994, 0.999] | 0.999 [0.989, 0.999] | 0.000 [0.000, 0.000] | 0.53 | 22 / 20 / 44 |
+| Repairs | 2 [1, 2] | 2 [1, 2] | 0 [0, 0] | 0.10 | 14 / 21 / 51 |
+| Candidates that hold, of 40 | 23.5 [22.5, 24.0] | 19.0 [17.75, 20.0] | −3.25 [−5.25, −2.25] | < 0.0001 | 5 / 76 / 5 |
+| Wall time | 9.77 s [7.59, 14.81] | 9.35 s [7.35, 14.86] | +0.01 s [−0.20, 0.28] | 0.33 | 43 / 43 / 0 |
+| Back-end calls | 67 [54.5, 81] | 67 [56.25, 78.5] | +0.5 [−1, 1] | 0.50 | 44 / 37 / 5 |
+| Net subsumption share | | | 0.000 [−0.088, 0.000] | 0.34 | 24 / 36 / 26 |
+
+The 86 instances are those where both arms have at least one paired seed. MedleyA-PT-09 `LTLCardinality-09` ran out of memory on every seed of both arms, and six large BEEM instances (anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4) ran only seeds 1 to 3, of which most reached the 3600 s cap without a result. Over the whole sweep 76 binary and 75 graded runs gave no result, at a cap of 8 GB. A rerun of those at 32 GB recovered 11; the rest were killed by the out-of-memory killer again, in a Spot or Ganak child. The losses are spread evenly over the arms.
+
+By family, the drop in candidates that hold is −3.0 on RERS (47 of 52 instances lower), −7.0 on MCC (16 of 19) and −1.0 on BEEM (12 of 14), each at p < 0.004. MCC is the one family where the drop reaches the gate: graded found a median of 0.5 fewer repairs (p = 0.024) and its net subsumption share was −0.10 [−0.17, 0.00] (p = 0.070, 4 instances stronger and 12 weaker). On BEEM graded ran 1.1 s longer (p = 0.0001, all 14 instances) and made 1.75 more back-end calls (p = 0.021). Nothing else differs at p < 0.05.
+
+Grading is cheap. Over 842 graded runs it took a median of 0.15% of the search's wall time and at most 7.3%. A run ends with a median of 3 stored lassos that violate φ (at most 17), so the grade can take few distinct values.
+
+The budget could hide a difference, since every arm finds a repair at 30 × 40. The same instances ran at 4 × 8 with 20 seeds (83 instances; the small BEEM pairs locally, MCC on av3 at two concurrent runs, everything else locally at two concurrent runs). The found-repair rate was 0.40 for both arms (p = 0.69), with 24 instances higher and 17 lower under graded. Graded held fewer proved candidates (9 higher and 23 lower, p = 0.009) and made more back-end calls (32 higher and 16 lower, p = 0.005), with medians equal. The net subsumption share did not differ (p = 0.11). Runs ended with a median of 1 refuting lasso (at most 5). These results are in `bench/results/graded-runs-4x8.csv` and `bench/results/graded-instances-4x8.csv`.
+
+The two variants of "Graded status" ran on RERS only, against the same binary runs.
+
+| Arm (52 RERS instances) | Seeds | Candidates that hold, difference | Back-end calls, difference | Wall, difference | Net subsumption share (p, higher / lower) |
+|---|---|---|---|---|---|
+| B with 64 random runs | 10 | −4.0 [−5.5, −2.25], p < 0.0001 | −6.25 [−9.25, −3.0], p < 0.0001 | +0.08 s, p = 0.36 | p = 0.035, 10 / 22 |
+| C, share of states | 1 to 4 | −5.0 [−5.5, −3.0], p < 0.0001 | −1.75 [−5.5, 0.0], p = 0.064 | +7.7 s [3.2, 254], p < 0.0001 | p = 0.58, 13 / 16 |
+
+The random runs save back-end calls, since a stored walk refutes some candidates before tier 3 sees them, but their repairs were weaker than binary's on more instances. Option C cost a median of 70% of the search's wall time and gave no stronger repairs, and C was stopped after four seeds.
+
+SPIN rechecked every repair that the explicit back end reported on RERS, as ground truth (`bench/graded_crosscheck.py`, `ltl2tgba --spin` and `pan -a` on the original Promela model, 600 s per check). At 4 × 8 there were 345 distinct repairs: 228 hold, 77 use `X` and were skipped (the Promela model takes hidden steps, so only a stutter-invariant formula has the same verdict on both; see `rers-kripke.md`), 40 left SPIN's search incomplete, and none is violated. At 30 × 40, over all four arms, there were 1735 distinct repairs: 1185 hold, 337 use `X` and were skipped, 213 left SPIN's search incomplete, and none is violated. The two back ends never disagree. The rows are in `bench/results/graded-crosscheck.csv` and `bench/results/graded-crosscheck-4x8.csv`.
+
+The search changed under this work: `6d5590a` gave each Spot exec of the validity filter, the counter and the gate's pruning 2 s, and moved the validity filter after scoring. After the rebase onto it, RERS and abp4 ran again on av2 (10 seeds, both arms, 14 concurrent runs, rows in `bench/results/graded-runs-rebased.csv` and `bench/results/graded-instances-rebased.csv`; 37 of 1060 runs gave no result). The conclusion holds. On the 52 RERS instances graded held 3.0 fewer proved candidates [−5.5, −2.25] (p < 0.0001, 47 lower), and the found-repair rate (p = 0.67), the repairs (p = 0.50) and the net subsumption share (p = 0.72, 18 higher and 16 lower) did not differ. Graded ran 0.15 s faster [−0.39, −0.03] (p = 0.021). Both arms made more back-end calls than before the rebase (binary's median rose from 86.75 to 102.75), so the absolute numbers in the tables above belong to `76966b1` and do not carry over.
 
 ## Left out of PEREDUR
 

@@ -30,7 +30,7 @@ use std::time::Duration;
 
 use super::process::Limits;
 use super::spot::{implications, syntactic_implications};
-use super::{Backend, KnownTruths, LassoCache, Semantics, Verdict, Words};
+use super::{Backend, KnownTruths, Lasso, LassoCache, Semantics, Verdict, Words};
 use crate::ltl::Formula;
 
 /// How many queries each tier answered, and what the slow tiers cost.
@@ -104,6 +104,12 @@ impl<B: Backend> Oracle<B> {
     /// this model must use.
     pub fn semantics(&self) -> Semantics {
         self.backend.semantics()
+    }
+
+    /// The runs of M stored by tier 1, oldest first. Each refuted some
+    /// earlier query, and the list only grows.
+    pub fn lassos(&self) -> &[Lasso] {
+        self.lassos.lassos()
     }
 
     /// Decides whether the model satisfies `formula`, cheapest tier first.
