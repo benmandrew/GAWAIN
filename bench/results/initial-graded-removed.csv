@@ -1,0 +1,654 @@
+instance,family,initial,formula,vacuous,seeds,semantic,top_semantic
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,p_wait0 -> F p_cs0,2,3,0.999354,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,G(p_wait0 -> F p_cs0) | !p_wait0,5,2,0.999674,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,p_cs0 W F(p_wait0 -> F G F p_cs0),4,1,0.999354,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,!p_wait0 | F p_cs0,2,1,0.999354,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,F p_cs0 W F !p_wait0,2,1,0.999354,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,F p_cs0 W G !p_wait0 | !p_cs0,6,1,0.999674,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,G(p_wait0 -> F p_cs0) | !p_cs0,5,1,0.999674,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,F(p_cs0 U G p_wait0 -> X G F p_cs0),4,1,0.999354,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,F p_cs0 W (F(p_cs0 <-> p_wait0) & !p_wait0),2,1,0.999354,0.999354
+beem-anderson.1-2,beem,!p_cs0 & !p_wait0,p_cs0 -> X F(p_cs0 | !p_wait0),6,1,0.999354,0.999354
+beem-anderson.1-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,5,0.999228,0.998476
+beem-anderson.1-4,beem,!p_someoneincs,!p_someoneincs | G F p_someoneincs,3,1,0.999228,0.998476
+beem-anderson.1-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,1,0.999228,0.998476
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,p_wait0 -> F p_cs0,2,2,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,G(p_wait0 -> F p_cs0) | !p_cs0,5,2,0.999674,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,F p_cs0 | !p_wait0,2,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,!p_wait0 W (F p_cs0 & p_wait0) | !p_cs0,6,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,p_cs0 W F(p_wait0 -> F p_cs0 & !p_cs0),4,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,G !p_cs0 & F p_wait0 -> !p_wait0,6,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,G(p_wait0 -> F p_cs0) | !p_wait0,5,1,0.999674,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,G((p_wait0 -> F p_cs0) | p_cs0) | !p_cs0,6,1,0.999674,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,!p_wait0 | G F(p_cs0 | !p_wait0),6,1,0.99949,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,F p_wait0 -> p_wait0 -> !G !p_cs0,6,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,p_wait0 -> F p_cs0 & G(p_wait0 -> F p_cs0),6,1,0.999674,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,F p_cs0 W F(p_wait0 <-> p_cs0),2,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,G(!p_cs0 -> F p_cs0) | F !p_wait0,5,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,!F p_cs0 -> !p_wait0,3,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,G p_wait0 -> G F X p_cs0,4,1,0.999354,0.999354
+beem-anderson.7-2,beem,!p_cs0 & !p_wait0,p_cs0 -> G F(p_cs0 | !p_wait0),6,1,0.99949,0.999354
+beem-lamport.2-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,5,0.999228,0.998476
+beem-lamport.2-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,3,0.999228,0.998476
+beem-lamport.3-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,5,0.999228,0.998476
+beem-lamport.3-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,3,0.999228,0.998476
+beem-lamport.6-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,3,0.999228,0.998476
+beem-lamport.6-4,beem,!p_someoneincs,p_someoneincs -> X F p_someoneincs,3,1,0.998476,0.998476
+beem-lamport.6-4,beem,!p_someoneincs,!p_someoneincs W X F p_someoneincs,0,1,0.998476,0.998476
+beem-lamport.6-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,1,0.999228,0.998476
+beem-mcs.2-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,5,0.999228,0.998476
+beem-mcs.2-4,beem,!p_someoneincs,!p_someoneincs | G F p_someoneincs,3,1,0.999228,0.998476
+beem-mcs.2-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,1,0.999228,0.998476
+beem-mcs.4-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,5,0.999228,0.998476
+beem-mcs.4-4,beem,!p_someoneincs,!p_someoneincs | G F p_someoneincs,3,1,0.999228,0.998476
+beem-mcs.4-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,1,0.999228,0.998476
+beem-mcs.6-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,5,0.999228,0.998476
+beem-mcs.6-4,beem,!p_someoneincs,!p_someoneincs | G F p_someoneincs,3,1,0.999228,0.998476
+beem-mcs.6-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,1,0.999228,0.998476
+beem-peterson.3-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,5,0.999228,0.998476
+beem-peterson.3-4,beem,!p_someoneincs,!p_someoneincs | G F p_someoneincs,3,1,0.999228,0.998476
+beem-peterson.3-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,1,0.999228,0.998476
+beem-peterson.6-4,beem,!p_someoneincs,G F p_someoneincs | !p_someoneincs,3,4,0.999228,0.998476
+beem-peterson.6-4,beem,!p_someoneincs,p_someoneincs -> G F p_someoneincs,3,1,0.999228,0.998476
+beem-rether.4-5,beem,!p_nact0,G F p_nact0 | !p_nact0,3,4,0.999228,0.998476
+beem-rether.4-5,beem,!p_nact0,p_nact0 -> G F p_nact0,3,1,0.999228,0.998476
+beem-rether.6-5,beem,!p_nact0,G F p_nact0 | !p_nact0,3,4,0.999228,0.998476
+beem-rether.6-5,beem,!p_nact0,p_nact0 -> G F p_nact0,3,1,0.999228,0.998476
+beem-synapse.1-3,beem,!p_read10 & !p_write10 & !p_write11,G(p_write11 -> G !p_write10 | !p_read10 U p_write10) | !p_read10,10,1,0.971455,0.964073
+beem-synapse.1-3,beem,!p_read10 & !p_write10 & !p_write11,G((p_write11 -> G !p_write10 | !p_read10 U p_write10) | p_write10) | !p_write11,11,1,0.971478,0.964073
+beem-synapse.1-3,beem,!p_read10 & !p_write10 & !p_write11,G(p_read10 -> G !p_write10 | !p_read10 U p_write10) W F(!p_write10 & !p_write11),9,1,0.964107,0.964073
+beem-synapse.1-3,beem,!p_read10 & !p_write10 & !p_write11,G(p_write11 -> G !p_write10 | (!p_read10 U p_write10 | p_read10)) | !p_write11,11,1,0.967592,0.964073
+abp4-p2false,lmcs,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1)))) | !s_get | !s_abp & !r_ack0,16,1,0.963021,0.959775
+abp4-p2false,lmcs,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1)))) | !s_abp,15,1,0.964558,0.959775
+abp4-p2false,lmcs,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1))) | s_abp) | !r_ack1,16,1,0.964234,0.959775
+abp4-p2false,lmcs,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G((r_ack0 -> X G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1))))) | r_ack1) | !r_ack1,19,1,0.964439,0.959775
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F((X a0 U (a1 & G a2)) U (!a0 & (a1 | a0))) | !a0 & !a2,12,1,0.999994,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F((X a0 U (a1 & G a2)) U (!a0 & a1)) | (G a2 | !a0),11,1,0.999988,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F(F G(a1 & !a0) U (!a0 & (a1 | !a2))),6,1,0.999965,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F(G !a2 U (!a0 & a1)) | !(!a0 -> a2),9,1,0.999994,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F((a1 & G a2) U (!a0 & (a1 | !a2)) & !a0),4,1,0.999965,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F(((X a0 U (a1 & G a2)) U (!a2 & a1)) U !a0),10,1,0.999964,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F((X a0 U ((a2 <-> !a1) & G a2)) U (!a0 & a1)) | !a2,12,1,0.999982,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F(a1 U (!a0 & a1)) | (a2 | !a0),7,1,0.999976,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F(F((a0 <-> a1) & G a2) U (!a0 & (a2 -> a1))),6,1,0.999965,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F((a1 & G a2) U a1) | !a0,6,1,0.999964,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F((a1 & G a2) U (!a0 & (a1 | !a2))),4,1,0.999965,0.999964
+mcc-AirplaneLD-PT-0010-LTLFireability-04,mcc,!a0 & !a1 & !a2,F((X a0 U (a1 & G a2 | a2)) U (!a0 & (a1 | !a2))),8,1,0.999965,0.999964
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!(X !a1 U G a2 & a1),6,2,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!((X(G a0 & a0) | X !a1) U G a2) | !a0,12,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!((X G a0 | X !a1) U G a2 & a0),10,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!(!F a0 | X !a1 U G a2) | !a1,11,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!((X G a0 & !a0 | X !a1 & !a1) U G a2) | !a2,14,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!(!F a0 & a2 | (G a2 | G a2 U X !a1) U G a2 & a0),11,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!((!F a1 | (X(G(!a2 <-> a0) & !a1) | G a0 U X !a1) U G a2) & a1),17,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!(X !a1 U G a2 & a0),6,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!((!F a0 | X !a1 U G a2) & a2),10,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!((!F a0 | X G a0 U G a2) & a2),9,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!(!F a0 | (X(G a0 | !a1) | X(!a1 & !a2)) U G a2) | !a1,17,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!(!F a0 | (X G a0 | X !a1) U G a2) | !a0,14,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!(!F a0 & a1 | (X G a0 | X !a1) U G a2 & (!a2 & a1)),13,1,1.0,1.0
+mcc-AutoFlight-PT-02a-LTLFireability-02,mcc,!a0 & !a1 & !a2,!((X G a0 | X !a1) U G a2) | !a1,11,1,1.0,1.0
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U G a1) | !a2 | G(a0 U a2)) | !a2,16,1,0.969574,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!(G F G(!a0 | a1) | !a0) | G(a0 U a2)),7,1,0.968448,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U G a1) | G(a0 U a2)) | !a0,14,1,0.969574,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,G(X F !a0 U G(a2 -> a1)) | !a0 & !a1,12,1,0.97398,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!G(a0 U a2),0,1,0.962216,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U G a1) & a2),9,1,0.969572,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!((!G(X F !a0 U G a1) | G(a0 U a2)) & a2),13,1,0.969574,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!(G(X F !a0 U G a1) & a1) & a1 | G(a0 U a2)),10,1,0.969607,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U (G a1 & a1)) | G(a0 U a2)) | !a0 & !a2,15,1,0.976689,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U (G a1 & a1)) | G(a0 U (a2 & a1))) | !a2,16,1,0.969572,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!(G F G a1 | !a1) | G(a0 U a2)),4,1,0.969486,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U G a1) & a1 | G(a0 U a2)),9,1,0.969607,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!((!G F G a1 | G(a0 U a2)) & a2),10,1,0.969453,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!((!G(X F !(a0 & a1) U G a1) | G a2) & a0),13,1,0.969572,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U G a1) | G(a0 U a2)) | !a1,14,1,0.969573,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U G a1) | G(a0 U a2)) | !(a0 | a2),14,1,0.976689,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!(G(X F !a0 U G a1) | !a1) | G(!a1 & a0)),9,1,0.969572,0.962181
+mcc-CO4-PT-05-LTLFireability-04,mcc,!a0 & !a1 & !a2,!(!G(X F !a0 U G a1) | !a2 & !a0) | !a0,14,1,0.969572,0.962181
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,F(X X X X a0 U !(a1 & F a0)),6,2,0.904161,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,G(X X X X a0 U !(a1 & F a0)) | !a1,11,1,0.915425,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,!a0 | G X X(F !a1 | !a0),9,1,0.904478,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,F(F X X X a0 U !(a1 & F a0)),6,1,0.904161,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,F(X X F X a0 U !(a1 & F a0)),6,1,0.904161,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,a0 -> G !G X(a1 & a0),7,1,0.904296,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,!(a0 & G(!a0 U G a1)),6,1,0.904161,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,!(a0 & G F G((a1 | !a0) & a0)),8,1,0.904296,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,F(F(X X X a0 & !a1) U !(a1 & F a0)),9,1,0.904161,0.904161
+mcc-CircadianClock-PT-000010-LTLFireability-02,mcc,!a0 & !a1,a1 -> G(a0 R F X(a0 -> F(X G X a0 & !a1) U !(a1 & F a0))),17,1,0.904296,0.904161
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,X !F G(G(a0 & a1 & F a1) & (a2 | G a0)) | a0,14,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F G(a0 & (a0 <-> a1) & X X(a2 | a1)) | !a2,13,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F G(!(a0 -> !a1) & X G(a0 & X X(a2 | a1))) | a1,17,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!(X F G(!(a0 -> !a1) & X G(a1 & X X(a2 | a1))) & !a0) | a0,19,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F G(a0 & a1 & X X(a2 | a1)) | !a2,12,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F(G(a0 & a1 & X X(a2 | a1)) & a0) | a0,13,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!(X F G(a0 & a1 & X X(a2 | a1)) & (a1 -> !a0 | a2)),11,1,0.999976,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F G(a0 & a1) | (!a2 <-> a1),7,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F G(a0 & a1) | a1,7,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F X G(a0 & a1 & X X(a2 | a1)) | a1,13,1,0.999905,0.999811
+mcc-CloudDeployment-PT-4a-LTLCardinality-15,mcc,a0 & a1 & !a2,!X F G(a0 & a1) | !a2,7,1,0.999905,0.999811
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,F a3 | a2,2,2,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(a0 | X G a1) & !a0) U (F a3 | !a0),10,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,X(!a2 | X G a1) U F((a1 <-> (a1 -> !a0)) & a2 | a3),8,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(a0 | X G a1) & (!a0 <-> a2)) U F(!(a0 | !a1) | a3),9,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,X(!(a3 <-> a0) | X G a1) U F(!a2 | a0 -> a3),8,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(!F(!a2 | a0) & a3) U (F a3 | a1),9,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,((X a1 | G X(a0 U F G a3)) & a0 & !a3) U (a2 & a1 | F a3),14,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,((X a1 | ((a3 | !a1) & a0) R a0) & a0 & !a3 & a2) U (a2 & a1 | F a3),15,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(!a1 | a0 | X G a3) & !(F !a0 U (!a0 <-> !a1))) U (F a3 | a1),16,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(!(a1 | !a0) | a0 | X G a3) & !F(!a0 <-> !a1)) W (F a3 | a1),16,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(a0 | X G a1) & !(F a2 U a0)) U (F a3 | !a0),13,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(a0 | X G a1) & !((F a2 | a3) U a0)) U F a3 | a1,15,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,!(F a2 U a0) U F(!(a1 <-> (a1 -> a0)) & a1 | a3),6,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,F(a2 & a1 | a3),1,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(a0 | X G a1) & !(F a2 U a0)) U F a3 | a1,14,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(a0 | X G a1) & !(F a2 U a0) | !a3) U (F a3 | a1),15,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(G(a0 | X G a1 | !a2) & !(F a2 U a0)) U F a3 | a1,16,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,F a3 | !a0 & a2,2,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,F(((a0 <-> a2) <-> !a0) U F(!a3 -> a1)),3,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,G(G !a0 & !a2 | F X a3) U (G !X a3 & !a3 -> a2),15,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X(a0 | X G a1) & !(F a2 U a0 | !a1)) U (F a3 | a1),15,1,1.0,1.0
+mcc-Diffusion2D-PT-D05N010-LTLCardinality-01,mcc,!a0 & a1 & a2 & !a3,(X X G !a1 & !(F a0 U (a0 & !a1))) U (F a3 | a2),13,1,1.0,1.0
+mcc-FireWire-PT-01-LTLCardinality-07,mcc,!a0 & !a1 & a2 & !a3,X !(F a0 U X(X(a1 & a2) U X X a3)) | !a1,14,1,0.902132,0.896227
+mcc-FireWire-PT-01-LTLCardinality-07,mcc,!a0 & !a1 & a2 & !a3,X !(F a0 U X(X(a1 & a2) U X X a3)) | !a3,14,1,0.902132,0.896227
+mcc-FireWire-PT-01-LTLCardinality-07,mcc,!a0 & !a1 & a2 & !a3,X !X(X(a1 & a2) U X X a3 & F(a0 | !a2)) | (!a3 | a0),16,1,0.897534,0.896227
+mcc-MedleyA-PT-03-LTLFireability-08,mcc,!a0 & !a1,X X !X G !X a1 | !a0,8,1,1.0,1.0
+mcc-MedleyA-PT-03-LTLFireability-08,mcc,!a0 & !a1,(F a0 | a0) & X X !X G !X a1 | !a0,12,1,1.0,1.0
+mcc-MedleyA-PT-03-LTLFireability-08,mcc,!a0 & !a1,a0 -> F X a1,3,1,1.0,1.0
+mcc-ParamProductionCell-PT-1-LTLCardinality-13,mcc,a0 & a1 & a2 & a3,F X !((a0 & a1) U X a0 & (G a2 | G a3)) | a3,14,1,1.0,1.0
+mcc-ParamProductionCell-PT-1-LTLCardinality-13,mcc,a0 & a1 & a2 & a3,F X !((a0 & a1) U X a0 & (G a2 | X(a3 & a0))) | a0,15,1,1.0,1.0
+mcc-ParamProductionCell-PT-1-LTLCardinality-13,mcc,a0 & a1 & a2 & a3,F !((a0 & a1) U X a0 & (G a2 | X a3)) | a2,13,1,1.0,1.0
+mcc-ParamProductionCell-PT-1-LTLCardinality-13,mcc,a0 & a1 & a2 & a3,F X !((a0 & a2 & a1) U X a0 & (G a2 | X a3)) | a3,15,1,1.0,1.0
+mcc-ParamProductionCell-PT-1-LTLCardinality-13,mcc,a0 & a1 & a2 & a3,F X !((a0 & a1) U X a0 & G a2) | a1,11,1,1.0,1.0
+mcc-ParamProductionCell-PT-1-LTLCardinality-13,mcc,a0 & a1 & a2 & a3,F X !((a0 & a1) U X a0 & a2 & F X !(a1 U X a3 & a3)) | G a2,18,1,1.0,1.0
+mcc-ParamProductionCell-PT-1-LTLCardinality-13,mcc,a0 & a1 & a2 & a3,F !((a0 & a1) U X a0 & !(a2 & a1) & (G a2 | X a3)),10,1,1.0,1.0
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,X G !F a1 | !a1,5,2,0.737105,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,a0 -> X G !(a0 U F a1),7,1,0.737105,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,a0 | a1 -> F G !a1,4,1,0.745783,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,X G(!F a1 | !a1) | !a0 & !a1,7,1,0.748008,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,X G(!(a0 U F a1) | !a0) | !a0,9,1,0.737105,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,a1 -> G(X(G !a0 R !a1) W F !a1),10,1,0.726897,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,X G !F a1 | !(a1 | a0),5,1,0.748008,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,X G !F a1 | (a0 -> !a0),7,1,0.737105,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,!(X F a1 & a0),3,1,0.737105,0.726516
+mcc-Peterson-PT-2-LTLFireability-09,mcc,!a0 & !a1,!(a1 & F X(a1 W F a1)),5,1,0.737105,0.726516
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,F(F G X a1 U X G F a2) W (a0 & !a1),10,1,0.999853,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,(F(G a0 U a1) | a1) U G F a2 | !a1,10,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,a0 | X(a0 -> G F G F((F(G a0 U a1) | a1) U G F a2)),16,1,0.999566,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G(F G F(F(G(!a0 -> a0) U a2) U G F a2) | !a2) | !(!a1 -> a2),16,1,0.999853,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,(a2 -> !a1) | !a0 | (F(a1 | a2) | a0) U G F a2,11,1,0.999495,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,F !(a1 & !a2) | F(G a0 & a2),6,1,0.999424,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G(a1 U X(a2 U X G !a2)) -> a0,9,1,0.999425,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,((a2 -> a1) <-> a0) | F !F !F !((a2 -> !a1) & a1),11,1,0.999518,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F(G F(F(G !a0 U (!a2 -> a1)) U G F a1) | a2) | !a2,17,1,0.999518,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F(G F(F(G !a0 U a1) U G F(a2 <-> !a0)) | a0) | (a2 <-> a1),15,1,0.999518,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,!a2 | (a2 -> !a2) | F !F !F !((a2 -> !a1) & a1),13,1,0.999518,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F G F(F(G a0 U a1) U G F a2) | a0,13,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,F !(a1 & (!G a0 | !a0) | a2) | F G F(F(G a0 U a1) U G F a2),15,1,0.999425,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F G F G F a2 | !(a2 | !a0),7,1,0.999853,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F G F(F(a1 <-> a0) U G F a2) | (a2 <-> !(a0 -> !a1)),10,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F G F G F(a2 | !(a1 & (a0 -> !a2))) & G F G F a2 | !a1 & a0,19,1,0.999853,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F G F a2 | a0,5,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G(a1 & a2) | (a2 -> G F a2),6,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,F G F a2 | (a1 -> G F a2 & a2),5,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,!a0 | a1 -> F X G F a2,5,1,0.999853,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,a1 | a2 -> F G F a2,4,1,0.999853,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,!a2 | a0 | a1 | F a1 U F(F(G a0 U a1) U G F a2),13,1,0.999495,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,a0 | G(F G F(F(G a0 U a1) U (G F a2 & a2 | a0)) | !a1),17,1,0.999518,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,a0 | F a2,2,1,0.999424,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,F !((a0 -> a1) & G !a2),3,1,0.999424,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,F((a1 -> F(G F(G(G F a0 U a1) U G(F a2 | a2)) & a2)) | !a1),17,1,0.999424,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,G F G(a0 U G F a2) | !a2,8,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,(!a1 <-> a2) -> G !G !(F(a2 & a0) | a2),9,1,0.999708,0.999424
+mcc-Peterson-PT-4-LTLCardinality-01,mcc,a0 & !a1 & !a2,a1 -> G !G !X F(!a2 -> G(a1 & a2)),12,1,0.999708,0.999424
+mcc-Railroad-PT-010-LTLCardinality-01,mcc,!a0 & !a1 & a2,G((a0 U (a1 | G F X G a1)) U X X a2) | !a1,13,1,0.976839,0.969893
+mcc-Railroad-PT-010-LTLCardinality-01,mcc,!a0 & !a1 & a2,F(X G a1 | a2) | a0,4,1,0.969893,0.969893
+mcc-Railroad-PT-010-LTLCardinality-01,mcc,!a0 & !a1 & a2,G((a0 U (a1 | G F X G a1)) U X X a2) | a2,13,1,0.976915,0.969893
+mcc-Railroad-PT-010-LTLCardinality-01,mcc,!a0 & !a1 & a2,G(G F X G a1 U F X(!a1 | a2)) | !a0,14,1,0.969986,0.969893
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,a0 | G(!a0 W X X !a1),8,1,0.797021,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,!a0 -> X !X X G F(a0 & a1),9,1,0.794883,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,X F !F a0 | (a1 | F G(a1 -> !(a0 -> X F a1))),13,1,0.795827,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,a0 & a1 | G F X X(!a1 | a1 & !a0),10,1,0.786383,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,G(X !a0 | !F X X a1) | a0,10,1,0.797102,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,G(X !a0 | !F X X a1) | a1,10,1,0.797102,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,G(X !a0 | !F X X(a1 & !a0)) | a0 & a1,11,1,0.807957,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,G(X(a0 -> !a0) | !F X X a1) | a0,11,1,0.797102,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,!a1 -> F G !(a1 & a0),6,1,0.794883,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,F G(a1 -> !a0) | a1,6,1,0.794883,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,F G(a0 -> !(a1 & a0)) | (!a0 -> a0),8,1,0.794883,0.786188
+mcc-ResAllocation-PT-R003C005-LTLCardinality-13,mcc,a0 & a1,F(G(!a1 | !a0) & !a1) | (a1 | a0),8,1,0.789945,0.786188
+mcc-ResAllocation-PT-R010C002-LTLCardinality-01,mcc,!a0 & a1 & !a2 & !a3,F(!a0 | a1 & !(a2 & a3)),8,3,0.931501,0.931501
+mcc-ResAllocation-PT-R010C002-LTLCardinality-01,mcc,!a0 & a1 & !a2 & !a3,G(!a0 | a1 & !(a2 & a3)) | !a2,10,1,0.937436,0.931501
+mcc-ResAllocation-PT-R010C002-LTLCardinality-01,mcc,!a0 & a1 & !a2 & !a3,G(!a0 | a1 & !(a2 & a3)) | !a3,10,1,0.937436,0.931501
+mcc-ResAllocation-PT-R010C002-LTLCardinality-01,mcc,!a0 & a1 & !a2 & !a3,G(!a0 | a1 & !(a2 & a3)) | (a0 <-> !(a3 -> a2)),10,1,0.937437,0.931501
+mcc-ResAllocation-PT-R010C002-LTLCardinality-01,mcc,!a0 & a1 & !a2 & !a3,G(!a0 | a1 & !(a2 & a3)) | (a0 <-> !(a3 -> !a2)),10,1,0.937436,0.931501
+mcc-ResAllocation-PT-R010C002-LTLCardinality-01,mcc,!a0 & a1 & !a2 & !a3,G(!a0 | a1 & !(a2 & a3)) | !(a3 | a0),10,1,0.943444,0.931501
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & X a2) U (a0 & F a1),9,2,0.828994,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & X a2) U (a0 & (G a1 | a1)),10,2,0.835092,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & X(a2 & a1)) U a0,10,1,0.829351,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U X(a2 | a0) U (a0 & a1),8,1,0.829475,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 W ((a1 & X X !X a0 U (a1 & X a2) U (a0 & G a1)) U a0),14,1,0.829721,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & X a2 U X X !X a0 U (a1 & X a2) U (a0 & G a1)) U a0,15,1,0.829721,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U X a2 U (a0 & a1 & F a1),7,1,0.832887,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & F a1),5,1,0.829548,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & (X a2 | a1)) U a0,10,1,0.82803,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X F !X a0 U (a1 & X a2) U a0,9,1,0.825117,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U ((a1 & X a2) W (a0 & G a1)) | a0,13,1,0.832722,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & X a2) U (a0 & F a1 & a1),9,1,0.835092,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U ((a1 & X a2) U (a0 & G a1) | !a2),12,1,0.829548,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U X a2 U (a0 & a1),7,1,0.832887,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,F X !X a0 U (a1 & X a0) U (a1 & G a1) | a0,11,1,0.832329,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U a1 U (a0 & G a1) | a0,10,1,0.832721,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,X X !X a0 U (a1 & X a2) U (a0 & G a1 | a0),11,1,0.828994,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,(X X !X a0 U (a0 & G a1)) W (X X !X a0 U (a1 & X a2) U (a0 & G a1)) | !a2,15,1,0.832722,0.825116
+mcc-ShieldPPPt-PT-001B-LTLCardinality-04,mcc,a0 & a1 & !a2,(X X !X a0 | a1) U (a1 & a0),7,1,0.833165,0.825116
+mcc-SieveSingleMsgMbox-PT-d2m06-LTLFireability-00,mcc,!a0 & !a1 & !a2,(!a1 U G !a0) U ((a1 & a0) U F a0 | (a2 <-> a1)),9,1,1.0,1.0
+mcc-SieveSingleMsgMbox-PT-d2m06-LTLFireability-00,mcc,!a0 & !a1 & !a2,G a0 | (a1 & a0) U F a0 | !a2 & !a1,7,1,1.0,1.0
+mcc-SieveSingleMsgMbox-PT-d2m06-LTLFireability-00,mcc,!a0 & !a1 & !a2,G a0 | (!a1 U G a2) U ((a1 & a0) U F a0 | !a2),10,1,1.0,1.0
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,(!a1 | a0) & !(G a2 U (a3 | a1)),1,1,0.993889,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,(a0 | a3 | F !a1 W G !a1) U (!a2 | a0) & !(a3 | a1),9,1,0.993999,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,(a0 | a3 | !a1 | (G a0 U (a1 <-> a2)) W G a1) U (!a2 | a0) & !(a3 | a1),12,1,0.994059,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,F(a0 | !a1) & !(G a2 U (a3 | a1)),1,1,0.993889,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,(a2 | a1 | G(a3 -> !a1)) U ((!a2 | a0) & !a1) & !(G a3 U (a3 | !a3 & a1)),10,1,0.993889,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,(a0 | (a0 | G !a1) U a0) U (a0 | !a2) & !(G a2 U (a3 | a1)) & !a3,7,1,0.996416,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,((a0 | G !a1) U (a0 & !a3) | !a3) & !(G a2 U (a3 | a1)),9,1,0.993889,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,!(G a2 U (a3 | a1)),0,1,0.993889,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,(a1 | a0 | G !a1) U !a3 & !(G a2 U (a3 | a1)),6,1,0.993889,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,!a1 U (a0 | !(!a2 <-> a0)) & !(G a2 U (a3 | a1)),3,1,0.994208,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,((a0 | G !a1) U a0 & !a3 | !a1) & !(G a2 U (a3 | a1)),9,1,0.993889,0.981889
+mcc-StigmergyElection-PT-02a-LTLFireability-12,mcc,!a0 & !a1 & !a2 & !a3,(a0 | !a1) & !(G a2 U (a3 | a1)),1,1,0.993889,0.981889
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,a0 U !(F !(a0 U !G a1) & a1),7,1,0.999438,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,F !(!a0 U !G a1) & a0 -> G F !(!a0 <-> a1),12,1,0.999301,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,F !(a0 U !G a0) & a1 -> G F !a1,10,1,0.999301,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,F !(F G a1 | a0 & a1) | !a0,8,1,0.999577,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,F !(F G((!a1 -> a1 | a0) & a1) | a1) | !a1,11,1,0.999577,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,!(a0 U G a0 U G a1),0,1,0.999165,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,a0 -> G F !a1,4,1,0.999577,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,a1 -> G F !a1,4,1,0.999577,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,G F(!F G a1 & !a1) | !(a0 & !a1) & !a1,8,1,0.999787,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,!(a0 | a1) | !F !F !a1,6,1,0.999787,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,G F !(X(G !F a0 & a0) W G a1) | !(a0 | a1),12,1,0.999787,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,G F !(X(G !F a0 & !a1 | !a1) U G a1) | !a1,14,1,0.999577,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,a0 -> !(a0 U F G a1),6,1,0.999577,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,(!a1 -> a0) -> X F G X G F X !a1,9,1,0.999787,0.999164
+mcc-TCPcondis-PT-05-LTLFireability-14,mcc,!a0 & !a1,!(a1 | a0) | G !(a1 W G a1),5,1,0.999787,0.999164
+rers2016-101-p13,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9,p_c0_t8 | !p_c0_t9 | F p_c0_t3,3,5,1.0,1.0
+rers2016-101-p13,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9,(p_c0_t8 | !p_c0_t9) R (p_c0_t8 | (F p_c0_t3 | !p_c0_t9)),3,1,1.0,1.0
+rers2016-101-p13,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9,F p_c0_t3 W (p_c0_t8 | !p_c0_t9),3,1,1.0,1.0
+rers2016-101-p13,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9,F p_c0_t3 W (p_c0_t8 R (p_c0_t8 | !p_c0_t9)) | !p_c0_t3,8,1,1.0,1.0
+rers2016-101-p13,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9,p_c0_t8 R (p_c0_t8 | !p_c0_t9 | F p_c0_t3) | !p_c0_t9,8,1,1.0,1.0
+rers2016-101-p13,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9,(!p_c0_t3 | p_c0_t8) R (p_c0_t8 | !p_c0_t9 | F p_c0_t3),3,1,1.0,1.0
+rers2016-101-p13,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9,(p_c0_t8 | !p_c0_t3) R (p_c0_t8 | !p_c0_t9 | F p_c0_t3),3,1,1.0,1.0
+rers2016-101-p17,rers,!p_c0_t1 & !p_c0_t5 & !p_c0_t6 & !p_c0_t7 & !p_c0_t8,(!p_c0_t1 | !p_c0_t6) U (p_c0_t5 | !p_c0_t7),8,1,0.883589,0.883043
+rers2016-101-p17,rers,!p_c0_t1 & !p_c0_t5 & !p_c0_t6 & !p_c0_t7 & !p_c0_t8,G((!(p_c0_t7 | p_c0_t1) | F((!p_c0_t1 | p_c0_t8) U (p_c0_t5 | !p_c0_t7))) & (!p_c0_t1 | G !p_c0_t6)) | !p_c0_t5,19,1,0.887796,0.883043
+rers2016-101-p17,rers,!p_c0_t1 & !p_c0_t5 & !p_c0_t6 & !p_c0_t7 & !p_c0_t8,F((!p_c0_t7 | !(p_c0_t8 | p_c0_t7) U p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)),10,1,0.883044,0.883043
+rers2016-101-p17,rers,!p_c0_t1 & !p_c0_t5 & !p_c0_t6 & !p_c0_t7 & !p_c0_t8,F((!p_c0_t7 | p_c0_t5 | !p_c0_t8 U p_c0_t5) & (!p_c0_t1 | G !p_c0_t6)),10,1,0.883043,0.883043
+rers2016-101-p17,rers,!p_c0_t1 & !p_c0_t5 & !p_c0_t6 & !p_c0_t7 & !p_c0_t8,(p_c0_t8 & p_c0_t5) U (!p_c0_t7 -> G !p_c0_t6) | (p_c0_t5 | !p_c0_t1),10,1,0.883955,0.883043
+rers2016-101-p2,rers,!p_c0_t1 & !p_c0_t2 & !p_c0_t7,(p_c0_t2 | !p_c0_t7) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),4,2,0.99922,0.995432
+rers2016-101-p2,rers,!p_c0_t1 & !p_c0_t2 & !p_c0_t7,!p_c0_t1 | p_c0_t2 | G !p_c0_t7,4,2,0.998669,0.995432
+rers2016-101-p2,rers,!p_c0_t1 & !p_c0_t2 & !p_c0_t7,(p_c0_t7 -> p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),4,2,0.99922,0.995432
+rers2016-101-p2,rers,!p_c0_t1 & !p_c0_t2 & !p_c0_t7,(p_c0_t2 | !p_c0_t7) R (!(!p_c0_t2 -> p_c0_t1) | p_c0_t2 | G !p_c0_t7),4,1,0.99922,0.995432
+rers2016-101-p2,rers,!p_c0_t1 & !p_c0_t2 & !p_c0_t7,(!(p_c0_t2 | !p_c0_t7) -> p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),4,1,0.99922,0.995432
+rers2016-101-p2,rers,!p_c0_t1 & !p_c0_t2 & !p_c0_t7,((p_c0_t1 <-> p_c0_t7) | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),4,1,0.99922,0.995432
+rers2016-101-p2,rers,!p_c0_t1 & !p_c0_t2 & !p_c0_t7,(!p_c0_t7 | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | G !p_c0_t7),4,1,0.99922,0.995432
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7),7,3,0.999928,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,(p_c0_t4 | p_c0_t8 | !p_c0_t5) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | p_c0_t8 R (p_c0_t4 | p_c0_t8 | G p_c1_t7),11,1,0.999971,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,(p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | !p_c1_t7,14,1,0.999888,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | (p_c0_t0__c1_t2 & !p_c1_t7 | !p_c1_t7)),10,1,0.999928,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,(p_c0_t4 | (p_c0_t8 | !p_c0_t0__c1_t2)) R (!(p_c0_t0__c1_t2 | p_c0_t5) | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),7,1,0.999949,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,!p_c0_t0__c1_t2 | (p_c0_t4 | p_c0_t5) | p_c0_t8 | (p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | (p_c0_t4 | p_c0_t5) | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),15,1,0.99993,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t4 | (p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)),14,1,0.999953,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | (!(p_c0_t8 & p_c0_t5) -> p_c0_t5) R (p_c0_t5 | !p_c1_t7),10,1,0.999928,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,(p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | (p_c0_t5 & !p_c1_t7) R (p_c0_t5 | p_c0_t0__c1_t2) | p_c0_t8 | !p_c1_t7,19,1,0.999767,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,(p_c0_t4 | p_c0_t8) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 | p_c0_t5 R (p_c0_t5 | !p_c1_t7)) | p_c0_t5 R (p_c0_t5 | p_c0_t0__c1_t2) & p_c0_t4 | p_c0_t0__c1_t2 | p_c0_t8 | !p_c1_t7,20,1,0.999656,0.999634
+rers2016-102-p13,rers,!p_c0_t0__c1_t2 & !p_c0_t4 & !p_c0_t5 & !p_c0_t8 & !p_c1_t7,(p_c0_t4 | p_c0_t8 | !p_c1_t7) R (!p_c0_t0__c1_t2 | p_c0_t4 | p_c0_t8 & !p_c0_t5 | (!p_c0_t8 -> p_c0_t5) R (p_c0_t5 | !p_c1_t7)),12,1,0.999948,0.999634
+rers2016-102-p14,rers,!p_c0_t6 & !p_c1_t3 & !p_c1_t8,p_c0_t6 W !p_c1_t3 | G(!p_c1_t3 | (!p_c0_t6 | p_c1_t3) U p_c1_t8),9,1,0.965349,0.963078
+rers2016-102-p14,rers,!p_c0_t6 & !p_c1_t3 & !p_c1_t8,G(!p_c1_t3 | (!p_c0_t6 & !p_c1_t8) U p_c1_t8) | !p_c0_t6,10,1,0.970495,0.963078
+rers2016-102-p14,rers,!p_c0_t6 & !p_c1_t3 & !p_c1_t8,G(!p_c1_t3 | !p_c0_t6 U p_c1_t8) | !p_c0_t6 | p_c1_t3,8,1,0.966129,0.963078
+rers2016-102-p14,rers,!p_c0_t6 & !p_c1_t3 & !p_c1_t8,(p_c1_t3 -> F !p_c0_t6 & p_c1_t8 & !p_c1_t3) | !p_c0_t6 U p_c1_t8,9,1,0.965125,0.963078
+rers2016-102-p19,rers,!p_c0_t2,!p_c0_t2,0,3,0.312686,0.30177
+rers2016-102-p2,rers,!p_c0_t9 & !p_c1_t3 & !p_c1_t4,p_c1_t4 | !(p_c0_t9 | p_c1_t3),1,9,0.998983,0.993684
+rers2016-102-p2,rers,!p_c0_t9 & !p_c1_t3 & !p_c1_t4,p_c1_t4 W (p_c1_t4 | !(p_c0_t9 | p_c1_t3)),1,1,0.998983,0.993684
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G !p_c0_t7 | !p_c1_t7 & !p_c1_t0,3,1,0.841218,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & (p_c1_t7 | !p_c1_t0 | (p_c1_t7 -> !p_c1_t0))) | !p_c1_t7 & !p_c0_t7,10,1,0.841218,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))) | !p_c1_t7,12,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & G(!p_c1_t0 | p_c1_t7 | !p_c1_t6)) | !p_c1_t0,12,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & G F(!p_c1_t0 | p_c1_t7 | !p_c1_t6)) | !p_c1_t6,13,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,((!p_c0_t7 <-> !p_c1_t0) & !p_c1_t6) R (p_c1_t7 | !p_c0_t7),1,1,0.836639,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,(!p_c1_t7 & !p_c1_t6) R !p_c0_t7,0,1,0.843128,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))) | !p_c1_t6,12,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7))) W !(p_c0_t7 | p_c1_t0),12,1,0.841218,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,(p_c1_t0 <-> !p_c1_t6) -> X !p_c1_t0 | p_c1_t7 R (!p_c0_t7 | p_c1_t7),9,1,0.830264,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7))) W ((p_c1_t6 | !(p_c0_t7 & p_c1_t6)) R (p_c0_t7 <-> p_c1_t7)),11,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(p_c1_t6 & !p_c1_t7 | !p_c0_t7) | (p_c1_t0 <-> p_c1_t7),8,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(p_c1_t6 & (p_c1_t0 & !p_c1_t7) | !p_c0_t7) | (p_c1_t6 <-> p_c1_t7),10,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,!(p_c0_t7 & F(!p_c1_t0 U (!p_c1_t6 | p_c0_t7))),8,1,0.835338,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G F(!p_c0_t7 & (!p_c1_t6 | G(!p_c1_t0 | p_c1_t7))) | !p_c1_t7,14,1,0.830034,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G !p_c0_t7 & G(!p_c1_t6 | p_c1_t7 R (!p_c1_t0 | p_c1_t7)) | !p_c0_t7 & !p_c1_t0 & !p_c1_t6,13,1,0.84718,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(p_c1_t7 | !p_c0_t7) | !(p_c1_t7 <-> !p_c0_t7) & !p_c1_t0,5,1,0.841146,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,!p_c1_t6 | F(!p_c1_t7 -> p_c1_t7 R (!p_c1_t0 | p_c1_t7)),8,1,0.829541,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,!p_c1_t6 | X(p_c1_t7 -> G(!p_c0_t7 & (!p_c1_t6 | (!p_c1_t0 | p_c1_t7)))),13,1,0.831937,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,((p_c1_t7 <-> p_c1_t6) -> X !F(p_c0_t7 & p_c1_t7)) & !p_c0_t7,1,1,0.841182,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,(p_c1_t7 -> X !F p_c0_t7) & !p_c0_t7,4,1,0.841218,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c0_t7 & !p_c1_t6) U (p_c1_t7 R (!p_c1_t0 | p_c1_t7)) | !p_c1_t6,12,1,0.831058,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,F(!p_c0_t7 & (!p_c1_t6 | p_c1_t7 R ((!p_c1_t0 | p_c1_t7) & p_c1_t6))),7,1,0.829541,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G !p_c0_t7 W !(p_c1_t6 | p_c0_t7 | p_c1_t0),3,1,0.84718,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!p_c1_t6 | !p_c1_t7 R (!p_c1_t0 | p_c1_t7) | p_c1_t7) & !p_c0_t7,1,1,0.858455,0.829541
+rers2016-102-p4,rers,!p_c0_t7 & !p_c1_t0 & !p_c1_t6 & !p_c1_t7,G(!(p_c1_t6 <-> !p_c1_t0) | G(!p_c1_t0 | p_c1_t7) | !(p_c1_t7 & p_c0_t7)) & !p_c0_t7,9,1,0.85433,0.829541
+rers2016-102-p8,rers,!p_c0_t9 & !p_c1_t7,F p_c1_t7 | !p_c0_t9,2,2,0.999354,0.999354
+rers2016-102-p8,rers,!p_c0_t9 & !p_c1_t7,F p_c1_t7 W !p_c0_t9,2,1,0.999354,0.999354
+rers2016-102-p8,rers,!p_c0_t9 & !p_c1_t7,p_c1_t7 -> X(F p_c1_t7 | !p_c0_t9),6,1,0.999354,0.999354
+rers2016-102-p8,rers,!p_c0_t9 & !p_c1_t7,(p_c0_t9 & p_c1_t7) W F p_c1_t7 | !p_c0_t9,5,1,0.999354,0.999354
+rers2016-102-p8,rers,!p_c0_t9 & !p_c1_t7,!p_c0_t9 | F p_c1_t7,2,1,0.999354,0.999354
+rers2016-102-p8,rers,!p_c0_t9 & !p_c1_t7,F p_c1_t7 U (p_c1_t7 | !p_c0_t9),2,1,0.999354,0.999354
+rers2016-103-p11,rers,!p_c0_t5__c2_t3,F G !p_c0_t5__c2_t3 | !p_c0_t5__c2_t3,4,7,0.921822,0.902488
+rers2016-103-p11,rers,!p_c0_t5__c2_t3,p_c0_t5__c2_t3 -> G F G !p_c0_t5__c2_t3,5,1,0.921822,0.902488
+rers2016-103-p11,rers,!p_c0_t5__c2_t3,!p_c0_t5__c2_t3 | !G F p_c0_t5__c2_t3,4,1,0.921822,0.902488
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,G !p_c0_t9 | !p_c0_t8,3,2,0.891232,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,(p_c1_t2 | !p_c0_t8) W X !p_c0_t9,4,1,0.887229,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,p_c0_t6 -> G(p_c0_t9 | !p_c0_t8 | G !p_c0_t9),8,1,0.8912,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,p_c1_t2 -> G(p_c0_t9 | !p_c0_t8 | G !p_c0_t9),8,1,0.8912,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,F((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2)),5,1,0.885341,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,G((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2)) | !p_c1_t2,13,1,0.891232,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,F((!p_c0_t8 | G !p_c0_t9) & (!p_c0_t6 | F p_c1_t2 & p_c1_t2)),6,1,0.885342,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,G(!p_c0_t8 | G !p_c0_t9) | !p_c0_t6,7,1,0.891232,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,G(!p_c0_t8 | G !p_c0_t9) | G p_c0_t9 U G p_c0_t8 | !(p_c1_t2 | p_c0_t6),11,1,0.897201,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,!((p_c0_t8 | X(p_c1_t2 & (F !(G p_c1_t2 | p_c0_t6) & F !p_c0_t9) & p_c0_t8)) & G F(p_c0_t9 U F p_c0_t9)),16,1,0.893012,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,F G(!p_c0_t8 | G !p_c0_t9) | p_c0_t8 | !p_c0_t6,9,1,0.887544,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,F G(!p_c0_t8 | G !p_c0_t9) | !p_c0_t8,8,1,0.890548,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,F G(!p_c0_t8 | G !p_c0_t9) | !p_c0_t9,8,1,0.890548,0.885341
+rers2016-103-p14,rers,!p_c0_t6 & !p_c0_t8 & !p_c0_t9 & !p_c1_t2,F G(p_c0_t8 | G !p_c0_t9) | !p_c0_t8,7,1,0.890548,0.885341
+rers2016-103-p15,rers,!p_c0_t5__c2_t3 & !p_c1_t7 & !p_c2_t7 & !p_c2_t9,p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7),7,7,0.999888,0.999143
+rers2016-103-p15,rers,!p_c0_t5__c2_t3 & !p_c1_t7 & !p_c2_t7 & !p_c2_t9,p_c1_t7 | !p_c2_t9 | (p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),9,1,0.999888,0.999143
+rers2016-103-p15,rers,!p_c0_t5__c2_t3 & !p_c1_t7 & !p_c2_t7 & !p_c2_t9,(p_c0_t5__c2_t3 | p_c1_t7) R (p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)) | !p_c2_t9,12,1,0.999888,0.999143
+rers2016-103-p15,rers,!p_c0_t5__c2_t3 & !p_c1_t7 & !p_c2_t7 & !p_c2_t9,(p_c0_t5__c2_t3 | !p_c2_t7 | p_c1_t7) R ((p_c0_t5__c2_t3 | p_c1_t7 | !p_c2_t9) & !p_c1_t7 | p_c1_t7 R (p_c1_t7 | !p_c2_t7)),7,1,0.99994,0.999143
+rers2016-103-p16,rers,!p_c0_t1,F G !p_c0_t1 | !p_c0_t1,4,7,0.921822,0.902488
+rers2016-103-p16,rers,!p_c0_t1,p_c0_t1 -> G F G !p_c0_t1,5,1,0.921822,0.902488
+rers2016-103-p16,rers,!p_c0_t1,!p_c0_t1 | !G F p_c0_t1,4,1,0.921822,0.902488
+rers2016-103-p2,rers,!p_c0_t2,!p_c0_t2,0,3,0.312686,0.30177
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,!p_c0_t1 | p_c0_t2 | F p_c1_t6,3,5,1.0,1.0
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,(!p_c1_t6 | p_c0_t2) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),3,1,1.0,1.0
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,(p_c0_t2 | !p_c1_t6) R (!p_c0_t1 | p_c0_t2 | p_c1_t6 | F p_c1_t6),3,1,1.0,1.0
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,(p_c0_t2 | !p_c1_t6) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),3,1,1.0,1.0
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,(F(!p_c0_t1 | p_c1_t6) U F p_c1_t6) W (!p_c0_t1 | p_c0_t2),8,1,1.0,1.0
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,(!p_c1_t6 | p_c0_t2) R (p_c0_t2 | F(p_c0_t1 | p_c0_t2 -> p_c1_t6)),4,1,1.0,1.0
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,(p_c0_t2 | !p_c0_t1) R (!p_c0_t1 | p_c0_t2 | F p_c1_t6),3,1,1.0,1.0
+rers2016-103-p20,rers,!p_c0_t1 & !p_c0_t2 & !p_c1_t6,(p_c1_t6 -> p_c0_t2) R (!p_c0_t1 | p_c0_t2 | F(p_c1_t6 | p_c0_t2)),4,1,1.0,1.0
+rers2016-103-p4,rers,!p_c1_t3__c0_t0 & !p_c1_t7 & !p_c2_t2 & !p_c2_t8,p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8,6,8,0.999823,0.99868
+rers2016-103-p4,rers,!p_c1_t3__c0_t0 & !p_c1_t7 & !p_c2_t2 & !p_c2_t8,(p_c1_t3__c0_t0 | !p_c2_t8 | p_c1_t7) R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8),6,1,0.999905,0.99868
+rers2016-103-p4,rers,!p_c1_t3__c0_t0 & !p_c1_t7 & !p_c2_t2 & !p_c2_t8,(p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t8) R (p_c1_t7 | !p_c2_t2 | p_c1_t3__c0_t0 R (p_c1_t3__c0_t0 | p_c1_t7 | !p_c2_t2 | G !p_c2_t8)),11,1,0.999905,0.99868
+rers2016-103-p5,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9 & !p_c1_t3__c0_t0 & !p_c2_t1,p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9),8,7,0.999928,0.999634
+rers2016-103-p5,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9 & !p_c1_t3__c0_t0 & !p_c2_t1,(p_c0_t6 | (p_c1_t3__c0_t0 | !p_c0_t6)) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | p_c0_t9 R (!p_c0_t2 | p_c0_t9)),8,1,0.999928,0.999634
+rers2016-103-p5,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9 & !p_c1_t3__c0_t0 & !p_c2_t1,(p_c0_t6 | p_c1_t3__c0_t0) R (p_c0_t6 | p_c1_t3__c0_t0 | !p_c2_t1 | p_c0_t9 R !(p_c0_t2 & !p_c0_t9)) | !p_c0_t9,14,1,0.999679,0.999634
+rers2016-103-p6,rers,!p_c2_t1,F G !p_c2_t1 | !p_c2_t1,4,7,0.921822,0.902488
+rers2016-103-p6,rers,!p_c2_t1,p_c2_t1 -> G F G !p_c2_t1,5,1,0.921822,0.902488
+rers2016-103-p6,rers,!p_c2_t1,!p_c2_t1 | !G F p_c2_t1,4,1,0.921822,0.902488
+rers2016-103-p7,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9,!p_c0_t2 | G(!p_c0_t2 | !p_c0_t9 U p_c0_t6),8,1,0.970516,0.963078
+rers2016-103-p7,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9,G(!p_c0_t2 | p_c0_t6 | !p_c0_t9 U p_c0_t6) | G p_c0_t6 | !p_c0_t6,11,1,0.97036,0.963078
+rers2016-103-p7,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9,!p_c0_t9 U p_c0_t6 | !p_c0_t2,4,1,0.965125,0.963078
+rers2016-103-p7,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9,G p_c0_t2 U !p_c0_t9 U !(p_c0_t2 & !p_c0_t6),6,1,0.964808,0.963078
+rers2016-103-p7,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9,X(p_c0_t9 -> p_c0_t6) W (p_c0_t6 & p_c0_t2 | !p_c0_t2),6,1,0.963909,0.963078
+rers2016-103-p7,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9,F(!p_c0_t2 | !p_c0_t9 U p_c0_t6),4,1,0.963078,0.963078
+rers2016-103-p7,rers,!p_c0_t2 & !p_c0_t6 & !p_c0_t9,G(p_c0_t9 | !p_c0_t2 | !p_c0_t9 U p_c0_t6) | F !p_c0_t2,9,1,0.963078,0.963078
+rers2016-103-p8,rers,!p_c0_t5__c2_t3 & !p_c0_t6 & !p_c0_t8 & !p_c1_t3__c0_t0,p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3,6,2,0.999823,0.99868
+rers2016-103-p8,rers,!p_c0_t5__c2_t3 & !p_c0_t6 & !p_c0_t8 & !p_c1_t3__c0_t0,(p_c0_t6 | (p_c0_t5__c2_t3 -> p_c0_t5__c2_t3 -> p_c0_t8)) R ((p_c1_t3__c0_t0 | !p_c0_t8) & p_c0_t8 | (p_c0_t6 | !p_c1_t3__c0_t0) | G !p_c0_t5__c2_t3),10,1,0.999905,0.99868
+rers2016-103-p8,rers,!p_c0_t5__c2_t3 & !p_c0_t6 & !p_c0_t8 & !p_c1_t3__c0_t0,(p_c0_t6 | p_c0_t8 | (p_c0_t8 <-> p_c1_t3__c0_t0) & (p_c0_t6 | !p_c0_t5__c2_t3)) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),6,1,0.999905,0.99868
+rers2016-103-p8,rers,!p_c0_t5__c2_t3 & !p_c0_t6 & !p_c0_t8 & !p_c1_t3__c0_t0,(p_c0_t6 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3) | !(!p_c1_t3__c0_t0 -> p_c0_t5__c2_t3),11,1,0.999911,0.99868
+rers2016-103-p8,rers,!p_c0_t5__c2_t3 & !p_c0_t6 & !p_c0_t8 & !p_c1_t3__c0_t0,(p_c0_t6 | p_c0_t8) R (p_c0_t6 | p_c0_t8 | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3) | !p_c0_t5__c2_t3,11,1,0.999314,0.99868
+rers2016-103-p8,rers,!p_c0_t5__c2_t3 & !p_c0_t6 & !p_c0_t8 & !p_c1_t3__c0_t0,(p_c0_t6 | !p_c0_t5__c2_t3 | p_c0_t8) R (p_c0_t6 | p_c0_t8 & !(p_c0_t5__c2_t3 & p_c0_t6) | !p_c1_t3__c0_t0 | G !p_c0_t5__c2_t3),9,1,0.999905,0.99868
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & F !p_c1_t4) | p_c1_t4,5,1,0.977288,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,(p_c0_t6 -> !p_c1_t6) U (!p_c0_t3 | p_c1_t4 | p_c0_t6),5,1,0.977288,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F p_c1_t4)) | !p_c0_t6,14,1,0.981779,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F p_c1_t4)),6,1,0.977288,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F(p_c1_t4 | p_c0_t9))) | !p_c1_t6,15,1,0.981854,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,!p_c0_t3 | F p_c1_t4,2,1,0.977288,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | F(p_c1_t4 | !(p_c0_t9 | !p_c0_t3)))) | !p_c0_t9,17,1,0.981866,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,F((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & (!p_c0_t3 | p_c1_t4 | F p_c1_t4 & p_c1_t6)),7,1,0.977288,0.977288
+rers2016-103-p9,rers,!p_c0_t3 & !p_c0_t6 & !p_c0_t9 & !p_c1_t4 & !p_c1_t6,G((!p_c0_t9 | !p_c1_t6 U p_c0_t6) & F(p_c1_t4 | !p_c0_t3)) | !p_c1_t4,14,1,0.98182,0.977288
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,!(p_c2_t0__c1_t3 | p_c1_t9),0,3,0.185316,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,G !(p_c1_t9 & p_c2_t0__c1_t3) & !p_c2_t0__c1_t3,0,2,0.217411,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,!(p_c1_t9 W (p_c1_t9 | p_c2_t0__c1_t3)),0,1,0.185316,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,!((p_c1_t9 | p_c2_t0__c1_t3) R (p_c2_t0__c1_t3 | p_c1_t9)),3,1,0.185316,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,G(p_c2_t0__c1_t3 -> (!p_c1_t9 <-> p_c2_t0__c1_t3)) & !p_c1_t9,0,1,0.217411,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,!p_c1_t9 & !p_c2_t0__c1_t3,0,1,0.185316,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,G(p_c1_t9 -> !p_c2_t0__c1_t3) & !p_c1_t9,0,1,0.217411,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,!(p_c1_t9 | p_c2_t0__c1_t3 | G p_c1_t9),0,1,0.185316,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,G !(p_c1_t9 & p_c2_t0__c1_t3) & !(p_c2_t0__c1_t3 | p_c1_t9),0,1,0.22302,0.177697
+rers2016-104-p1,rers,!p_c1_t9 & !p_c2_t0__c1_t3,G !(p_c1_t9 & p_c2_t0__c1_t3) & !p_c1_t9,0,1,0.217411,0.177697
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | p_c0_t9)),5,2,0.961753,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,G(!p_c3_t4__c1_t8 | (!p_c0_t7__c1_t2 U p_c0_t9 | X p_c3_t9)) | !p_c0_t7__c1_t2,11,1,0.964792,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,G((!(p_c3_t8__c2_t6 | p_c0_t6__c1_t7) | p_c0_t9 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)) | F(!p_c3_t8__c2_t6 | p_c3_t9 U p_c0_t9 & !p_c3_t9),20,1,0.961753,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,F((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),8,1,0.961753,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,G((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | F p_c0_t9 | p_c0_t7__c1_t2)) | !p_c3_t4__c1_t8,16,1,0.965553,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,!p_c3_t8__c2_t6 | G(!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U (p_c0_t9 | p_c0_t7__c1_t2)),9,1,0.961784,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,G((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)) | !p_c3_t8__c2_t6,16,1,0.965778,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,F((!p_c3_t8__c2_t6 | p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),5,1,0.961753,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,G(!p_c3_t4__c1_t8 | (!p_c0_t7__c1_t2 | !p_c3_t9) U p_c0_t9) | !p_c3_t8__c2_t6 & !p_c3_t9,11,1,0.967232,0.961753
+rers2016-104-p12,rers,!p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t4__c1_t8 & !p_c3_t8__c2_t6 & !p_c3_t9,F((!p_c3_t8__c2_t6 | G((!p_c3_t8__c2_t6 | !p_c3_t9 U p_c0_t6__c1_t7) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9))) & (!p_c3_t4__c1_t8 | !p_c0_t7__c1_t2 U p_c0_t9)),16,1,0.961754,0.961753
+rers2016-104-p13,rers,!p_c3_t3 & !p_c3_t5,!p_c3_t3 | p_c3_t5,1,9,0.998061,0.993357
+rers2016-104-p13,rers,!p_c3_t3 & !p_c3_t5,p_c3_t5 U (!p_c3_t3 | p_c3_t5),1,1,0.998061,0.993357
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9),6,5,0.99948,0.998735
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,p_c3_t8__c2_t6 R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)) | !p_c0_t3,11,1,0.999666,0.998735
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,p_c3_t8__c2_t6 R (!p_c0_t3 | p_c3_t8__c2_t6 | (p_c0_t8 R (p_c0_t8 | (!p_c0_t9 | p_c3_t8__c2_t6))) U (p_c0_t8 R (p_c0_t8 | !p_c0_t9))) | !p_c0_t9,15,1,0.999502,0.998735
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,(p_c0_t8 -> p_c3_t8__c2_t6) R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),6,1,0.999744,0.998735
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,(p_c0_t8 R (p_c0_t8 | !p_c0_t9)) W (!(p_c0_t3 & !p_c3_t8__c2_t6) | p_c3_t8__c2_t6 | p_c0_t8 & !p_c0_t3 & !p_c3_t8__c2_t6),11,1,0.999601,0.998735
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,!(p_c0_t3 | p_c0_t8) | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9),6,1,0.99948,0.998735
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,!p_c0_t3 | (p_c0_t8 | p_c3_t8__c2_t6) | p_c0_t8 R (p_c0_t8 | !p_c0_t9),7,1,0.99948,0.998735
+rers2016-104-p14,rers,!p_c0_t3 & !p_c0_t8 & !p_c0_t9 & !p_c3_t8__c2_t6,(p_c3_t8__c2_t6 | !p_c0_t8) R (!p_c0_t3 | p_c3_t8__c2_t6 | p_c0_t8 R (p_c0_t8 | !p_c0_t9)),6,1,0.999744,0.998735
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,(!p_c0_t7__c1_t2 W p_c0_t0) W ((p_c0_t0 <-> !(p_c3_t11 & !p_c0_t9)) U (p_c0_t6__c1_t7 | !p_c0_t2)),6,1,0.962211,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,((!p_c0_t7__c1_t2 & !p_c0_t6__c1_t7 | p_c0_t9) U (!p_c0_t2 | p_c0_t0)) W ((p_c0_t7__c1_t2 <-> !(p_c3_t11 -> !p_c0_t0)) U (p_c0_t6__c1_t7 | !p_c0_t2)),15,1,0.962008,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,F((!p_c0_t2 | (!p_c0_t7__c1_t2 | p_c0_t6__c1_t7) U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 W p_c3_t11)),9,1,0.961753,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,F((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)),8,1,0.961753,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,p_c0_t9 -> X(!p_c0_t0 W (p_c0_t0 | p_c0_t7__c1_t2) W G((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | F p_c3_t11))),19,1,0.965205,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,G((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)) | !p_c0_t9,16,1,0.965778,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,G(!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) | !p_c0_t9 & !p_c0_t0,8,1,0.96912,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,G(p_c0_t9 | !p_c0_t2 | (p_c3_t11 | !p_c0_t6__c1_t7 | p_c0_t6__c1_t7) U p_c0_t0) W !p_c0_t7__c1_t2,13,1,0.961829,0.961753
+rers2016-104-p15,rers,!p_c0_t0 & !p_c0_t2 & !p_c0_t6__c1_t7 & !p_c0_t7__c1_t2 & !p_c0_t9 & !p_c3_t11,G((!p_c0_t2 | !p_c0_t7__c1_t2 U p_c0_t0) & (!p_c0_t9 | !p_c0_t6__c1_t7 U p_c3_t11)) | !p_c3_t11,16,1,0.965774,0.961753
+rers2016-104-p16,rers,!p_c2_t1 & !p_c2_t10 & !p_c2_t9 & !p_c3_t10__c0_t4 & !p_c3_t7,G(!p_c2_t9 | p_c2_t10) W G((!p_c2_t1 | p_c3_t10__c0_t4 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)) & (!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7))) | !p_c3_t7,20,1,0.96497,0.960229
+rers2016-104-p16,rers,!p_c2_t1 & !p_c2_t10 & !p_c2_t9 & !p_c3_t10__c0_t4 & !p_c3_t7,G((!p_c2_t1 | (p_c2_t10 | p_c3_t7) R (!p_c2_t9 | p_c2_t10)) & (!(p_c3_t10__c0_t4 & !p_c2_t10) | p_c2_t10 R (p_c2_t10 | !p_c3_t7))) | !p_c3_t10__c0_t4,20,1,0.965011,0.960229
+rers2016-104-p16,rers,!p_c2_t1 & !p_c2_t10 & !p_c2_t9 & !p_c3_t10__c0_t4 & !p_c3_t7,G((!p_c2_t1 | G((!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)) & (!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7)))) & (!p_c3_t10__c0_t4 | p_c2_t10 R (p_c2_t10 | !p_c3_t7))) | !p_c2_t1 & !p_c3_t7,20,1,0.96982,0.960229
+rers2016-104-p16,rers,!p_c2_t1 & !p_c2_t10 & !p_c2_t9 & !p_c3_t10__c0_t4 & !p_c3_t7,G(p_c2_t9 <-> !p_c2_t1) -> F(!p_c3_t10__c0_t4 & p_c2_t10 & p_c3_t7 | p_c2_t10) U G(!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)),17,1,0.960229,0.960229
+rers2016-104-p16,rers,!p_c2_t1 & !p_c2_t10 & !p_c2_t9 & !p_c3_t10__c0_t4 & !p_c3_t7,G(p_c2_t9 <-> !p_c2_t1) -> (F(!p_c3_t10__c0_t4 & p_c3_t7 | p_c2_t10) & !p_c3_t10__c0_t4) U G(!p_c2_t1 | p_c2_t10 R (!p_c2_t9 | p_c2_t10)),17,1,0.960229,0.960229
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),0,2,0.126113,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(p_c3_t4__c1_t8 -> !(p_c2_t1 | p_c2_t3)) & !p_c2_t1,0,1,0.159054,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(p_c3_t4__c1_t8 -> !(p_c2_t1 | p_c2_t3)) & !p_c2_t3,0,1,0.159054,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,(G(p_c3_t4__c1_t8 -> !(p_c2_t1 | p_c2_t3)) | p_c2_t3) & (p_c2_t1 | !p_c3_t4__c1_t8),2,1,0.128573,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!(X(p_c2_t1 & p_c2_t3) U (!p_c3_t4__c1_t8 -> p_c2_t3)),2,1,0.130515,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!(X(p_c2_t1 & p_c3_t4__c1_t8) U (!p_c3_t4__c1_t8 -> p_c2_t3)),2,1,0.130515,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!p_c2_t1 & !p_c2_t3 & !(p_c2_t3 <-> !p_c3_t4__c1_t8),0,1,0.131678,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | (p_c3_t4__c1_t8 <-> p_c2_t1),8,1,0.127785,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) | !(p_c3_t4__c1_t8 | p_c2_t3),8,1,0.129702,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 | !(p_c2_t1 | p_c2_t3)) & !p_c2_t1,0,1,0.159054,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 | !(p_c2_t1 | p_c2_t3)) & !p_c2_t3,0,1,0.159054,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 | !(p_c2_t1 | p_c2_t3)) & (p_c2_t1 | !p_c3_t4__c1_t8),1,1,0.157848,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!(p_c2_t1 | G(p_c2_t3 & !p_c3_t4__c1_t8 | p_c3_t4__c1_t8) | p_c3_t4__c1_t8),2,1,0.129708,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) U (G !p_c3_t4__c1_t8 | !p_c3_t4__c1_t8),9,1,0.127785,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3) -> p_c2_t1) | !(p_c2_t3 | p_c2_t1),9,1,0.129107,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G !(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)) U (G p_c3_t4__c1_t8 | (p_c2_t1 -> p_c3_t4__c1_t8)),10,1,0.12662,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 & (!(p_c2_t1 | p_c2_t3) & p_c2_t1)) | !p_c2_t3,9,1,0.127785,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,(p_c2_t1 <-> !p_c2_t3) -> G(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),8,1,0.127785,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!(!p_c3_t4__c1_t8 -> p_c2_t1),0,1,0.129702,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!(p_c2_t3 | p_c3_t4__c1_t8),0,1,0.129702,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!p_c2_t3 & !p_c2_t1 & (p_c2_t3 <-> p_c3_t4__c1_t8),0,1,0.131678,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G !(p_c2_t1 & p_c2_t3) & !p_c2_t3,0,1,0.144647,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!p_c2_t3 & (!(p_c3_t4__c1_t8 | p_c2_t1) | p_c2_t3),1,1,0.131678,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!p_c2_t1 & F(!p_c3_t4__c1_t8 & !(p_c2_t1 | p_c2_t3)),0,1,0.127952,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,F !(p_c2_t1 | p_c2_t3) & (p_c3_t4__c1_t8 <-> p_c2_t3),0,1,0.127793,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!p_c2_t3 & F((!p_c3_t4__c1_t8 | p_c2_t3) & !(p_c2_t1 | p_c2_t3)),1,1,0.127952,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!p_c3_t4__c1_t8 & F((!p_c3_t4__c1_t8 | p_c2_t3) & !(p_c2_t1 | p_c2_t3)),1,1,0.127952,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!(p_c2_t1 | p_c3_t4__c1_t8) & !p_c2_t3,0,1,0.131678,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G !(p_c2_t1 & p_c2_t3) & (!p_c3_t4__c1_t8 & !p_c2_t1),0,1,0.147109,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(p_c2_t1 & !p_c3_t4__c1_t8 | !p_c2_t1) & !p_c2_t3,0,1,0.145659,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,!((p_c2_t1 <-> !p_c2_t3) | p_c3_t4__c1_t8),0,1,0.129702,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G !(p_c3_t4__c1_t8 & p_c2_t3) & !p_c3_t4__c1_t8,0,1,0.144647,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G(!p_c3_t4__c1_t8 | !p_c2_t1) & !p_c3_t4__c1_t8,0,1,0.144647,0.125923
+rers2016-104-p2,rers,!p_c2_t1 & !p_c2_t3 & !p_c3_t4__c1_t8,G !(p_c2_t1 & p_c2_t3) & (!p_c2_t3 & !p_c2_t1),0,1,0.147109,0.125923
+rers2016-104-p6,rers,!p_c2_t0__c1_t3 & !p_c3_t11 & !p_c3_t4__c1_t8,(p_c2_t0__c1_t3 | p_c3_t11 | !p_c2_t0__c1_t3) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),3,2,0.999768,0.998268
+rers2016-104-p6,rers,!p_c2_t0__c1_t3 & !p_c3_t11 & !p_c3_t4__c1_t8,(p_c2_t0__c1_t3 | p_c3_t11) U (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),3,2,0.999768,0.998268
+rers2016-104-p6,rers,!p_c2_t0__c1_t3 & !p_c3_t11 & !p_c3_t4__c1_t8,p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11,2,2,0.999768,0.998268
+rers2016-104-p6,rers,!p_c2_t0__c1_t3 & !p_c3_t11 & !p_c3_t4__c1_t8,(p_c2_t0__c1_t3 -> p_c2_t0__c1_t3 | p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),3,1,0.999768,0.998268
+rers2016-104-p6,rers,!p_c2_t0__c1_t3 & !p_c3_t11 & !p_c3_t4__c1_t8,(p_c2_t0__c1_t3 | p_c3_t11) W (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),3,1,0.999768,0.998268
+rers2016-104-p6,rers,!p_c2_t0__c1_t3 & !p_c3_t11 & !p_c3_t4__c1_t8,(p_c2_t0__c1_t3 | p_c3_t11 | !p_c3_t11) R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11),3,1,0.999768,0.998268
+rers2016-104-p6,rers,!p_c2_t0__c1_t3 & !p_c3_t11 & !p_c3_t4__c1_t8,!p_c2_t0__c1_t3 R (p_c2_t0__c1_t3 | !p_c3_t4__c1_t8 | p_c3_t11) | (p_c2_t0__c1_t3 | p_c3_t11),3,1,0.999768,0.998268
+rers2016-104-p7,rers,!p_c0_t1 & !p_c0_t8 & !p_c3_t2,G(!p_c3_t2 | !p_c0_t1 U p_c0_t8 | p_c0_t1) | !p_c3_t2,9,1,0.966711,0.963078
+rers2016-104-p7,rers,!p_c0_t1 & !p_c0_t8 & !p_c3_t2,G(!p_c3_t2 | !p_c0_t1 W p_c0_t8) | !p_c0_t8,8,1,0.970352,0.963078
+rers2016-105-p10,rers,!p_c2_t5 & !p_c4_t13 & !p_c4_t16 & !p_c4_t2,p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5,6,5,0.999823,0.99868
+rers2016-105-p10,rers,!p_c2_t5 & !p_c4_t13 & !p_c4_t16 & !p_c4_t2,(p_c4_t2 | (p_c4_t13 | !p_c2_t5)) R (p_c4_t2 | (p_c4_t13 | !p_c4_t16) | G !p_c2_t5),5,1,0.999905,0.99868
+rers2016-105-p10,rers,!p_c2_t5 & !p_c4_t13 & !p_c4_t16 & !p_c4_t2,((p_c4_t2 <-> p_c2_t5) | p_c4_t13 | p_c4_t2) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),6,1,0.999905,0.99868
+rers2016-105-p10,rers,!p_c2_t5 & !p_c4_t13 & !p_c4_t16 & !p_c4_t2,(p_c4_t2 | p_c4_t13) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5) | !p_c2_t5,11,1,0.999314,0.99868
+rers2016-105-p10,rers,!p_c2_t5 & !p_c4_t13 & !p_c4_t16 & !p_c4_t2,((p_c4_t2 <-> !(!p_c4_t2 & p_c4_t13)) | !p_c2_t5) R (p_c4_t2 | p_c4_t13 | !p_c4_t16 | G !p_c2_t5),7,1,0.999905,0.99868
+rers2016-105-p10,rers,!p_c2_t5 & !p_c4_t13 & !p_c4_t16 & !p_c4_t2,(!p_c4_t13 & p_c2_t5 -> p_c4_t2) R ((p_c4_t2 <-> p_c4_t16) | p_c4_t2 | p_c4_t13 | G !p_c2_t5),6,1,0.999905,0.99868
+rers2016-105-p10,rers,!p_c2_t5 & !p_c4_t13 & !p_c4_t16 & !p_c4_t2,(p_c4_t2 | p_c4_t13 | !p_c2_t5) R (p_c4_t2 | p_c4_t13 | (p_c4_t13 | !p_c4_t16) | G !p_c2_t5),6,1,0.999905,0.99868
+rers2016-105-p11,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t8__c1_t2 & !p_c4_t11,p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6,6,5,0.999823,0.99868
+rers2016-105-p11,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t8__c1_t2 & !p_c4_t11,(p_c2_t3__c1_t6 | (p_c2_t8__c1_t2 | !p_c2_t6)) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | (G !(p_c2_t6 | p_c2_t8__c1_t2) | G !p_c2_t6)),10,1,0.999905,0.99868
+rers2016-105-p11,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t8__c1_t2 & !p_c4_t11,(!p_c2_t6 | (!p_c2_t3__c1_t6 -> p_c2_t8__c1_t2) & p_c2_t6) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | (p_c2_t8__c1_t2 | !p_c4_t11) | G !p_c2_t6),9,1,0.999905,0.99868
+rers2016-105-p11,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t8__c1_t2 & !p_c4_t11,(p_c2_t3__c1_t6 | !p_c2_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),6,1,0.999905,0.99868
+rers2016-105-p11,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t8__c1_t2 & !p_c4_t11,p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !(p_c4_t11 | p_c2_t6) | (p_c2_t3__c1_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6),11,1,0.999911,0.99868
+rers2016-105-p11,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t8__c1_t2 & !p_c4_t11,(p_c2_t3__c1_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | p_c2_t8__c1_t2 | !p_c4_t11 | G !p_c2_t6) | !p_c2_t6,11,1,0.999314,0.99868
+rers2016-105-p11,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t8__c1_t2 & !p_c4_t11,(p_c2_t3__c1_t6 | !p_c2_t6 | p_c2_t8__c1_t2) R (p_c2_t3__c1_t6 | !p_c4_t11 | G !p_c2_t6 | p_c2_t8__c1_t2),5,1,0.999905,0.99868
+rers2016-105-p12,rers,!p_c0_t5 & !p_c0_t9 & !p_c4_t10 & !p_c4_t18,!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18),6,6,0.99948,0.998735
+rers2016-105-p12,rers,!p_c0_t5 & !p_c0_t9 & !p_c4_t10 & !p_c4_t18,!p_c0_t5 | p_c4_t10 | (p_c0_t9 | p_c4_t10) R (p_c0_t9 | !p_c4_t18),7,1,0.999453,0.998735
+rers2016-105-p12,rers,!p_c0_t5 & !p_c0_t9 & !p_c4_t10 & !p_c4_t18,!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | p_c4_t10 | !p_c4_t18),7,1,0.999403,0.998735
+rers2016-105-p12,rers,!p_c0_t5 & !p_c0_t9 & !p_c4_t10 & !p_c4_t18,!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18 & !p_c0_t9),8,1,0.99948,0.998735
+rers2016-105-p12,rers,!p_c0_t5 & !p_c0_t9 & !p_c4_t10 & !p_c4_t18,!(!p_c4_t10 & p_c4_t18) R (!p_c0_t5 | p_c4_t10 | (p_c0_t9 | p_c4_t18) R (p_c0_t9 | !p_c4_t18)),8,1,0.999662,0.998735
+rers2016-105-p12,rers,!p_c0_t5 & !p_c0_t9 & !p_c4_t10 & !p_c4_t18,(p_c4_t10 | !p_c0_t9) R (!p_c0_t5 | p_c4_t10 | p_c0_t9 R (p_c0_t9 | !p_c4_t18)),6,1,0.999744,0.998735
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,G !p_c2_t8__c1_t2 | !p_c4_t10,3,2,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c2_t8__c1_t2,7,2,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c4_t10,7,2,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,G p_c2_t8__c1_t2 W G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c2_t8__c1_t2,9,1,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,G !p_c4_t10 W G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c4_t10,9,1,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,p_c2_t8__c1_t2 | p_c4_t10 -> !p_c4_t10 W F(p_c4_t10 U G !p_c2_t8__c1_t2),8,1,0.777877,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | !p_c2_t8__c1_t2 & !p_c4_t10,7,1,0.780137,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,G(!p_c4_t10 | G !p_c2_t8__c1_t2) | (p_c2_t8__c1_t2 -> G p_c2_t8__c1_t2),8,1,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,p_c4_t10 -> G !p_c2_t8__c1_t2,3,1,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,!p_c4_t10 | G !p_c2_t8__c1_t2,3,1,0.769054,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,X !p_c2_t8__c1_t2 | !p_c4_t10,5,1,0.762715,0.758281
+rers2016-105-p13,rers,!p_c2_t8__c1_t2 & !p_c4_t10,p_c4_t10 -> G(!p_c2_t8__c1_t2 | p_c4_t10),5,1,0.768987,0.758281
+rers2016-105-p16,rers,!p_c0_t6 & !p_c2_t6 & !p_c2_t7,(p_c2_t6 | !p_c0_t6 -> p_c2_t6) -> p_c2_t6 R (p_c2_t6 | !p_c2_t7),9,1,0.965294,0.963248
+rers2016-105-p16,rers,!p_c0_t6 & !p_c2_t6 & !p_c2_t7,p_c0_t6 -> F((p_c0_t6 -> p_c2_t6) R (p_c2_t6 | !p_c2_t7)),8,1,0.963248,0.963248
+rers2016-105-p16,rers,!p_c0_t6 & !p_c2_t6 & !p_c2_t7,X p_c2_t6 W ((p_c2_t6 | !p_c0_t6) R (p_c2_t6 | !p_c2_t7)) | p_c2_t7,5,1,0.963655,0.963248
+rers2016-105-p16,rers,!p_c0_t6 & !p_c2_t6 & !p_c2_t7,X(p_c0_t6 <-> !p_c2_t6) W ((p_c2_t6 | !p_c0_t6) R (p_c2_t6 | !p_c2_t7)) | !p_c0_t6,11,1,0.964481,0.963248
+rers2016-105-p16,rers,!p_c0_t6 & !p_c2_t6 & !p_c2_t7,G(!p_c0_t6 | p_c2_t6 R (p_c2_t6 | !p_c2_t7)) | !p_c0_t6,9,1,0.97068,0.963248
+rers2016-105-p17,rers,!p_c2_t0 & !p_c2_t8__c1_t2 & !p_c4_t18 & !p_c4_t3 & !p_c4_t6,!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6),7,6,0.999928,0.999634
+rers2016-105-p17,rers,!p_c2_t0 & !p_c2_t8__c1_t2 & !p_c4_t18 & !p_c4_t3 & !p_c4_t6,(p_c2_t8__c1_t2 | ((p_c4_t3 <-> p_c2_t0) | p_c4_t18)) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | !p_c4_t18 R ((!p_c2_t0 | p_c2_t8__c1_t2) & !p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6))),15,1,0.99996,0.999634
+rers2016-105-p17,rers,!p_c2_t0 & !p_c2_t8__c1_t2 & !p_c4_t18 & !p_c4_t3 & !p_c4_t6,(p_c2_t8__c1_t2 | p_c4_t18 | !p_c2_t0) R ((!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18) & (!p_c4_t6 | !p_c4_t18) | p_c4_t6 R (!p_c4_t3 | p_c4_t6)),10,1,0.999949,0.999634
+rers2016-105-p17,rers,!p_c2_t0 & !p_c2_t8__c1_t2 & !p_c4_t18 & !p_c4_t3 & !p_c4_t6,!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6) | p_c4_t6,7,1,0.999928,0.999634
+rers2016-105-p17,rers,!p_c2_t0 & !p_c2_t8__c1_t2 & !p_c4_t18 & !p_c4_t3 & !p_c4_t6,(p_c2_t8__c1_t2 | (p_c4_t18 | !p_c4_t3)) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c4_t6)) | p_c2_t8__c1_t2,7,1,0.999959,0.999634
+rers2016-105-p17,rers,!p_c2_t0 & !p_c2_t8__c1_t2 & !p_c4_t18 & !p_c4_t3 & !p_c4_t6,(p_c2_t8__c1_t2 | p_c4_t18) R (!p_c2_t0 | p_c2_t8__c1_t2 | p_c4_t18 | p_c4_t6 R (!p_c4_t3 | p_c2_t0 | p_c4_t6)) | !p_c4_t6,15,1,0.999647,0.999634
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,G !p_c4_t16 | !p_c0_t4,3,4,0.769054,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,G(!p_c0_t4 | G !p_c4_t16) | !p_c0_t4,7,3,0.769054,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,G(!p_c0_t4 | G !p_c4_t16) | !p_c4_t16,7,1,0.769054,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,p_c0_t4 -> G !p_c4_t16,3,1,0.769054,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,p_c4_t16 | G !p_c0_t4 -> G(p_c0_t4 -> G !p_c4_t16),3,1,0.769054,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,p_c4_t16 | p_c0_t4 -> G(!p_c4_t16 & p_c0_t4 -> G !p_c4_t16),7,1,0.779977,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,G(!p_c0_t4 | G !p_c4_t16) & !p_c0_t4 | !p_c4_t16,8,1,0.769054,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,!(!G !p_c4_t16 & p_c0_t4),4,1,0.769054,0.758281
+rers2016-105-p19,rers,!p_c0_t4 & !p_c4_t16,G(!p_c0_t4 | G !p_c4_t16) | (!p_c4_t16 | p_c0_t4),7,1,0.762715,0.758281
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G((p_c4_t3 | G !p_c2_t6) & (!p_c4_t3 | (!p_c2_t3__c1_t6 | p_c2_t7))) | !p_c4_t12,13,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G(((p_c4_t3 <-> p_c4_t12) | G !p_c2_t6) & (!p_c4_t3 | (!p_c2_t3__c1_t6 | p_c2_t7))) | !p_c4_t12,14,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G((p_c2_t7 <-> p_c4_t12 & !p_c2_t3__c1_t6) | G !p_c2_t6) | !p_c4_t12,6,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G(!p_c2_t7 & p_c4_t12 | G !p_c2_t6) | !p_c4_t12,9,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G(!p_c4_t3 | G(!p_c4_t12 | G !p_c2_t6)) W (!p_c2_t6 R (!p_c2_t3__c1_t6 | p_c2_t7 | p_c4_t3)),12,1,0.884957,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,p_c4_t3 -> p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7),6,1,0.884485,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,(!p_c2_t3__c1_t6 <-> p_c2_t6) -> X X G(!p_c4_t12 | G !p_c2_t6),9,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G !G(p_c4_t12 & !p_c2_t6) W (p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7) | !p_c4_t3 | p_c2_t7),16,1,0.883258,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G((!p_c4_t12 | G !p_c2_t6) & (!p_c4_t3 | p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7))) | !p_c2_t6,16,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,(!p_c4_t12 -> !p_c2_t3__c1_t6 & p_c4_t12) -> F G !p_c2_t6,6,1,0.887656,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G((!p_c4_t12 | G !p_c2_t6) & (!p_c4_t3 | p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7))) | !p_c4_t12 | (p_c2_t7 & !p_c4_t12) R (!p_c2_t3__c1_t6 | p_c2_t7),19,1,0.885802,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G(!p_c4_t12 | G !p_c2_t6) | !p_c2_t7 R (!p_c2_t3__c1_t6 | p_c2_t7),8,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G(!p_c4_t12 | G !p_c2_t6) | !(p_c4_t12 | p_c4_t3) | G(!p_c2_t3__c1_t6 | p_c2_t7),12,1,0.892731,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G((!(p_c2_t3__c1_t6 <-> !p_c2_t7) | G(p_c2_t6 | !(p_c2_t6 -> p_c2_t7))) & (!(p_c4_t3 & p_c4_t12) | G p_c2_t3__c1_t6)) | !p_c4_t12 | G !p_c2_t6,20,1,0.887992,0.883239
+rers2016-105-p2,rers,!p_c2_t3__c1_t6 & !p_c2_t6 & !p_c2_t7 & !p_c4_t12 & !p_c4_t3,G(((p_c2_t3__c1_t6 <-> !p_c2_t7) | G(p_c2_t6 | !(p_c2_t6 -> !p_c2_t6))) & (!(p_c4_t3 & p_c4_t12) | G !p_c2_t3__c1_t6)) | !p_c4_t12 | G !p_c2_t6,19,1,0.887992,0.883239
+rers2016-105-p20,rers,!p_c2_t3__c1_t6 & !p_c2_t4 & !p_c3_t12__c2_t11 & !p_c3_t7,!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11),6,6,0.99948,0.998735
+rers2016-105-p20,rers,!p_c2_t3__c1_t6 & !p_c2_t4 & !p_c3_t12__c2_t11 & !p_c3_t7,(p_c3_t7 | !p_c2_t4) R (!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),6,2,0.999601,0.998735
+rers2016-105-p20,rers,!p_c2_t3__c1_t6 & !p_c2_t4 & !p_c3_t12__c2_t11 & !p_c3_t7,!p_c2_t4 | p_c3_t7 | p_c3_t7 R (!p_c2_t4 | p_c3_t7 | p_c2_t3__c1_t6 R (p_c2_t3__c1_t6 | !p_c3_t12__c2_t11)),11,1,0.999666,0.998735
+rers2016-105-p5,rers,!p_c3_t1 & !p_c3_t3 & !p_c3_t6 & !p_c4_t15,p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3),9,3,0.99948,0.998735
+rers2016-105-p5,rers,!p_c3_t1 & !p_c3_t3 & !p_c3_t6 & !p_c4_t15,(p_c3_t6 | !p_c3_t3) R (p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3)),9,1,0.999662,0.998735
+rers2016-105-p5,rers,!p_c3_t1 & !p_c3_t3 & !p_c3_t6 & !p_c4_t15,p_c3_t6 | !p_c4_t15 | p_c3_t1 R (p_c3_t1 | !p_c3_t3) | p_c3_t1,9,1,0.99948,0.998735
+rers2016-105-p5,rers,!p_c3_t1 & !p_c3_t3 & !p_c3_t6 & !p_c4_t15,(p_c3_t6 | !p_c4_t15) & !p_c3_t1 | p_c3_t1 R (p_c3_t1 | !p_c3_t3),11,1,0.99948,0.998735
+rers2016-105-p5,rers,!p_c3_t1 & !p_c3_t3 & !p_c3_t6 & !p_c4_t15,p_c3_t6 | !p_c4_t15 | (!p_c4_t15 | p_c3_t1) R (p_c3_t1 | !p_c3_t3),10,1,0.999453,0.998735
+rers2016-105-p7,rers,!p_c1_t1 & !p_c2_t4 & !p_c4_t19__c2_t10 & !p_c4_t8__c1_t8,!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8),9,7,0.99948,0.998735
+rers2016-105-p7,rers,!p_c1_t1 & !p_c2_t4 & !p_c4_t19__c2_t10 & !p_c4_t8__c1_t8,p_c4_t19__c2_t10 R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8) | p_c1_t1) | p_c2_t4 | !p_c1_t1,13,1,0.998883,0.998735
+rers2016-105-p7,rers,!p_c1_t1 & !p_c2_t4 & !p_c4_t19__c2_t10 & !p_c4_t8__c1_t8,p_c4_t19__c2_t10 R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)) | !p_c1_t1,11,1,0.999034,0.998735
+rers2016-105-p7,rers,!p_c1_t1 & !p_c2_t4 & !p_c4_t19__c2_t10 & !p_c4_t8__c1_t8,p_c4_t19__c2_t10 R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)) | !p_c2_t4,11,1,0.999666,0.998735
+rers2016-105-p7,rers,!p_c1_t1 & !p_c2_t4 & !p_c4_t19__c2_t10 & !p_c4_t8__c1_t8,(!p_c2_t4 | p_c4_t19__c2_t10) R (!p_c2_t4 | p_c4_t19__c2_t10 | F(p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8))),10,1,0.998735,0.998735
+rers2016-105-p7,rers,!p_c1_t1 & !p_c2_t4 & !p_c4_t19__c2_t10 & !p_c4_t8__c1_t8,(p_c4_t19__c2_t10 | !p_c2_t4) R (!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8)),9,1,0.999601,0.998735
+rers2016-105-p7,rers,!p_c1_t1 & !p_c2_t4 & !p_c4_t19__c2_t10 & !p_c4_t8__c1_t8,!p_c2_t4 | p_c4_t19__c2_t10 | p_c1_t1 R (p_c1_t1 | !p_c4_t8__c1_t8) & !p_c4_t19__c2_t10,11,1,0.99948,0.998735
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5,5,4,0.999823,0.99868
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,(p_c3_t4 | (p_c5_t10 | !p_c5_t5 & !p_c3_t5)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !(p_c3_t5 & p_c3_t4) & G !p_c3_t5),9,1,0.999905,0.99868
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,(p_c3_t4 | (p_c3_t5 -> p_c5_t10)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),5,1,0.999905,0.99868
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,(p_c3_t4 | (p_c5_t10 | !p_c3_t5)) R (p_c3_t4 | !p_c5_t5 | (!p_c3_t4 <-> p_c5_t10) | G !p_c3_t5),6,1,0.999905,0.99868
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,(!p_c3_t4 | (p_c3_t4 | p_c5_t10)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),6,1,0.999823,0.99868
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,(p_c3_t4 | p_c5_t10) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5) | !p_c3_t5,12,1,0.999314,0.99868
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,(p_c3_t4 | !p_c3_t5 | p_c5_t10) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),5,1,0.999905,0.99868
+rers2016-106-p11,rers,!p_c3_t4 & !p_c3_t5 & !p_c5_t10 & !p_c5_t5,(p_c5_t10 | p_c3_t4 | (p_c3_t5 <-> p_c5_t10)) R (p_c3_t4 | !p_c5_t5 | p_c5_t10 | G !p_c3_t5),6,1,0.999905,0.99868
+rers2016-106-p12,rers,!p_c3_t0 & !p_c3_t6__c2_t2 & !p_c3_t9 & !p_c5_t11,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | !p_c5_t11,14,2,0.750478,0.744893
+rers2016-106-p12,rers,!p_c3_t0 & !p_c3_t6__c2_t2 & !p_c3_t9 & !p_c5_t11,G(!p_c5_t11 | G !p_c3_t9) | !(!p_c3_t6__c2_t2 -> p_c5_t11),7,1,0.756148,0.744893
+rers2016-106-p12,rers,!p_c3_t0 & !p_c3_t6__c2_t2 & !p_c3_t9 & !p_c5_t11,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | !p_c3_t0,14,1,0.750478,0.744893
+rers2016-106-p12,rers,!p_c3_t0 & !p_c3_t6__c2_t2 & !p_c3_t9 & !p_c5_t11,G((!p_c3_t0 | G !p_c3_t6__c2_t2) & (!p_c5_t11 | G !p_c3_t9)) | !p_c3_t6__c2_t2,14,1,0.750478,0.744893
+rers2016-106-p13,rers,!p_c1_t0 & !p_c1_t3,!p_c1_t3 U F p_c1_t0 | !p_c1_t3,5,1,0.999354,0.999354
+rers2016-106-p13,rers,!p_c1_t0 & !p_c1_t3,F F p_c1_t0 | !p_c1_t3,3,1,0.999354,0.999354
+rers2016-106-p13,rers,!p_c1_t0 & !p_c1_t3,G(!p_c1_t3 | F p_c1_t0) | !p_c1_t3,6,1,0.999674,0.999354
+rers2016-106-p13,rers,!p_c1_t0 & !p_c1_t3,F p_c1_t0 | !p_c1_t3,2,1,0.999354,0.999354
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,G(!p_c5_t6 | p_c5_t11 R (!p_c5_t1 | p_c5_t11)) | !p_c5_t6,9,1,0.965752,0.961922
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,G(!p_c5_t5 | p_c2_t8__c1_t4 R (!p_c2_t6 | p_c2_t8__c1_t4)) W (!p_c2_t8__c1_t4 R (!p_c2_t6 | p_c2_t8__c1_t4)),9,1,0.965783,0.961922
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,G((!p_c5_t5 | p_c2_t8__c1_t4 R (!p_c2_t6 | p_c2_t8__c1_t4)) & (!p_c5_t6 | p_c5_t11 R (!p_c5_t1 | p_c5_t11))) | !p_c5_t1,18,1,0.965945,0.961922
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,G((!p_c5_t5 | p_c2_t8__c1_t4 R (!p_c2_t6 | p_c2_t8__c1_t4)) & (p_c5_t6 | !p_c5_t11 R ((p_c5_t1 -> !p_c5_t6) | p_c5_t11))) | !p_c5_t1,19,1,0.965853,0.961922
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,(p_c2_t8__c1_t4 & p_c5_t6) W (G(!p_c5_t6 | p_c5_t11 R (!p_c5_t1 | p_c5_t11)) | !p_c5_t11),11,1,0.964956,0.961922
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,!(p_c5_t1 & !p_c5_t6) & p_c5_t11 -> G((!p_c5_t5 | (!p_c2_t6 | p_c2_t8__c1_t4) | p_c5_t6) & (!p_c5_t6 | p_c5_t11 R (!p_c5_t1 | p_c5_t11))),20,1,0.964612,0.961922
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,p_c5_t11 R (!p_c5_t1 | p_c5_t11) | !p_c5_t6,5,1,0.962979,0.961922
+rers2016-106-p16,rers,!p_c2_t6 & !p_c2_t8__c1_t4 & !p_c5_t1 & !p_c5_t11 & !p_c5_t5 & !p_c5_t6,G(!p_c5_t5 | p_c2_t8__c1_t4 R (!p_c2_t6 | p_c2_t8__c1_t4 | !p_c5_t1 & !p_c2_t6)) W !(!p_c5_t1 -> p_c5_t5) W X !p_c2_t8__c1_t4,15,1,0.964955,0.961922
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2,4,5,0.998669,0.995432
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,(p_c5_t8__c1_t2 -> p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),4,2,0.99922,0.995432
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,(p_c4_t17 | !p_c5_t8__c1_t2) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),4,1,0.99922,0.995432
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,(p_c4_t17 | (p_c4_t4 | !p_c5_t8__c1_t2)) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),5,1,0.99922,0.995432
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,(!p_c5_t8__c1_t2 | p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2 U G(p_c4_t4 | !p_c5_t8__c1_t2)),8,1,0.9992,0.995432
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,p_c4_t17 R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2) | !p_c5_t8__c1_t2,9,1,0.997481,0.995432
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,(!p_c5_t8__c1_t2 | p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G(p_c5_t8__c1_t2 -> p_c4_t17)),4,1,0.99921,0.995432
+rers2016-106-p18,rers,!p_c4_t17 & !p_c4_t4 & !p_c5_t8__c1_t2,(!p_c5_t8__c1_t2 | p_c4_t17) R (!p_c4_t4 | p_c4_t17 | G !p_c5_t8__c1_t2),4,1,0.99922,0.995432
+rers2016-106-p19,rers,!p_c0_t5 & !p_c0_t7 & !p_c2_t1__c0_t3 & !p_c5_t5,F((!p_c0_t5 | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)),5,1,0.885341,0.885341
+rers2016-106-p19,rers,!p_c0_t5 & !p_c0_t7 & !p_c2_t1__c0_t3 & !p_c5_t5,G((!p_c0_t5 | G !p_c5_t5) & (!p_c0_t7 | F p_c2_t1__c0_t3)) | !p_c5_t5,13,1,0.891232,0.885341
+rers2016-106-p19,rers,!p_c0_t5 & !p_c0_t7 & !p_c2_t1__c0_t3 & !p_c5_t5,G(!p_c0_t5 | G !p_c5_t5) | !p_c2_t1__c0_t3,7,1,0.891232,0.885341
+rers2016-106-p2,rers,!p_c0_t5 & !p_c2_t5__c5_t7 & !p_c5_t5 & !p_c5_t6,p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5,5,5,0.999823,0.99868
+rers2016-106-p2,rers,!p_c0_t5 & !p_c2_t5__c5_t7 & !p_c5_t5 & !p_c5_t6,(p_c2_t5__c5_t7 | !p_c0_t5 | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),5,1,0.999905,0.99868
+rers2016-106-p2,rers,!p_c0_t5 & !p_c2_t5__c5_t7 & !p_c5_t5 & !p_c5_t6,(p_c2_t5__c5_t7 | p_c5_t6 | !p_c2_t5__c5_t7) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),6,1,0.999823,0.99868
+rers2016-106-p2,rers,!p_c0_t5 & !p_c2_t5__c5_t7 & !p_c5_t5 & !p_c5_t6,(p_c2_t5__c5_t7 | (p_c5_t6 | !p_c0_t5)) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),5,1,0.999905,0.99868
+rers2016-106-p2,rers,!p_c0_t5 & !p_c2_t5__c5_t7 & !p_c5_t5 & !p_c5_t6,(p_c2_t5__c5_t7 | !p_c0_t5 | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5 & (!p_c0_t5 | p_c5_t6)),7,1,0.999905,0.99868
+rers2016-106-p2,rers,!p_c0_t5 & !p_c2_t5__c5_t7 & !p_c5_t5 & !p_c5_t6,(!p_c2_t5__c5_t7 -> !p_c0_t5 | p_c5_t6) R (p_c2_t5__c5_t7 | !p_c5_t5 | p_c5_t6 | G !p_c0_t5),6,1,0.999905,0.99868
+rers2016-106-p3,rers,!p_c3_t4 & !p_c3_t5 & !p_c3_t7 & !p_c5_t11 & !p_c5_t6,p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7),11,5,0.999928,0.999634
+rers2016-106-p3,rers,!p_c3_t4 & !p_c3_t5 & !p_c3_t7 & !p_c5_t11 & !p_c5_t6,p_c3_t5 | p_c5_t6 | !(p_c5_t11 & !p_c3_t7) | p_c3_t7 R (!p_c3_t4 | p_c3_t7),13,1,0.999928,0.999634
+rers2016-106-p3,rers,!p_c3_t4 & !p_c3_t5 & !p_c3_t7 & !p_c5_t11 & !p_c5_t6,(p_c3_t5 | p_c5_t6) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | (p_c3_t7 R (!p_c3_t4 | p_c3_t7) | p_c3_t7) & !p_c3_t5) | !p_c3_t7,16,1,0.999679,0.999634
+rers2016-106-p3,rers,!p_c3_t4 & !p_c3_t5 & !p_c3_t7 & !p_c5_t11 & !p_c5_t6,((p_c3_t7 <-> p_c3_t5) | p_c5_t6 | p_c3_t5) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),11,1,0.999971,0.999634
+rers2016-106-p3,rers,!p_c3_t4 & !p_c3_t5 & !p_c3_t7 & !p_c5_t11 & !p_c5_t6,p_c5_t6 | !p_c5_t11 | (p_c3_t5 | p_c5_t6) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),13,1,0.999953,0.999634
+rers2016-106-p3,rers,!p_c3_t4 & !p_c3_t5 & !p_c3_t7 & !p_c5_t11 & !p_c5_t6,(p_c3_t5 | p_c5_t6 | !p_c3_t7) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),11,1,0.999971,0.999634
+rers2016-106-p3,rers,!p_c3_t4 & !p_c3_t5 & !p_c3_t7 & !p_c5_t11 & !p_c5_t6,(p_c3_t5 | p_c5_t6 | !p_c5_t11) R (p_c3_t5 | p_c5_t6 | !p_c5_t11 | p_c3_t7 R (!p_c3_t4 | p_c3_t7)),11,1,0.999949,0.999634
+rers2016-106-p5,rers,!p_c1_t5__c3_t10 & !p_c5_t1 & !p_c5_t9,!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1,4,4,0.998669,0.995432
+rers2016-106-p5,rers,!p_c1_t5__c3_t10 & !p_c5_t1 & !p_c5_t9,(!p_c5_t1 | p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),4,3,0.99922,0.995432
+rers2016-106-p5,rers,!p_c1_t5__c3_t10 & !p_c5_t1 & !p_c5_t9,(p_c5_t1 -> p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G(p_c5_t1 -> p_c5_t9)),4,1,0.99921,0.995432
+rers2016-106-p5,rers,!p_c1_t5__c3_t10 & !p_c5_t1 & !p_c5_t9,!(p_c5_t1 & !p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),5,1,0.99922,0.995432
+rers2016-106-p5,rers,!p_c1_t5__c3_t10 & !p_c5_t1 & !p_c5_t9,(p_c5_t1 -> p_c5_t9) R (!p_c1_t5__c3_t10 | p_c5_t9 | G !p_c5_t1),4,1,0.99922,0.995432
+rers2016-106-p5,rers,!p_c1_t5__c3_t10 & !p_c5_t1 & !p_c5_t9,(p_c5_t9 | !p_c5_t1) R (!(p_c1_t5__c3_t10 & !p_c5_t9) | G !p_c5_t1),5,1,0.99922,0.995432
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,F(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10)),3,1,0.592362,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G(!p_c2_t8__c1_t4 & !p_c3_t0 & G !p_c1_t5__c3_t10) | !p_c2_t8__c1_t4,10,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10)) & p_c1_t5__c3_t10 | !p_c2_t8__c1_t4,11,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G((p_c1_t5__c3_t10 | !p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10)) | !p_c3_t0,11,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G(!p_c2_t8__c1_t4 & !p_c1_t5__c3_t10) | !p_c3_t0,6,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,F(!p_c2_t8__c1_t4 & (!p_c3_t0 | (G !p_c1_t5__c3_t10 | p_c1_t5__c3_t10))),6,1,0.592334,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,F(!p_c2_t8__c1_t4 & (!p_c3_t0 | (G !p_c1_t5__c3_t10 | !p_c1_t5__c3_t10))),6,1,0.592334,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,(p_c1_t5__c3_t10 -> X !p_c3_t0) U (!p_c1_t5__c3_t10 | G !p_c2_t8__c1_t4),8,1,0.596149,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G(!p_c2_t8__c1_t4 & (!p_c3_t0 | G !p_c1_t5__c3_t10) & p_c2_t8__c1_t4) | !p_c2_t8__c1_t4,11,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G((p_c3_t0 <-> p_c2_t8__c1_t4) & (!p_c3_t0 | G !p_c1_t5__c3_t10)) | !p_c2_t8__c1_t4,9,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,p_c2_t8__c1_t4 -> !G(!(p_c3_t0 & p_c1_t5__c3_t10) & (!p_c3_t0 | G !p_c1_t5__c3_t10)),11,1,0.592333,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G !(!p_c1_t5__c3_t10 -> p_c2_t8__c1_t4) | !p_c3_t0,6,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,F(!p_c2_t8__c1_t4 & ((p_c1_t5__c3_t10 <-> !p_c3_t0) | G !p_c1_t5__c3_t10)),0,1,0.592362,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,p_c2_t8__c1_t4 -> G !p_c1_t5__c3_t10,3,1,0.598887,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,!(F p_c3_t0 U (p_c3_t0 & X !(p_c2_t8__c1_t4 -> !p_c1_t5__c3_t10))) & !p_c2_t8__c1_t4,3,1,0.624893,0.592333
+rers2016-106-p7,rers,!p_c1_t5__c3_t10 & !p_c2_t8__c1_t4 & !p_c3_t0,G(!(!p_c2_t8__c1_t4 <-> p_c3_t0) | G !p_c1_t5__c3_t10) | !p_c2_t8__c1_t4,7,1,0.598887,0.592333
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,!p_c5_t10 | G !p_c3_t2,3,3,0.769054,0.758281
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,p_c3_t2 -> G(!p_c5_t10 | G !p_c3_t2),7,2,0.769054,0.758281
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,G !p_c3_t2 | !p_c5_t10,3,2,0.769054,0.758281
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,G(!p_c5_t10 | G !p_c3_t2) | !p_c3_t2,7,2,0.769054,0.758281
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,p_c5_t10 -> G(!p_c5_t10 | G !p_c3_t2),7,1,0.769054,0.758281
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,G(!p_c5_t10 | G !p_c3_t2) | !p_c5_t10,7,1,0.769054,0.758281
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,G(p_c3_t2 | !p_c5_t10 | G !p_c3_t2) | !p_c3_t2,8,1,0.768976,0.758281
+rers2016-106-p8,rers,!p_c3_t2 & !p_c5_t10,F G !p_c3_t2 W !p_c5_t10,6,1,0.768286,0.758281

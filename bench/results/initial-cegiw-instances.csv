@@ -1,0 +1,10 @@
+instance,family,seeds,class,initial,initial_error,found_flag,found_posthoc,found_filter,repairs_flag,trivial_flag,repairs_filter,maximal_posthoc,maximal_filter,net_share_filter,wall_flag,wall_filter,calls_flag,calls_filter,initial_time,initial_calls
+forage-response,cegiw,10,degenerate,resting_p,,0.7,0.1,0.0,8,7,0,,,,6.0605,5.418,23.5,23.5,0.032,1.0
+forage-absence,cegiw,10,proper,resting_p,,0.9,0.8,1.0,15,3,12,4,1,0.0,7.6225000000000005,7.3045,19.5,20.0,0.032,1.0
+forage-limit-response,cegiw,10,degenerate,resting_p,,1.0,1.0,1.0,13,2,10,1,1,0.0,7.434,7.4825,28.5,28.0,0.032,1.0
+forage-limit-absence,cegiw,10,proper,resting_p,,0.9,0.9,1.0,14,1,19,2,1,0.0,12.53,10.935,22.0,20.0,0.032,1.0
+minimal-response,cegiw,10,proper,a_p,,0.9,0.8,0.6,18,5,6,2,2,0.0,4.876,4.4350000000000005,16.0,15.0,0.032,1.0
+minimal-absence,cegiw,10,proper,a_p,,0.6,0.4,0.5,29,2,16,26,9,0.0769,8.7725,7.6875,18.0,15.0,0.032,1.0
+minimal-limit-response,cegiw,10,proper,a_p,,1.0,1.0,1.0,15,3,12,3,2,0.3333,6.246499999999999,5.864,19.5,21.0,0.032,1.0
+minimal-limit-absence,cegiw,10,degenerate,a_p,,0.6,0.5,0.5,17,5,23,10,23,-0.0435,10.1945,10.5305,18.0,19.0,0.032,1.0
+abp4-p2false,cegiw,10,proper,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,,1.0,1.0,1.0,37,4,28,10,6,0.0333,30.807000000000002,33.739999999999995,184.0,188.5,0.053,1.0

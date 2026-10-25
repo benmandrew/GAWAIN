@@ -20,7 +20,9 @@ The arms are `binary`, `graded` (option B), `feasible` (B with every
 proved candidate ranked first), `reserve4` and `reserve2` (feasible with a
 quarter or a half of the population kept for unproved candidates) and
 `forced` (binary, searching
-degenerate instances too, for the CEGIW case studies); see ARMS. The `random` and
+degenerate instances too, for the CEGIW case studies), and `initflag`,
+`initfilter` and their `forced-` twins for the initial-state check
+(bench/initial_stats.py); see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (branch `exp/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -48,6 +50,13 @@ ARMS = {
     'feasible': ['--status', 'graded-feasible'],
     'reserve4': ['--status', 'graded-reserve-4'],
     'reserve2': ['--status', 'graded-reserve-2'],
+    # Binary with the initial-state predicate: `initflag` only marks the
+    # repairs that I ∧ Init implies, `initfilter` drops them in the loop
+    # and the gate. The `forced-` arms search degenerate instances too.
+    'initflag': ['--status', 'binary', '--initial', 'flag'],
+    'initfilter': ['--status', 'binary', '--initial', 'filter'],
+    'forced-initflag': ['--status', 'binary', '--degenerate', 'search', '--initial', 'flag'],
+    'forced-initfilter': ['--status', 'binary', '--degenerate', 'search', '--initial', 'filter'],
 }
 
 

@@ -9,6 +9,7 @@
 //!     --seed N --generations G --population P
 //!     --status binary|graded|graded-feasible|graded-reserve-D
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
+//!     [--initial ignore|flag|filter]
 //! ```
 //!
 //! - `nuxmv`: `--model` is an SMV file, `--atoms` its DEFINEs and `--ltl`
@@ -26,7 +27,12 @@
 //! and 4096 MB). A degenerate instance (M ⊨ ¬φ) is classified and not
 //! searched, unless `--degenerate search` is given: CEGIW's case studies
 //! include degenerate ones, and `bench/baselines_cegiw.py` compares the
-//! two tools there too. The JSON line holds the instance class, the repairs with
+//! two tools there too. `--initial flag` finds the initial-state
+//! predicate Init of M over φ's atoms ([`initial`]) and marks each repair
+//! that I ∧ Init implies; `--initial filter` also puts I ∧ Init in place of
+//! I in the search's validity filter and the gate, so those repairs drop
+//! ("Triviality at the initial state" in `docs/dev/search.md`). The
+//! default, `ignore`, asks nothing. The JSON line holds the instance class, the repairs with
 //! their similarities, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
 
@@ -37,19 +43,19 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use gawain::count::Counter;
-use gawain::instance::{classify, Instance};
-use gawain::ltl::Formula;
+use gawain::instance::{classify, initial, Instance};
+use gawain::ltl::{BinaryOp, Formula};
 use gawain::mcc::{properties, Net};
 use gawain::oracle::explicit::Explicit;
 use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::spin::Spin;
 use gawain::oracle::tapaal::Tapaal;
-use gawain::oracle::{Backend, Oracle, Words};
+use gawain::oracle::{implications_each, Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -81,6 +87,19 @@ struct Args {
     timeout: u64,
     memory_mb: u64,
     search_degenerate: bool,
+    initial: Initial,
+}
+
+/// What `--initial` asks of the initial-state predicate.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+enum Initial {
+    /// Nothing.
+    #[default]
+    Ignore,
+    /// Find it and mark the repairs it makes trivial.
+    Flag,
+    /// Also conjoin it to the invariant, so those repairs drop.
+    Filter,
 }
 
 fn parse_args() -> Result<Args, String> {
@@ -135,6 +154,14 @@ fn parse_args() -> Result<Args, String> {
                     "search" => true,
                     "skip" => false,
                     _ => return Err(format!("--degenerate {value}: skip or search")),
+                }
+            }
+            "--initial" => {
+                args.initial = match value.as_str() {
+                    "ignore" => Initial::Ignore,
+                    "flag" => Initial::Flag,
+                    "filter" => Initial::Filter,
+                    _ => return Err(format!("--initial {value}: ignore, flag or filter")),
                 }
             }
             _ => return Err(format!("unknown flag {flag}")),
@@ -246,6 +273,29 @@ fn search_on<B: Backend>(
         Instance::Proper { unknown } => format!("proper{}", "?".repeat(unknown.len())),
     };
     field(&mut out, "instance", &json(&class));
+    // I ∧ Init, when Init was asked for and found.
+    let mut trivial_at_start = None;
+    let mut invariant = invariant;
+    if args.initial != Initial::Ignore {
+        let asked = Instant::now();
+        let calls = oracle.counters().backend_calls;
+        let found = initial(&used, &mut oracle);
+        let calls = oracle.counters().backend_calls - calls;
+        field(&mut out, "initial_calls", &calls.to_string());
+        let time = asked.elapsed().as_secs_f64();
+        field(&mut out, "initial_time", &format!("{time:.3}"));
+        match found {
+            Ok(init) => {
+                field(&mut out, "initial", &json(&init.simplify().to_string()));
+                let both = Formula::binary(BinaryOp::And, invariant.clone(), init).simplify();
+                if args.initial == Initial::Filter {
+                    invariant = both.clone();
+                }
+                trivial_at_start = Some(both);
+            }
+            Err(reason) => field(&mut out, "initial_error", &json(&reason)),
+        }
+    }
     let mut repairs = String::from("[");
     let mut grading = Default::default();
     let mut search_wall = 0.0;
@@ -300,17 +350,32 @@ fn search_on<B: Backend>(
             SEARCH_LIMITS,
         );
         gate_wall = gated.elapsed().as_secs_f64();
-        for (i, repair) in outcome.repairs.iter().enumerate() {
+        // Whether I ∧ Init implies each repair, in one batch.
+        let flags: Vec<Option<bool>> = match &trivial_at_start {
+            Some(both) => {
+                let pairs: Vec<(&Formula, &Formula)> =
+                    outcome.repairs.iter().map(|r| (both, &r.formula)).collect();
+                let (proved, _) = implications_each(&pairs, oracle.semantics(), GATE_LIMITS);
+                proved.into_iter().map(Some).collect()
+            }
+            None => vec![None; outcome.repairs.len()],
+        };
+        for (i, (repair, flag)) in outcome.repairs.iter().zip(flags).enumerate() {
             if i > 0 {
                 repairs.push(',');
             }
             let _ = write!(
                 repairs,
-                "{{\"formula\":{},\"similarity\":{:.6},\"semantic\":{:.6}}}",
+                "{{\"formula\":{},\"similarity\":{:.6},\"semantic\":{:.6},\"vacuous\":{}",
                 json(&repair.formula.to_string()),
                 repair.similarity,
-                repair.semantic
+                repair.semantic,
+                repair.vacuity.subformulae.len()
             );
+            if let Some(flag) = flag {
+                let _ = write!(repairs, ",\"initial_trivial\":{flag}");
+            }
+            repairs.push('}');
         }
         let errors: Vec<String> = outcome.errors.iter().map(|e| json(e)).collect();
         field(&mut out, "gate_errors", &format!("[{}]", errors.join(",")));

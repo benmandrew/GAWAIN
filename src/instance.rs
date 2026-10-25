@@ -4,9 +4,21 @@
 //! some truth of M to which φ contributes nothing. See "Evaluation without a
 //! ground truth" in `PLAN.md` and "The degeneracy filter" in
 //! `docs/dev/search.md`.
+//!
+//! [`initial`] finds the initial-state predicate of M over φ's atoms, for
+//! the experimental initial-state triviality check ("Triviality at the
+//! initial state" in `docs/dev/search.md`).
 
-use crate::ltl::{Formula, UnaryOp};
-use crate::oracle::{Backend, Oracle, Verdict};
+use std::collections::BTreeSet;
+use std::sync::Arc;
+
+use crate::ltl::{BinaryOp, Formula, UnaryOp};
+use crate::oracle::{Backend, Lasso, Oracle, Valuation, Verdict};
+
+/// The most distinct initial letters [`initial`] collects before it gives
+/// up. Each letter beyond those of the stored runs costs one query, and a
+/// model whose free inputs start in every combination would need 2^k.
+pub const INITIAL_LETTERS: usize = 16;
 
 /// What the two checks found.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -42,6 +54,54 @@ pub fn classify<B: Backend>(phi: &Formula, oracle: &mut Oracle<B>) -> Instance {
         Verdict::Unknown(reason) => unknown.push(format!("{negation}: {reason}")),
     }
     Instance::Proper { unknown }
+}
+
+/// The initial-state predicate Init of `oracle`'s model over `atoms`: the
+/// disjunction of the letters, projected onto `atoms`, that start some run
+/// of M. It is exact, not an over-approximation: M satisfies Init, read at
+/// position 0, and every disjunct starts a real run. The letters come first
+/// from the runs the oracle has stored, then from refutations: while the
+/// oracle refutes the disjunction so far, the refuting run starts with a
+/// letter outside it, which joins. A model with one initial letter costs
+/// one query after [`classify`]. Gives up with a reason when a query is
+/// `Unknown` or more than [`INITIAL_LETTERS`] letters appear, since a
+/// partial disjunction would be stronger than Init.
+pub fn initial<B: Backend>(
+    atoms: &BTreeSet<Arc<str>>,
+    oracle: &mut Oracle<B>,
+) -> Result<Formula, String> {
+    let first = |lasso: &Lasso| -> Option<Valuation> {
+        let at = lasso.prefix().first().or(lasso.cycle().first())?;
+        Some(at.intersection(atoms).cloned().collect())
+    };
+    let mut letters: BTreeSet<Valuation> = oracle.lassos().iter().filter_map(first).collect();
+    loop {
+        if letters.len() > INITIAL_LETTERS {
+            return Err(format!("more than {INITIAL_LETTERS} initial letters"));
+        }
+        let init = (letters.iter())
+            .map(|letter| {
+                (atoms.iter())
+                    .map(|a| match letter.contains(a) {
+                        true => Formula::atom(a),
+                        false => Formula::unary(UnaryOp::Not, Formula::atom(a)),
+                    })
+                    .reduce(|l, r| Formula::binary(BinaryOp::And, l, r))
+                    .unwrap_or_else(Formula::tt)
+            })
+            .reduce(|l, r| Formula::binary(BinaryOp::Or, l, r))
+            .unwrap_or_else(Formula::ff);
+        match oracle.check(&init) {
+            Verdict::Holds => return Ok(init),
+            Verdict::Fails(run) => {
+                let letter = first(&run).ok_or("an empty run")?;
+                if !letters.insert(letter) {
+                    return Err(format!("a run starting in {init} refutes it"));
+                }
+            }
+            Verdict::Unknown(reason) => return Err(format!("{init}: {reason}")),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -111,6 +171,38 @@ mod tests {
         let mut oracle = oracle();
         assert_eq!(classify(&f("G !b"), &mut oracle), Instance::Satisfied);
         assert_eq!(oracle.counters().queries, 1);
+    }
+
+    fn atoms(names: &[&str]) -> BTreeSet<Arc<str>> {
+        names.iter().map(|&n| Arc::from(n)).collect()
+    }
+
+    #[test]
+    fn the_initial_predicate_joins_the_first_letter_of_each_run() {
+        // With no stored run, the empty disjunction is refuted once per
+        // initial letter, then confirmed.
+        let mut fresh = oracle();
+        let found = initial(&atoms(&["a", "b"]), &mut fresh);
+        assert_eq!(found, Ok(f("(!a & !b) | (a & !b)")));
+        assert_eq!(fresh.counters().backend_calls, 3);
+        // After classify both runs are stored, so one query confirms them.
+        let mut oracle = oracle();
+        classify(&f("G a"), &mut oracle);
+        let calls = oracle.counters().backend_calls;
+        assert_eq!(initial(&atoms(&["a"]), &mut oracle), Ok(f("!a | a")));
+        assert_eq!(oracle.counters().backend_calls, calls + 1);
+        assert_eq!(initial(&atoms(&["b"]), &mut oracle), Ok(f("!b")));
+    }
+
+    #[test]
+    fn the_initial_predicate_gives_up_on_an_unknown() {
+        let found = initial(&atoms(&["a", "u"]), &mut oracle());
+        assert!(
+            found
+                .as_ref()
+                .is_err_and(|e| e.contains("no verdict for u")),
+            "{found:?}"
+        );
     }
 
     #[test]

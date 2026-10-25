@@ -354,6 +354,41 @@ fn search_bench_searches_a_degenerate_instance_only_when_asked() {
     assert!(!searched.contains("\"repairs\":[]"), "{searched}");
 }
 
+#[test]
+fn search_bench_flags_or_filters_repairs_true_at_the_start() {
+    let test = "search_bench_flags_or_filters_repairs_true_at_the_start";
+    if !have(&["nuXmv", "ltlfilt", "ltl2tgba"], test) {
+        return;
+    }
+    let model = write_model(
+        "toggle-initial.smv",
+        "MODULE main\nVAR x : boolean;\nASSIGN init(x) := FALSE; next(x) := !x;\nDEFINE p := x;\n",
+    );
+    let run = |initial: &str| {
+        let output = Command::new(env!("CARGO_BIN_EXE_search_bench"))
+            .args(["--backend", "nuxmv", "--model"])
+            .arg(&model)
+            .args(["--atoms", "p", "--ltl", "G p", "--seed", "1"])
+            .args(["--generations", "5", "--population", "8"])
+            .args(["--status", "binary", "--degenerate", "search"])
+            .args(["--initial", initial])
+            .output()
+            .expect("run search_bench");
+        assert!(output.status.success(), "{output:?}");
+        String::from_utf8(output.stdout).unwrap()
+    };
+    let ignored = run("ignore");
+    assert!(!ignored.contains("\"initial"), "{ignored}");
+    for mode in ["flag", "filter"] {
+        let stdout = run(mode);
+        say(&stdout);
+        assert!(stdout.contains("\"initial\":\"!p\""), "{stdout}");
+        assert!(!stdout.contains("\"initial_trivial\":true") || mode == "flag");
+        let repairs = stdout.matches("\"formula\"").count();
+        assert_eq!(stdout.matches("\"initial_trivial\"").count(), repairs);
+    }
+}
+
 /// DEFINEs naming the propositions of abp4 `p2false`, appended to its last
 /// module, `main`.
 const ABP4_DEFINES: &str = "

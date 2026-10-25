@@ -329,6 +329,74 @@ A first version of the gate dropped every candidate vacuous on M. On abp4 it dro
 
 The `weaken` binary prints the flag as the third column of each repair line: the subformulae in which the repair is vacuous, separated by `; `, or `-` when there are none. A witness whose verdict is unknown adds `?`. A line `vacuity: queries=… unknowns=… backend_calls=…` gives the cost, and the gate's own time is on the `wall` line.
 
+## Triviality at the initial state
+
+Validity modulo I misses a second kind of trivial repair. CEGIW's foraging robots start at rest, and the gate reports `G(resting_p -> X(resting_p | X(resting_p | X resting_p))) | resting_p` on them. The disjunct `resting_p` is true at position 0 of every run, so the whole formula holds whatever M does afterwards. I says nothing about the first position, so the repair passes the triviality filter.
+
+### The candidate filter
+
+Let *Init* be the *initial-state predicate* of M over φ's atoms: the disjunction of the letters that start some run of M, each letter a conjunction of literals over every atom of φ. The candidate filter drops φ' when (I ∧ Init) → φ' is valid, read with Init at position 0 only. It is the triviality check with I ∧ Init in place of I, so it runs in the same `ltlfilt` batches as before, under the oracle's semantics, and adds no Spot process.
+
+`instance::initial` finds Init through the oracle, so one routine serves every back end: SMV `INIT` and `init()` assignments, Promela initial values, a PNML initial marking and the first letters of a trace set's positive traces. It starts from the first letters of the runs the oracle has stored, which after `classify` include the run that refutes φ. It then asks whether M satisfies their disjunction. Each refutation starts with a letter outside the disjunction, which joins it, so the loop ends with the exact projection of M's initial states onto φ's atoms. It gives up after 16 letters or on an `Unknown`, since a partial disjunction would be stronger than Init. A run then keeps I alone.
+
+`search_bench --initial flag` finds Init and marks each repair that I ∧ Init implies, in one more `ltlfilt` batch after the gate, without changing the search. `--initial filter` also hands I ∧ Init to the search's validity filter and to the gate, so these candidates leave the population as soon as they are scored. The default, `ignore`, asks nothing. The `weaken` binary has no such option.
+
+### Is position 0 the right line?
+
+Treating "true at the first position" as trivial has a cost. A repair `G ψ | init_p` is strictly stronger than ⊤ as a language, and on a second implementation that starts elsewhere it still says `G ψ`. Read as a statement about M, though, it holds on every model with M's encoding and M's first letter, whatever the model does next. That is the same reason I-validity counts as trivial: the fact comes from the model's interface and start, not from its behaviour. Reachable-state invariants are left out on purpose. They are truths of M's behaviour, and dropping every φ' implied by one would drop every repair.
+
+Vacuity overlaps with the check. `G ψ | init_p` is vacuous in `G ψ`, since its witness `init_p` holds on M, so the existing flag already marks the plain disjunctive case. The check is not the same as vacuity, however. Vacuity flags real repairs such as abp4's `G(s_get -> X F …)`, and the initial-state check does not; it also needs no oracle query per subformula. So three uses are possible: a filter in the loop and the gate, a flag on each repair beside vacuity, or a filter at the gate only. The last loses repairs without letting the search look elsewhere, so only the first two were measured.
+
+### Measured on the ablation set and CEGIW's cases
+
+Two arms ran on one commit, at 30 × 40 over seeds 1–10, on av3 (32 cores, 28 runs at once, no other load). `initflag` is the binary arm with `--initial flag`, so its search is the binary arm's and its marks give the post-hoc count. `initfilter` uses `--initial filter`. The instances are the 86 of the status ablation and CEGIW's nine cases, the degenerate ones searched (`forced-initflag` and `forced-initfilter`). The commands were the following, with the results in `bench/results/initial-*.csv`.
+
+```
+bench/graded_remote.sh bench/data/graded 28 init --seeds 1-10 --arms initflag,initfilter \
+    --out runs-init --filter '^(?!beem-anderson\.(3-2|3-4|5-2|5-4|7-4)$|beem-lamport\.8-4$|mcc-MedleyA-PT-09-)'
+bench/graded_run.py bench/data/cegiw 2 --seeds 1-10 --arms forced-initflag,forced-initfilter --out runs-init
+python3 bench/initial_stats.py bench/data/graded bench/results initial-graded --top bench/results/baselines-top.csv
+python3 bench/initial_stats.py bench/data/cegiw bench/results initial-cegiw \
+    --flag forced-initflag --filter forced-initfilter --top bench/results/baselines-cegiw.csv
+```
+
+The flag arm reproduces the binary arm of the reserve ablation, which ran the previous commit's search. Of 837 runs on the same instances and seeds, 815 report the same repairs; 19 of the 22 others had a back-end `Unknown` in one of the two runs, and the last 3 were not traced. All 860 flag runs and 851 of 860 filter runs finished; the other 9 filter runs passed the 3,600 s cap (lamport.6-4 three times, SieveSingleMsgMbox four times, anderson.7-2 and peterson.6-4 once each), where their flag twins took 1,514–2,732 s.
+
+| Family | Instances | Repairs | Marked | Marked and vacuous | Runs left with none | Of those, the filter run finds one | Instances left with none |
+|---|---|---|---|---|---|---|---|
+| RERS | 52 | 965 | 532 (55%) | 492 | 249 | 82 | 12 |
+| MCC | 19 | 541 | 220 (41%) | 217 | 45 | 32 | 1 |
+| BEEM | 14 | 228 | 111 (49%) | 110 | 28 | 7 | 0 |
+| abp4 `p2false` | 1 | 37 | 4 (11%) | 4 | 0 | 0 | 0 |
+| CEGIW cases | 9 | 166 | 32 (19%) | 32 | 11 | 2 | 0 |
+
+Repairs count over the flag arm's runs. A run is left with none when it reported repairs and every one is marked; an instance is left with none when that holds for all ten seeds. Every instance but one has at least one marked repair.
+
+Half the repairs are marked: 867 of 1,771 on the ablation set. The share is highest on RERS because every RERS run starts with the empty letter, before any action, so Init is the conjunction of every atom negated. Any top-level disjunct `!a` then holds at position 0. Representative marks, with Init after the instance, are these.
+
+- **RERS** 2016/103 p16, `!p_c0_t1`: `F G !p_c0_t1 | !p_c0_t1`, for φ = `F G !p_c0_t1`, on 7 seeds. 2016/104 p13, `!p_c3_t3 & !p_c3_t5`: `!p_c3_t3 | p_c3_t5`, which is the right side of φ's release read at position 0 alone, on 9 seeds. 2016/102 p19: `!p_c0_t2` for φ = `G !p_c0_t2`, the repair the ⊤ baseline already noted.
+- **BEEM** anderson.1-4 and six others, `!p_someoneincs`: `G F p_someoneincs | !p_someoneincs` on 5 seeds each. lamport.6-4: `!p_someoneincs W X F p_someoneincs`, which carries no vacuity flag.
+- **MCC** Peterson-PT-4 Cardinality-01, `a0 & !a1 & !a2`: `a0 | F a2`. Peterson-PT-2 Fireability-09, `!a0 & !a1`: `X G !F a1 | !a1`. ResAllocation-R010C002, `!a0 & a1 & …`: `F(!a0 | a1 & !(a2 & a3))`, whose `F` is met at position 0.
+- **abp4**, `s_get & !s_abp & …`: φ itself `| !s_abp`, since the sender starts with bit 0.
+- **CEGIW**, `resting_p`: `G(resting_p -> X(resting_p | X(resting_p | X resting_p))) | resting_p` and `resting_p U X(resting_p -> X F X X resting_p)` on forage-response, and the same `… | a_p` shapes on the two-state model.
+
+By construction, a marked formula holds on every word that satisfies I and starts in Init, so it says nothing about M after its first letter. The 32 CEGIW marks, the 36 distinct marks without a vacuity flag and about 20 others were also read by hand, and each reads as trivial. 823 of the 867 marked repairs already carry a vacuity flag; the 44 others (36 distinct) include `!p_c0_t2`, which has no subformula to replace, and conjunctions such as `G !(a & b) & !a` that restate I ∧ Init. The lasso count does not see the problem: 142 of 653 distinct marked repairs on the ablation set tie with ⊤, and the rest score above it. On forage-response the best score in the CEGIW comparison above, 0.9676, belongs to a marked repair; the filter arm finds no repair there on any seed.
+
+The filter in the loop beats removing the marks afterwards.
+
+| Family | Found rate, flag after removal | Found rate, filter | Higher / lower / equal | p | Back-end calls, flag → filter | Wall, flag → filter |
+|---|---|---|---|---|---|---|
+| All 86 | 0.70 | 0.90 | 36 / 10 / 40 | <0.0001 | 49 → 67.25 (+10.5, p<0.0001) | 17.7 → 20.8 s (+1.0 s, p<0.0001) |
+| RERS | 0.40 | 0.60 | 25 / 9 / 18 | 0.0014 | 63.75 → 89.75 | 12.2 → 12.0 s |
+| MCC | 0.90 | 1.00 | 10 / 0 / 9 | 0.0057 | 48 → 68.5 | 131.8 → 130.8 s |
+| BEEM | 1.00 | 1.00 | 1 / 1 / 12 | 1.0 | 14.75 → 17.25 | 14.3 → 15.0 s |
+
+Each cell is the median over instances of the per-instance value over the seeds both arms finished, and p is the Wilcoxon signed-rank test of the paired per-instance differences. The differences are medians of per-instance differences, so they are not the differences of the two medians. Of the 13 instances left with no repair after removal, the filter finds one on 10, at rates of 0.1 to 0.8. It finds none on RERS 2016/103 p4, 105 p12 and 105 p17, nor on CEGIW's degenerate forage-response. Of 322 flag runs left with none, the filter run on the same seed found a repair in 121. The repairs it finds are as strong as the survivors of removal: the net subsumption share of the filter's pooled maximal set against the flag arm's, after removal, has median 0 (22 instances favour the filter, 16 the flag arm, 31 tie; p = 0.91).
+
+The cost is in the search, not in Init. `instance::initial` took a median of 18 ms and at most 0.95 s, and exactly one back-end call on every run, since the stored runs always held every initial letter. The filter arm makes a median 10.5 more back-end calls per run, while the final population holds as many proved candidates (median 24 against 23). On the four instances whose calls take tens of seconds, the extra calls pushed 9 of 40 runs past the cap.
+
+The filter removes half of what the gate reported, and what it removes is trivial by construction. Its price is about ten more back-end calls per run, which matters only where each call takes tens of seconds.
+
 ## The validity filter
 
 The brief asked for a syntactic validity check only. That was not enough. On the first runs, with only the `simplify` check in the filter, the gate reported one repair on each of the two end-to-end models, and both were valid: `G(ack -> X(!req <-> ack) | ack)` and a formula ending in `s_wait W (… | !s_wait)`. A valid candidate holds on every model and so wins the status objective outright, and the search crowded towards them. PEREDUR's vacuity filter asks a solver the same question per guarantee, so the filter now sends each generation's offspring to `ltlfilt` in one batch, and the gate asks again. The question is now validity modulo I, as described above. The filter runs after scoring and asks only about the candidates that hold on M. M satisfies I, so a candidate that fails on M is not valid modulo I. A batch that fails is retried one candidate per exec (`implications_each`), and a candidate whose own exec fails is kept unfiltered, so the search never depends on machine load. The filter, the counter and the gate's pruning of dominated repairs give each Spot exec 2 s, and the gate's proof of φ ⇒ φ' gives it 10 s (`SEARCH_LIMITS` and `GATE_LIMITS` in `src/main.rs`), against 120 s for the oracle's batches. "Slow implication batches" in `trace-sets.md` has the measurement behind these choices.

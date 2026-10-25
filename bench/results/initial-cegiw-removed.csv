@@ -1,0 +1,33 @@
+instance,family,initial,formula,vacuous,seeds,semantic,top_semantic
+abp4-p2false,cegiw,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1)))) | !s_get | !s_abp & !r_ack0,16,1,0.963021,0.959775
+abp4-p2false,cegiw,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1)))) | !s_abp,15,1,0.964558,0.959775
+abp4-p2false,cegiw,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1))) | s_abp) | !r_ack1,16,1,0.964234,0.959775
+abp4-p2false,cegiw,!r_ack0 & !r_ack1 & !s_abp & s_get & !s_wait,G((r_ack0 -> X G(s_get -> X(!s_get U (s_wait & (!s_abp & r_ack0 | s_abp & r_ack1))))) | r_ack1) | !r_ack1,19,1,0.964439,0.959775
+forage-absence,cegiw,resting_p,G(resting_p & X !resting_p -> X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & (X !resting_p | resting_p)))))))))))))))) | resting_p,35,1,0.639858,0.621732
+forage-absence,cegiw,resting_p,G(resting_p & X !resting_p -> X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X !resting_p))) | !resting_p))))))))))) | resting_p,34,1,0.639852,0.621732
+forage-absence,cegiw,resting_p,G(resting_p & X !resting_p -> X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X(!resting_p & X X !resting_p)))))))))))))) | resting_p,33,1,0.639857,0.621732
+forage-limit-absence,cegiw,resting_p,G(resting_p & X !resting_p -> X(!resting_p & X(!resting_p & X !resting_p))) | resting_p,10,1,0.639345,0.621732
+forage-limit-response,cegiw,resting_p,G(resting_p -> X(resting_p | X(resting_p | X resting_p))) | resting_p,8,1,0.967602,0.953114
+forage-limit-response,cegiw,resting_p,G(resting_p -> G(resting_p | X(resting_p | X resting_p))) | resting_p,8,1,0.967602,0.953114
+forage-response,cegiw,resting_p,resting_p U X(resting_p -> X F X X resting_p),5,1,0.953114,0.953114
+forage-response,cegiw,resting_p,G(resting_p -> X(resting_p | X(resting_p | X resting_p))) | resting_p,8,1,0.967602,0.953114
+forage-response,cegiw,resting_p,G(resting_p -> X((!resting_p -> resting_p) | X(resting_p | X resting_p))) | resting_p,10,1,0.967602,0.953114
+forage-response,cegiw,resting_p,resting_p | G(X resting_p U G(resting_p -> X(resting_p | X((!resting_p -> resting_p) | X resting_p) | resting_p))),13,1,0.967602,0.953114
+forage-response,cegiw,resting_p,resting_p U X(resting_p -> G(resting_p R F X resting_p)),5,1,0.953486,0.953114
+forage-response,cegiw,resting_p,resting_p | G(resting_p -> resting_p U F(G resting_p | X X F resting_p)),10,1,0.953864,0.953114
+forage-response,cegiw,resting_p,G(resting_p -> X(resting_p | X(resting_p | X resting_p)) & resting_p) | resting_p,9,1,0.967602,0.953114
+minimal-absence,cegiw,a_p,G(a_p & X !a_p -> X(!a_p & X((a_p <-> !(a_p -> !a_p)) & X X !a_p))) | X(a_p & X !a_p) | a_p,14,1,0.632927,0.621732
+minimal-absence,cegiw,a_p,!a_p -> G X((a_p -> !a_p) -> !G(a_p R !(!a_p U G(a_p & X(a_p -> !a_p) -> X(!a_p & X(!a_p & X F(!a_p & X(!a_p & X(a_p & X(a_p -> !a_p) | a_p))) | !a_p)))))),27,1,0.632386,0.621732
+minimal-limit-absence,cegiw,a_p,G(a_p & X !a_p -> X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X X(!a_p & X !a_p))))))))))))) | a_p,31,1,0.639857,0.621732
+minimal-limit-absence,cegiw,a_p,G(a_p & X !a_p -> X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X(!a_p & X !a_p))))))))))))))) | a_p,34,1,0.639858,0.621732
+minimal-limit-absence,cegiw,a_p,!a_p -> !(F X(F !a_p & !a_p) U (X(!a_p & X(!a_p & X(a_p & X(!a_p & X a_p)))) | X(a_p & X(!a_p & X(a_p & X !a_p)))) & X !a_p),26,1,0.627206,0.621732
+minimal-limit-absence,cegiw,a_p,!a_p -> !((a_p U X F !a_p) U (X(!a_p & X(!a_p & X(a_p & X(!a_p & X a_p)))) U X X(a_p & X(!a_p & X(!a_p & X a_p))) & a_p) & F !a_p),24,1,0.628484,0.621732
+minimal-limit-absence,cegiw,a_p,!a_p -> !(F X X(a_p & X(!a_p & X X a_p)) & (X !a_p | a_p)),14,1,0.628524,0.621732
+minimal-limit-response,cegiw,a_p,G(a_p -> X(a_p | X a_p)) | a_p,6,1,0.893625,0.873733
+minimal-limit-response,cegiw,a_p,a_p U X(G(a_p | X a_p) | !a_p) | a_p,8,1,0.881988,0.873733
+minimal-limit-response,cegiw,a_p,a_p | F G(G !a_p | (a_p | X a_p)),8,1,0.887751,0.873733
+minimal-response,cegiw,a_p,a_p | G(a_p -> X(a_p | X a_p) | !a_p),8,1,0.893625,0.873733
+minimal-response,cegiw,a_p,(a_p -> !a_p) -> G X X(a_p U F X a_p | !a_p),9,1,0.874473,0.873733
+minimal-response,cegiw,a_p,G(a_p -> X(a_p | X a_p)) | !(a_p -> !a_p),6,1,0.893625,0.873733
+minimal-response,cegiw,a_p,G(X(a_p | X a_p) | (a_p -> !a_p)) | a_p,8,1,0.893625,0.873733
+minimal-response,cegiw,a_p,a_p | !a_p W X X a_p,5,1,0.875621,0.873733
