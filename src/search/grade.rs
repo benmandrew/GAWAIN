@@ -7,8 +7,9 @@
 //! scores 0, and for a fixed set of lassos the score is monotone under
 //! implication. The set grows during a run, so the whole pool is rescored
 //! before each selection. [`Status::GradedFeasible`] keeps the grade but
-//! ranks every proved candidate above every other in selection. The
-//! default, [`Status::Binary`], scores every such candidate 0.
+//! ranks every proved candidate above every other in selection, and
+//! [`Status::GradedReserve`] also keeps a share of the population for the
+//! others. The default, [`Status::Binary`], scores every such candidate 0.
 
 use std::time::{Duration, Instant};
 
@@ -32,17 +33,34 @@ pub enum Status {
     /// only the candidates that are not proved. Kept for the ablation in
     /// `docs/dev/search.md`.
     GradedFeasible,
+    /// The order of [`Status::GradedFeasible`], with ⌈population / d⌉ slots
+    /// kept for candidates that are not proved, where d is the field, so φ
+    /// and the candidates climbing the grade stay in the population. Kept
+    /// for the ablation in `docs/dev/search.md`.
+    GradedReserve(usize),
 }
 
 impl Status {
     /// Whether candidates are graded against the stored lassos.
     pub fn graded(self) -> bool {
-        matches!(self, Status::Graded | Status::GradedFeasible)
+        matches!(
+            self,
+            Status::Graded | Status::GradedFeasible | Status::GradedReserve(_)
+        )
     }
 
     /// Whether selection ranks proved candidates above all others.
     pub fn feasible_first(self) -> bool {
-        self == Status::GradedFeasible
+        matches!(self, Status::GradedFeasible | Status::GradedReserve(_))
+    }
+
+    /// How many of `size` slots selection keeps for candidates that are not
+    /// proved, when there are enough of them.
+    pub fn reserved(self, size: usize) -> usize {
+        match self {
+            Status::GradedReserve(divisor) => size.div_ceil(divisor),
+            _ => 0,
+        }
     }
 }
 
@@ -142,6 +160,16 @@ mod tests {
 
     fn statuses(pool: &[Scored]) -> Vec<f64> {
         pool.iter().map(|s| s.objectives[STATUS]).collect()
+    }
+
+    #[test]
+    fn the_reserve_rounds_up() {
+        assert_eq!(Status::GradedReserve(4).reserved(40), 10);
+        assert_eq!(Status::GradedReserve(4).reserved(41), 11);
+        assert_eq!(Status::GradedReserve(2).reserved(1), 1);
+        assert_eq!(Status::GradedFeasible.reserved(40), 0);
+        assert!(Status::GradedReserve(4).feasible_first());
+        assert!(Status::GradedReserve(4).graded());
     }
 
     #[test]

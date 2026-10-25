@@ -6,7 +6,8 @@
 //! ```text
 //! search_bench --backend nuxmv|explicit|spin|tapaal --model PATH
 //!     [--atoms a,b,...] [--ltl 'φ'] [--property ID]
-//!     --seed N --generations G --population P --status binary|graded|graded-feasible
+//!     --seed N --generations G --population P
+//!     --status binary|graded|graded-feasible|graded-reserve-D
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
 //! ```
 //!
@@ -48,7 +49,7 @@ use gawain::oracle::{Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -117,11 +118,14 @@ fn parse_args() -> Result<Args, String> {
                     "graded" => Status::Graded,
                     "binary" => Status::Binary,
                     "graded-feasible" => Status::GradedFeasible,
-                    _ => {
-                        return Err(format!(
-                            "--status {value}: binary, graded or graded-feasible"
+                    other => match other.strip_prefix("graded-reserve-").map(str::parse) {
+                        Some(Ok(divisor)) if divisor >= 1 => Status::GradedReserve(divisor),
+                        _ => {
+                            return Err(format!(
+                            "--status {value}: binary, graded, graded-feasible or graded-reserve-D"
                         ))
-                    }
+                        }
+                    },
                 })
             }
             "--timeout" => args.timeout = number()?,
@@ -230,11 +234,12 @@ fn search_on<B: Backend>(
     field(&mut out, "phi", &json(&phi.to_string()));
     field(&mut out, "seed", &args.seed.to_string());
     let status = match args.status {
-        Some(Status::Graded) => "graded",
-        Some(Status::GradedFeasible) => "graded-feasible",
-        _ => "binary",
+        Some(Status::Graded) => "graded".to_string(),
+        Some(Status::GradedFeasible) => "graded-feasible".to_string(),
+        Some(Status::GradedReserve(divisor)) => format!("graded-reserve-{divisor}"),
+        _ => "binary".to_string(),
     };
-    field(&mut out, "status", &json(status));
+    field(&mut out, "status", &json(&status));
     let class = match classify(&phi, &mut oracle) {
         Instance::Satisfied => "satisfied".to_string(),
         Instance::Degenerate => "degenerate".to_string(),

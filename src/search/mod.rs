@@ -129,7 +129,6 @@ pub fn search<B: Backend>(
     assert!(params.population >= 1, "the population needs a member");
     let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
     let mut grader = Grader::new(phi);
-    let feasible_first = params.status.feasible_first();
     // The stored lassos only grow, so the whole pool is regraded against
     // one set before it is ranked.
     let mut regrade = |pool: &mut Vec<Scored>, oracle: &Oracle<B>| {
@@ -139,7 +138,7 @@ pub fn search<B: Backend>(
     };
     let mut population = score(vec![phi.clone()], phi, oracle, counter);
     regrade(&mut population, oracle);
-    population = select(population, params.population, feasible_first);
+    population = select(population, params.population, params.status);
     for _ in 0..params.generations {
         let offspring = filter(breed(&population, &atoms, rng), phi);
         let scored = score(offspring, phi, oracle, counter);
@@ -150,7 +149,7 @@ pub fn search<B: Backend>(
             spot_limits,
         ));
         regrade(&mut population, oracle);
-        population = select(population, params.population, feasible_first);
+        population = select(population, params.population, params.status);
     }
     (population, grader.counts())
 }
@@ -256,11 +255,15 @@ pub fn invariant(groups: &[Vec<Arc<str>>]) -> Formula {
 
 /// PEREDUR's `nsga2-apportion` survivor step: drop repeats up to
 /// [`Formula::canonical`], sort by the crowded-comparison order, then keep
-/// the best `size` or replicate the distinct ones up to `size`. With
-/// `feasible_first`, a candidate that holds is feasible and every other is
-/// not, so every holder ranks above every other candidate (see
-/// [`nsga2::constrained_dominates`]); without it all are feasible.
-pub fn select(pool: Vec<Scored>, size: usize, feasible_first: bool) -> Vec<Scored> {
+/// the best `size` or replicate the distinct ones up to `size`. When
+/// `status` ranks feasible candidates first, a candidate that holds is
+/// feasible and every other is not, so every holder ranks above every other
+/// candidate (see [`nsga2::constrained_dominates`]); otherwise all are
+/// feasible. When the pool is cut, [`Status::reserved`] slots go to the
+/// best candidates that do not hold, as far as there are any, and the
+/// holders fill the rest; a pool short of either kind leaves its slots to
+/// the other.
+pub fn select(pool: Vec<Scored>, size: usize, status: Status) -> Vec<Scored> {
     let mut seen = HashSet::new();
     let distinct: Vec<Scored> = pool
         .into_iter()
@@ -268,15 +271,27 @@ pub fn select(pool: Vec<Scored>, size: usize, feasible_first: bool) -> Vec<Score
         .collect();
     let objectives: Vec<Vec<f64>> = distinct.iter().map(|s| s.objectives.clone()).collect();
     let feasible: Vec<bool> = (distinct.iter())
-        .map(|s| !feasible_first || s.holds())
+        .map(|s| !status.feasible_first() || s.holds())
         .collect();
     let (order, ranks) = nsga2::crowded_order(&objectives, &feasible);
     if order.len() >= size {
-        return order
-            .into_iter()
-            .take(size)
-            .map(|i| distinct[i].clone())
-            .collect();
+        // Fronts never mix the two kinds, so each kind's part of `order`
+        // is its own crowded order.
+        let (proved, unproved): (Vec<usize>, Vec<usize>) =
+            order.iter().partition(|&&i| distinct[i].holds());
+        let reserve = status.reserved(size);
+        let kept: Vec<usize> = if reserve == 0 {
+            order.into_iter().take(size).collect()
+        } else {
+            let others = reserve
+                .min(unproved.len())
+                .max(size.saturating_sub(proved.len()));
+            let holders = size - others;
+            (proved.into_iter().take(holders))
+                .chain(unproved.into_iter().take(others))
+                .collect()
+        };
+        return kept.into_iter().map(|i| distinct[i].clone()).collect();
     }
     let sorted_ranks: Vec<usize> = order.iter().map(|&i| ranks[i]).collect();
     let copies = nsga2::apportion(&sorted_ranks, size);
@@ -539,7 +554,7 @@ mod tests {
             scored("!!a", 0.0, 1.0),
             scored("c", 0.0, 0.1),
         ];
-        let next = select(pool, 7, false);
+        let next = select(pool, 7, Status::Binary);
         let names: Vec<String> = next.iter().map(|s| s.formula.to_string()).collect();
         // Front 0 is {a, b} (the repeat !!a is dropped), front 1 is {c}.
         // Spare 4 by weights 1, 1, 1/2: 1.6, 1.6, 0.8.
@@ -553,7 +568,7 @@ mod tests {
             scored("b", 1.0, 0.2),
             scored("c", 0.0, 0.9),
         ];
-        let next = select(pool, 2, false);
+        let next = select(pool, 2, Status::Binary);
         let names: Vec<String> = next.iter().map(|s| s.formula.to_string()).collect();
         assert_eq!(names, ["b", "c"]);
     }
@@ -573,9 +588,79 @@ mod tests {
         let names = |next: Vec<Scored>| -> Vec<String> {
             next.iter().map(|s| s.formula.to_string()).collect()
         };
-        assert_eq!(names(select(pool(), 2, false)), ["a", "b"]);
-        assert_eq!(names(select(pool(), 2, true)), ["b", "d"]);
-        assert_eq!(names(select(pool(), 3, true)), ["b", "d", "a"]);
+        assert_eq!(names(select(pool(), 2, Status::Binary)), ["a", "b"]);
+        assert_eq!(names(select(pool(), 2, Status::GradedFeasible)), ["b", "d"]);
+        assert_eq!(
+            names(select(pool(), 3, Status::GradedFeasible)),
+            ["b", "d", "a"]
+        );
+    }
+
+    #[test]
+    fn a_reserve_keeps_failures_beside_the_holders() {
+        // Four holders and three failures; φ is the failure with both
+        // similarities at 1.
+        let pool = || {
+            vec![
+                scored("h1", 1.0, 0.4),
+                scored("h2", 1.0, 0.3),
+                scored("h3", 1.0, 0.2),
+                scored("h4", 1.0, 0.1),
+                scored("phi", 0.0, 1.0),
+                scored("c", 0.5, 0.8),
+                scored("e", 0.2, 0.5),
+            ]
+        };
+        let names = |next: Vec<Scored>| -> Vec<String> {
+            next.iter().map(|s| s.formula.to_string()).collect()
+        };
+        // Without a reserve the holders take every slot.
+        assert_eq!(
+            names(select(pool(), 4, Status::GradedFeasible)),
+            ["h1", "h2", "h3", "h4"]
+        );
+        // ⌈4 / 2⌉ = 2 slots go to the failures on their own front 0, φ and
+        // c; e is dominated by c.
+        assert_eq!(
+            names(select(pool(), 4, Status::GradedReserve(2))),
+            ["h1", "h2", "phi", "c"]
+        );
+        // ⌈6 / 4⌉ = 2, so four holders.
+        assert_eq!(
+            names(select(pool(), 6, Status::GradedReserve(4))),
+            ["h1", "h2", "h3", "h4", "phi", "c"]
+        );
+    }
+
+    #[test]
+    fn a_short_kind_leaves_its_slots_to_the_other() {
+        let names = |next: Vec<Scored>| -> Vec<String> {
+            next.iter().map(|s| s.formula.to_string()).collect()
+        };
+        // One failure for a reserve of two: the holders take the spare slot.
+        let few_failures = vec![
+            scored("h1", 1.0, 0.4),
+            scored("h2", 1.0, 0.3),
+            scored("h3", 1.0, 0.2),
+            scored("h4", 1.0, 0.1),
+            scored("phi", 0.0, 1.0),
+        ];
+        assert_eq!(
+            names(select(few_failures, 4, Status::GradedReserve(2))),
+            ["h1", "h2", "h3", "phi"]
+        );
+        // One holder for a reserve of one in four: the failures take three.
+        let few_holders = vec![
+            scored("h1", 1.0, 0.4),
+            scored("phi", 0.0, 1.0),
+            scored("c", 0.5, 0.8),
+            scored("d", 0.8, 0.3),
+            scored("e", 0.2, 0.5),
+        ];
+        assert_eq!(
+            names(select(few_holders, 4, Status::GradedReserve(4))),
+            ["h1", "phi", "d", "c"]
+        );
     }
 
     #[test]

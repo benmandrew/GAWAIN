@@ -17,7 +17,9 @@ own systemd scope when `systemd-run --user` works, and under `ulimit -v`
 otherwise.
 
 The arms are `binary`, `graded` (option B), `feasible` (B with every
-proved candidate ranked first) and `forced` (binary, searching
+proved candidate ranked first), `reserve4` and `reserve2` (feasible with a
+quarter or a half of the population kept for unproved candidates) and
+`forced` (binary, searching
 degenerate instances too, for the CEGIW case studies); see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (branch `exp/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
@@ -44,6 +46,8 @@ ARMS = {
     # case studies (bench/baselines_cegiw.py).
     'forced': ['--status', 'binary', '--degenerate', 'search'],
     'feasible': ['--status', 'graded-feasible'],
+    'reserve4': ['--status', 'graded-reserve-4'],
+    'reserve2': ['--status', 'graded-reserve-2'],
 }
 
 
