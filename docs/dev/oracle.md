@@ -6,7 +6,7 @@
 
 `Oracle::check` stops at the first tier that answers.
 
-0. **Memo.** A map from `φ'.canonical()` to an earlier verdict. The key never renames atoms, since atoms name model variables. `Unknown` is never stored, so a timed-out query is asked again.
+0. **Memo.** A map from `φ'.canonical()` to an earlier verdict. The key never renames atoms, since atoms name model variables. `Unknown` is stored too, so a timed-out query costs its timeout once per run; under one run's fixed limits a repeat never gave a verdict (see "Unknown verdicts" in `oracle-measurements.md`).
 1. **Lasso cache.** `LassoCache::refutes` evaluates φ' on every stored run of M. A run that violates φ' refutes it. This tier never proves anything.
 2. **Known truths.** `KnownTruths::may_imply` keeps only the stored truths whose fingerprint does not rule out ψ ⇒ φ'. One `ltlfilt` exec of Spot's rewriting rules (`syntactic_implications`) then tries every surviving pair. When it proves none, one exec of the complete check (`implications`) tries them again, for at most 250 ms (`COMPLETE_CHECK_BUDGET`). A proved pair proves M ⊨ φ'. This tier never refutes anything.
 3. **Back end.** `Backend::check`, for example `Nuxmv`.

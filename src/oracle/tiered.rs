@@ -16,7 +16,11 @@
 //! evicts every stored truth Spot's rewriting rules prove it implies.
 //! Eviction only keeps the store small, so it never runs the complete check,
 //! which on long formulas costs more than the model checker. `Unknown` is
-//! never memoised. See "Recommended oracle" in
+//! memoised too, so a run asks the back end once per formula: under the
+//! fixed limits of one run, a repeat ended `Unknown` every time it was
+//! measured, and on four BEEM models repeats took 33–82% of a run's wall
+//! time (see "Unknown verdicts" in `docs/dev/oracle-measurements.md`).
+//! `Unknown` feeds no other tier. See "Recommended oracle" in
 //! `docs/dev/oracle-performance.md`, `docs/dev/oracle.md` and the eviction
 //! measurements in `docs/dev/oracle-measurements.md`.
 //!
@@ -149,7 +153,7 @@ impl<B: Backend> Oracle<B> {
                 }
                 Verdict::Unknown(reason) => {
                     self.counters.backend_unknowns += 1;
-                    return Verdict::Unknown(reason);
+                    Verdict::Unknown(reason)
                 }
             }
         };
@@ -286,15 +290,15 @@ mod tests {
     }
 
     #[test]
-    fn unknown_is_never_memoised() {
+    fn unknown_is_memoised() {
         let mut oracle = oracle();
         for _ in 0..3 {
             assert!(matches!(oracle.check(&f("F u")), Verdict::Unknown(_)));
         }
-        assert_eq!(oracle.backend.calls, 3);
+        assert_eq!(oracle.backend.calls, 1);
         let counters = oracle.counters();
-        assert_eq!(counters.memo_hits, 0);
-        assert_eq!(counters.backend_unknowns, 3);
+        assert_eq!(counters.memo_hits, 2);
+        assert_eq!(counters.backend_unknowns, 1);
     }
 
     #[test]

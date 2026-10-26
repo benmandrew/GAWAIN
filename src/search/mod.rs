@@ -94,8 +94,8 @@ pub fn score<B: Backend>(
             .iter()
             .map(|candidate| match oracle.check(candidate) {
                 Verdict::Holds => 1.0,
-                // Unknown scores as a failure. The oracle never memoises
-                // it, so the same formula is asked again if it comes back.
+                // Unknown scores as a failure. The oracle memoises it, so
+                // a formula that comes back costs nothing again.
                 Verdict::Fails(_) | Verdict::Unknown(_) => 0.0,
             })
             .collect();

@@ -52,6 +52,7 @@
 //! the position. The state before the first step is not a position, so the
 //! claim for φ is `X (φ)`.
 
+use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 use std::fs;
@@ -75,9 +76,17 @@ pub const MAX_CLAIMS: usize = 200;
 /// 128 MB and about 100 ms before the search starts.
 const HASH_BITS: &str = "-w18";
 
-/// `pan`'s search depth bound. Reaching it truncates the search, which is
-/// then reported as `Verdict::Unknown`.
-const DEPTH: &str = "-m200000";
+/// `pan`'s first search depth bound. A search that reaches it is run again
+/// at [`DEEP_DEPTH`], and every later search of the back end starts there.
+/// `pan` allocates its stack up front, so the deep bound would cost about
+/// 0.5 s and 0.5 GB on every search of a small model; BEEM models such as
+/// lamport.6-4 need depths near 300,000. See "Depth bound" in
+/// `docs/dev/oracle-performance.md`.
+const DEPTH: u32 = 200_000;
+
+/// `pan`'s second and last depth bound. A search that reaches it is reported
+/// as `Verdict::Unknown`.
+const DEEP_DEPTH: u32 = 10_000_000;
 
 /// Address space kept free of `-DMEMLIM` for the `pan` binary itself.
 const PAN_HEADROOM_MB: u64 = 64;
@@ -91,6 +100,9 @@ pub struct Spin {
     dir: PathBuf,
     /// Whether every step is a position (see "Stepwise models").
     stepwise: bool,
+    /// The depth bound of the next search, [`DEPTH`] until a search reaches
+    /// it.
+    depth: Cell<u32>,
 }
 
 /// An interface atom `name`, defined as `var == value`.
@@ -128,6 +140,7 @@ impl Spin {
             limits,
             dir: scratch_dir()?,
             stepwise: false,
+            depth: Cell::new(DEPTH),
         })
     }
 
@@ -236,12 +249,21 @@ impl Spin {
         let _ = fs::remove_file(self.dir.join("claims.pml.trail"));
         let pan = self.dir.join("pan");
         let claim = format!("c{k}");
-        let args = ["-a", "-n", HASH_BITS, DEPTH, "-N", &claim];
-        let output = match self.run(&pan.to_string_lossy(), &args) {
-            Ok(output) => output,
-            Err(reason) => return unknown(reason),
+        let output = loop {
+            let depth = self.depth.get();
+            let bound = format!("-m{depth}");
+            let args = ["-a", "-n", HASH_BITS, &bound, "-N", &claim];
+            let output = match self.run(&pan.to_string_lossy(), &args) {
+                Ok(output) => output,
+                Err(reason) => return unknown(reason),
+            };
+            if depth < DEEP_DEPTH && search_result(&output.stdout) == Err(Truncated::Depth) {
+                self.depth.set(DEEP_DEPTH);
+                continue;
+            }
+            break output;
         };
-        match search_result(&output.stdout) {
+        match search_result(&output.stdout).map_err(|t| t.reason(self.depth.get())) {
             Ok(false) => Verdict::Holds,
             Ok(true) => match self.replay() {
                 Ok(lasso) if lasso.satisfies(formula) => unknown(format!(
@@ -429,9 +451,30 @@ fn accepting(claims: &str) -> Result<String, String> {
     Ok(out)
 }
 
+/// Why `pan` gave no verdict.
+#[derive(Debug, PartialEq, Eq)]
+enum Truncated {
+    /// The search reached the depth bound.
+    Depth,
+    /// The search reached `-DMEMLIM` or ran out of memory.
+    Memory,
+    /// `pan` printed no error count; its output.
+    NoResult(String),
+}
+
+impl Truncated {
+    fn reason(self, depth: u32) -> String {
+        match self {
+            Truncated::Depth => format!("search depth exhausted at -m{depth}"),
+            Truncated::Memory => "pan ran out of memory".into(),
+            Truncated::NoResult(stdout) => format!("no result from pan: {}", stdout.trim()),
+        }
+    }
+}
+
 /// Reads whether `pan` found a violation. A truncated or out-of-memory
 /// search without one is an error, never a proof.
-fn search_result(stdout: &str) -> Result<bool, String> {
+fn search_result(stdout: &str) -> Result<bool, Truncated> {
     let errors = stdout.lines().find_map(|line| {
         let (_, count) = line.split_once("errors: ")?;
         count.trim().parse::<u64>().ok()
@@ -440,14 +483,14 @@ fn search_result(stdout: &str) -> Result<bool, String> {
         return Ok(true);
     }
     if stdout.contains("max search depth too small") {
-        return Err(format!("search depth exhausted at {DEPTH}"));
+        return Err(Truncated::Depth);
     }
     if stdout.contains("reached -DMEMLIM bound") || stdout.contains("out of memory") {
-        return Err("pan ran out of memory".into());
+        return Err(Truncated::Memory);
     }
     match errors {
         Some(_) => Ok(false),
-        None => Err(format!("no result from pan: {}", stdout.trim())),
+        None => Err(Truncated::NoResult(stdout.into())),
     }
 }
 
@@ -664,10 +707,14 @@ accept_all:
             Ok(true)
         );
         let deep = "error: max search depth too small\n errors: 0\n";
-        assert!(search_result(deep).unwrap_err().contains("depth"));
+        assert_eq!(search_result(deep), Err(Truncated::Depth));
         let full = "pan: reached -DMEMLIM bound\n";
-        assert!(search_result(full).unwrap_err().contains("memory"));
-        assert!(search_result("").is_err());
+        assert_eq!(search_result(full), Err(Truncated::Memory));
+        assert!(matches!(search_result(""), Err(Truncated::NoResult(_))));
+        assert_eq!(
+            Truncated::Depth.reason(DEEP_DEPTH),
+            "search depth exhausted at -m10000000"
+        );
     }
 
     /// A replay in SPIN's format: the sender's and listener's steps of a

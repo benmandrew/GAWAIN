@@ -46,6 +46,14 @@ SPIN's state space for RERS is much larger than the model's. The Promela encodin
 
 The back end (`src/oracle/spin.rs`) returns lassos over observable positions: the initial state and each receive into an atom variable, one per RERS action. SPIN's run is a stuttering of that lasso, so the two agree on every `X`-free formula. They need not agree on a formula with `X`, because SPIN's `X` counts its own steps, including the `Listener` and rendezvous steps. A SPIN verdict on such a formula is therefore about SPIN's run, not the model's, and the back end turns any counterexample that its lasso does not refute into `Unknown`. SPIN's translator also ends a safety violation with an `assert` in the claim, which gives a finite trail and no lasso, so the back end rewrites each claim to move to an accepting self-loop instead.
 
+### Depth bound
+
+`pan` runs with a *depth bound* of `-m200000` and a hash table of `-w18`, both sized on RERS models. `pan` allocates its depth-first search (DFS) stack up front, so the bound costs memory on every call: as measured above, `-m10000000` took 0.57 s at 679,840 KB on a 23-state search. A large bound on every call would slow every query on a RERS-size model.
+
+On BEEM the bound was too small. A probe ran one GA run per instance (seed 1, 30 × 40, on av2). Of the `Unknown` back-end calls, 39 of 42 on lamport.6-4, 41 of 43 on peterson.6-4 and all 40 on rether.6-5 ended "search depth exhausted at -m200000", each after about a minute. Run directly on lamport.6-4 with the claim `[](p_someoneincs -> <>!p_someoneincs)`, `pan` at `-m200000` stopped after about 20 s with 11.5 million states stored and no verdict. At `-m10000000 -w26` it completed in 26 s, reached depth 289,939 and stored 12.9 million states with 0 errors, so the property holds. Its DFS stack took 534 MB at that bound.
+
+The back end (`src/oracle/spin.rs`) therefore starts at 200,000. When a search reaches the bound, it reruns that search at 10,000,000, which needs no recompile, and keeps the deep bound for every later search of that back end. A search that reaches the deep bound is `Unknown`. The test `spin_raises_the_depth_bound_of_a_deep_search` in `tests/tools.rs` checks a 300,000-step counter, which the old code answered `Unknown`. The deep bound costs its memory only on the back ends that need it.
+
 ## Back end 2: nuXmv
 
 nuXmv has no Promela front end, so the RERS models were translated to SMV from the same Promela (one enumerated variable per component plus `last`, the last action; one `TRANS` disjunct per action). nuXmv reports 19,255 reachable states for problem104, the same count as the explicit Kripke structure.

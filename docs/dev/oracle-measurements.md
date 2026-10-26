@@ -169,10 +169,6 @@ On production-cell the 153 back-end truths now cost a median of 2.38 s and a mea
 
 **Process start-up.** The rest of the query path now costs 30 s of 8,854 s on nuXmv (0.34%) and 21 s of 90,071 s on SPIN (0.02%), over 763 and 2,341 `ltlfilt` execs. A long-lived `ltlfilt` would save at most the 8 ms start-up per exec, about 6 s and 19 s, under 0.1% of either total. The bench does not justify it, so the oracle still starts one process per batch.
 
-## Unknown verdicts
-
-Every `Unknown` was a back-end timeout. SPIN gave 721: 80 on rers2016-105, 103 on 106, and 96, 140, 155 and 147 on rers2017-102 to 105. nuXmv gave 22: 4 on bc57-sensors (all on `p3`) and 18 on dme6. The rerun in "Tier 2 eviction" gave 719 and 18. No candidate contained X, since no RERS property uses it and `ltlgrind` never introduced it, so SPIN's X refusal never fired.
-
 ## Caveats
 
 The candidate streams are `ltlgrind` mutants of each φ, which stand in for GA populations. A real GA run differs in two ways that move these numbers: later generations hold more true candidates, which only tier 2 can answer, and a GA re-proposes candidates more often than the overlap between two mutant lists does, which raises the memo rate. "Hit rates on GA populations" below re-measures them on real GA runs. On LMCS, mutants never touch a past subformula, since the abstraction makes each one an atom. Timings on av2 shared the machine with another user's SPIN jobs, so per-call times there carry some contention.
@@ -195,4 +191,33 @@ python3 -I bench/ga_hit_rates.py bench/data/baselines/top-runs \
 | All | 838 | 742,994 | 24.5% | 46.0% | 21.2% | 8.4% | 91.6% | 92.8% | 1,836 |
 
 The cheap tiers answer 91.6% of the queries of a GA run, against 72.6% (SPIN) and 75.7% (nuXmv) on the mutant streams. The lowest run still reaches 72.2%. The memo tier moved most, from about 5% to 24.5%, as the caveat above predicted: selection keeps re-proposing the formulas it already holds. On BEEM the memo answers 60.8%, and the back end gets 4.2% of the queries. 1,647 of BEEM's 3,938 back-end calls ended `Unknown`, almost all on four instances (lamport.6-4, peterson.6-4, rether.4-5 and rether.6-5, about 350 each), where SPIN times out on most candidates. On abp4 the rate is 83.0%, close to the 78.3% that the mutants gave there.
+
+## Unknown verdicts
+
+Every `Unknown` was a back-end timeout. SPIN gave 721: 80 on rers2016-105, 103 on 106, and 96, 140, 155 and 147 on rers2017-102 to 105. nuXmv gave 22: 4 on bc57-sensors (all on `p3`) and 18 on dme6. The rerun in "Tier 2 eviction" gave 719 and 18. No candidate contained X, since no RERS property uses it and `ltlgrind` never introduced it, so SPIN's X refusal never fired.
+
+The tiered oracle used to memoise every verdict except `Unknown`. A candidate that timed out was asked again, at full cost, each time selection bred it again. Repeats are common in a GA run, where the memo tier answers 24.5% of queries (60.8% on BEEM). A probe on the old code logged the time of each back-end call (seed 1, 30 × 40, av2). A *repeat Unknown* is a query whose canonical formula had already ended `Unknown` earlier in the run. Repeat Unknowns took 33% of the wall time on anderson.7-2 (a 1,107 s run), 72% on lamport.6-4 (2,730 s), 76% on peterson.6-4 (2,581 s) and 82% on rether.6-5 (749 s). MCC MedleyA-PT-03 and SieveSingleMsgMbox-PT-d2m06 had no repeats. In all six runs, no formula that once ended `Unknown` later got a verdict. Under one run's fixed limits, a repeat gives nothing.
+
+The oracle now memoises `Unknown` (`src/oracle/tiered.rs`). An `Unknown` still feeds no other tier.
+
+The table gives the combined effect of this change and the SPIN depth bound ("Depth bound" in `oracle-performance.md`), on seeds 1 and 2 of the same instances, on av2. Other jobs shared av2, so the wall times carry load noise.
+
+| Instance | Seed | Wall, old → new (s) | Unknown back-end calls, old → new |
+|---|---|---|---|
+| anderson.7-2 | 1 | 1,107 → 542 | 10 → 4 |
+| anderson.7-2 | 2 | 2,610 → 1,819 | 23 → 15 |
+| lamport.6-4 | 1 | 2,730 → 140 | 42 → 0 |
+| lamport.6-4 | 2 | 2,579 → 128 | 51 → 0 |
+| peterson.6-4 | 1 | 2,581 → 172 | 43 → 0 |
+| peterson.6-4 | 2 | 2,279 → 181 | 50 → 0 |
+| rether.6-5 | 1 | 749 → 58 | 40 → 0 |
+| rether.6-5 | 2 | 723 → 71 | 50 → 0 |
+| MedleyA-PT-03-LTLFireability-08 | 1 | 952 → 901 | 5 → 5 |
+| MedleyA-PT-03-LTLFireability-08 | 2 | 422 → 398 | 2 → 2 |
+| SieveSingleMsgMbox-PT-d2m06-LTLFireability-00 | 1 | 1,790 → 2,652 | 6 → 5 |
+| SieveSingleMsgMbox-PT-d2m06-LTLFireability-00 | 2 | 2,574 → 2,713 | 4 → 4 |
+
+The 8 BEEM runs fell from 15,358 s to 3,111 s in total. On BEEM the final population holds more proved candidates (lamport.6-4 went from 21 to 23 and from 14 to 19 of 40), since the deep bound turns timeouts into verdicts. For that reason the repair sets of 2 of the 8 BEEM runs differ. The MCC changes are TAPAAL timeouts at 120 s, which depend on load, and the Sieve seed-1 repair set differs for that reason.
+
+A cross-seed cache of the lasso counts was also considered. Counting depends only on φ and the candidate, so such a cache would be sound. However, on 5 counting-bound instances (3 MCC and 2 RERS, seeds 1 and 2), the two seeds shared only 1–6% of their counted formulas, so the cache would save almost nothing. The oracle repeats its work within a run, and barely at all across seeds.
 

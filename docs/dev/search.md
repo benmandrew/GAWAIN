@@ -46,7 +46,7 @@ Crossover is one side of `tlsf_crossover`. On a fair coin, a subformula of the f
 
 `score` takes one generation's survivors and returns three objectives for each, all higher-is-better.
 
-- **Status.** 1 if the oracle answers `Holds`, 0 if it answers `Fails` or `Unknown`. The oracle never memoises `Unknown`, so a candidate that timed out is asked again if it is bred again. A graded alternative was measured and not adopted; see "Graded status" below.
+- **Status.** 1 if the oracle answers `Holds`, 0 if it answers `Fails` or `Unknown`. The oracle memoises `Unknown` like any verdict, so a candidate that timed out costs the timeout once per run. A graded alternative was measured and not adopted; see "Graded status" below.
 - **Syntactic similarity** to φ (`Formula::syntactic_similarity`).
 - **Model-counting similarity** to φ (`count::Counter`, next section), the measure of strength that PLAN.md ranks repairs by. A candidate whose counts fail scores 0, the worst value.
 

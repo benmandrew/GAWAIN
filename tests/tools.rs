@@ -626,3 +626,32 @@ fn spin_matches_rers_2016_problem101() {
         expected.iter().filter(|holds| !**holds).count()
     );
 }
+
+/// A counter whose search runs 300,000 steps deep, past `pan`'s first depth
+/// bound of 200,000. The back end must rerun the search at the deep bound
+/// and prove the property, not report the truncated search as `Unknown`.
+const DEEP_PROMELA: &str = "int x = 0;
+#define p_a (x == 0)
+#define p_b (x == 1)
+active proctype Count() {
+  do
+  :: x < 300000 -> x++
+  :: x >= 300000 -> x = 0
+  od
+}
+";
+
+#[test]
+fn spin_raises_the_depth_bound_of_a_deep_search() {
+    if !have(
+        &["spin", "gcc"],
+        "spin_raises_the_depth_bound_of_a_deep_search",
+    ) {
+        return;
+    }
+    let mut backend = spin("deep.pml", DEEP_PROMELA, LIMITS);
+    for _ in 0..2 {
+        let verdict = backend.check(&parse("G F p_a"));
+        assert!(matches!(verdict, Verdict::Holds), "{verdict:?}");
+    }
+}
