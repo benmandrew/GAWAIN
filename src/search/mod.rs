@@ -8,6 +8,10 @@
 //! pools them with their parents, regrades the pool's status against the
 //! runs of M stored so far ([`grade`]), and keeps the population size by
 //! PEREDUR's `nsga2-apportion` step. See `docs/dev/search.md`.
+//!
+//! [`random_search`] is the baseline without selection: the same breeding,
+//! filters and scores, with each parent drawn uniformly from every
+//! candidate kept so far, and one NSGA-II cut at the end.
 
 pub mod grade;
 pub mod nsga2;
@@ -114,9 +118,18 @@ pub fn score<B: Backend>(
         .collect()
 }
 
+/// What a search spent, in candidates.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Budget {
+    /// Candidates bred, φ included: 1 + G × P for either search.
+    pub bred: usize,
+    /// Of those, the candidates that passed [`filter`] and were scored.
+    pub scored: usize,
+}
+
 /// Runs the search from `phi` and returns the final population, best first,
-/// with the cost of grading the status. Mutation draws atoms from `phi`'s
-/// atoms only.
+/// with the cost of grading the status and the candidates spent. Mutation
+/// draws atoms from `phi`'s atoms only.
 pub fn search<B: Backend>(
     phi: &Formula,
     oracle: &mut Oracle<B>,
@@ -125,7 +138,7 @@ pub fn search<B: Backend>(
     params: Params,
     spot_limits: Limits,
     rng: &mut Rng,
-) -> (Vec<Scored>, GradeCounts) {
+) -> (Vec<Scored>, GradeCounts, Budget) {
     assert!(params.population >= 1, "the population needs a member");
     let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
     let mut grader = Grader::new(phi);
@@ -137,10 +150,14 @@ pub fn search<B: Backend>(
         }
     };
     let mut population = score(vec![phi.clone()], phi, oracle, counter);
+    let mut budget = Budget { bred: 1, scored: 1 };
     regrade(&mut population, oracle);
     population = select(population, params.population, params.status);
     for _ in 0..params.generations {
-        let offspring = filter(breed(&population, &atoms, rng), phi);
+        let parents: Vec<&Scored> = population.iter().collect();
+        let offspring = filter(breed(&parents, &population, &atoms, rng), phi);
+        budget.bred += parents.len();
+        budget.scored += offspring.len();
         let scored = score(offspring, phi, oracle, counter);
         population.extend(drop_valid(
             scored,
@@ -151,20 +168,72 @@ pub fn search<B: Backend>(
         regrade(&mut population, oracle);
         population = select(population, params.population, params.status);
     }
-    (population, grader.counts())
+    (population, grader.counts(), budget)
 }
 
-/// One offspring per slot of the best-first `parents`. Each starts as its
-/// slot's parent, is crossed with a parent drawn from the whole population
-/// at [`CROSSOVER_RATE`], mutated at [`MUTATION_RATE`], then simplified.
+/// The random-mutation baseline: [`search`] with no selection during the
+/// run. Each of G rounds breeds P offspring, the same way, from parents
+/// drawn uniformly from the archive, the distinct candidates kept so far
+/// (φ first). The offspring pass the same [`filter`], scores and
+/// [`drop_valid`], and the new distinct ones join the archive. At the end
+/// the archive is regraded once and cut to P by [`select`]. Both searches
+/// breed 1 + G × P candidates; how many are scored depends on the filter.
+pub fn random_search<B: Backend>(
+    phi: &Formula,
+    oracle: &mut Oracle<B>,
+    counter: &mut Counter,
+    invariant: &Formula,
+    params: Params,
+    spot_limits: Limits,
+    rng: &mut Rng,
+) -> (Vec<Scored>, GradeCounts, Budget) {
+    assert!(params.population >= 1, "the population needs a member");
+    let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
+    let mut grader = Grader::new(phi);
+    let mut archive = score(vec![phi.clone()], phi, oracle, counter);
+    let mut seen: HashSet<Formula> = archive.iter().map(|s| s.formula.canonical()).collect();
+    let mut budget = Budget { bred: 1, scored: 1 };
+    for _ in 0..params.generations {
+        let drawn = draw_parents(archive.len(), params.population, rng);
+        let parents: Vec<&Scored> = drawn.into_iter().map(|i| &archive[i]).collect();
+        let offspring = filter(breed(&parents, &archive, &atoms, rng), phi);
+        budget.bred += parents.len();
+        budget.scored += offspring.len();
+        let scored = score(offspring, phi, oracle, counter);
+        let kept = drop_valid(scored, invariant, oracle.semantics(), spot_limits);
+        archive.extend(
+            kept.into_iter()
+                .filter(|s| seen.insert(s.formula.canonical())),
+        );
+    }
+    if params.status.graded() {
+        grader.rescore(&mut archive, oracle.lassos());
+    }
+    let population = select(archive, params.population, params.status);
+    (population, grader.counts(), budget)
+}
+
+/// `n` indices drawn uniformly, with replacement, from `[0, len)`.
+fn draw_parents(len: usize, n: usize, rng: &mut Rng) -> Vec<usize> {
+    (0..n).map(|_| rng.below(len)).collect()
+}
+
+/// One offspring per slot of `parents`. Each starts as its slot's parent,
+/// is crossed with a partner drawn uniformly from `partners` at
+/// [`CROSSOVER_RATE`], mutated at [`MUTATION_RATE`], then simplified.
 /// Crossover and mutation interleave per slot, so this stays one pass.
-fn breed(parents: &[Scored], atoms: &[Arc<str>], rng: &mut Rng) -> Vec<Formula> {
+fn breed(
+    parents: &[&Scored],
+    partners: &[Scored],
+    atoms: &[Arc<str>],
+    rng: &mut Rng,
+) -> Vec<Formula> {
     let mut offspring = Vec::with_capacity(parents.len());
     for parent in parents {
         let mut child = parent.formula.clone();
         if rng.chance(CROSSOVER_RATE) {
-            let partner = rng.below(parents.len());
-            child = crossover(&child, &parents[partner].formula, rng);
+            let partner = rng.below(partners.len());
+            child = crossover(&child, &partners[partner].formula, rng);
         }
         if rng.chance(MUTATION_RATE) {
             child = mutate(&child, atoms, rng);
@@ -661,6 +730,39 @@ mod tests {
             names(select(few_holders, 4, Status::GradedReserve(4))),
             ["h1", "phi", "d", "c"]
         );
+    }
+
+    #[test]
+    fn parents_are_drawn_uniformly_and_reproducibly() {
+        let mut rng = Rng::new(5);
+        let drawn = draw_parents(6, 60_000, &mut rng);
+        let mut seen = [0usize; 6];
+        for &i in &drawn {
+            seen[i] += 1;
+        }
+        // 10,000 expected each; the standard deviation is about 91.
+        assert!(
+            seen.iter().all(|&n| (9_500..10_500).contains(&n)),
+            "{seen:?}"
+        );
+        assert_eq!(drawn, draw_parents(6, 60_000, &mut Rng::new(5)));
+        assert_eq!(draw_parents(1, 3, &mut rng), [0, 0, 0]);
+    }
+
+    #[test]
+    fn breeding_spends_one_candidate_per_slot() {
+        // A round of either search breeds one offspring per parent, so G
+        // rounds of P and φ give 1 + G × P bred candidates.
+        let atoms: Vec<Arc<str>> = ["a", "b"].into_iter().map(Arc::from).collect();
+        let archive = vec![scored("G (a -> X b)", 0.0, 1.0), scored("F b", 1.0, 0.2)];
+        let mut rng = Rng::new(3);
+        for population in [1, 4, 9] {
+            let drawn = draw_parents(archive.len(), population, &mut rng);
+            let parents: Vec<&Scored> = drawn.iter().map(|&i| &archive[i]).collect();
+            let offspring = breed(&parents, &archive, &atoms, &mut rng);
+            assert_eq!(offspring.len(), population);
+            assert!(filter(offspring, &archive[0].formula).len() <= population);
+        }
     }
 
     #[test]

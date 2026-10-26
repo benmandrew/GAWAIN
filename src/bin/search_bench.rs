@@ -9,7 +9,7 @@
 //!     --seed N --generations G --population P
 //!     --status binary|graded|graded-feasible|graded-reserve-D
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
-//!     [--initial ignore|flag|filter]
+//!     [--initial ignore|flag|filter] [--search ga|random]
 //! ```
 //!
 //! - `nuxmv`: `--model` is an SMV file, `--atoms` its DEFINEs and `--ltl`
@@ -35,8 +35,11 @@
 //! that I ∧ Init implies; `--initial filter` also puts I ∧ Init in place of
 //! I in the search's validity filter and the gate, so those repairs drop
 //! ("Triviality at the initial state" in `docs/dev/search.md`). `filter`
-//! is the default; `ignore` asks nothing. The JSON line holds the instance class, the repairs with
-//! their similarities, and the counters of the oracle, the counter and the
+//! is the default; `ignore` asks nothing. `--search random` runs the
+//! random-mutation baseline ([`random_search`]) in place of the genetic
+//! search, the default `ga`. The JSON line holds the instance class, the repairs with
+//! their similarities, the search that ran, the candidates it bred and
+//! scored, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
 
 use std::fmt::Write as _;
@@ -57,9 +60,9 @@ use gawain::oracle::tapaal::Tapaal;
 use gawain::oracle::traces::TraceSet;
 use gawain::oracle::{implications_each, Backend, Oracle, Words};
 use gawain::rers::Model;
-use gawain::search::{gate, invariant, search, Params, Rng, Status};
+use gawain::search::{gate, invariant, random_search, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -92,6 +95,7 @@ struct Args {
     memory_mb: u64,
     search_degenerate: bool,
     initial: Initial,
+    random: bool,
 }
 
 /// What `--initial` asks of the initial-state predicate.
@@ -166,6 +170,13 @@ fn parse_args() -> Result<Args, String> {
                     "flag" => Initial::Flag,
                     "filter" => Initial::Filter,
                     _ => return Err(format!("--initial {value}: ignore, flag or filter")),
+                }
+            }
+            "--search" => {
+                args.random = match value.as_str() {
+                    "random" => true,
+                    "ga" => false,
+                    _ => return Err(format!("--search {value}: ga or random")),
                 }
             }
             _ => return Err(format!("unknown flag {flag}")),
@@ -283,6 +294,8 @@ fn search_on<B: Backend>(
         _ => "binary".to_string(),
     };
     field(&mut out, "status", &json(&status));
+    let which = if args.random { "random" } else { "ga" };
+    field(&mut out, "search", &json(which));
     let class = match classify(&phi, &mut oracle) {
         Instance::Satisfied => "satisfied".to_string(),
         Instance::Degenerate => "degenerate".to_string(),
@@ -325,7 +338,8 @@ fn search_on<B: Backend>(
         let mut rng = Rng::new(args.seed);
         let mut counter = Counter::new(&phi, oracle.semantics(), SEARCH_LIMITS);
         let searched = Instant::now();
-        let (population, counts) = search(
+        let run = if args.random { random_search } else { search };
+        let (population, counts, budget) = run(
             &phi,
             &mut oracle,
             &mut counter,
@@ -336,6 +350,8 @@ fn search_on<B: Backend>(
         );
         search_wall = searched.elapsed().as_secs_f64();
         grading = counts;
+        field(&mut out, "bred", &budget.bred.to_string());
+        field(&mut out, "scored", &budget.scored.to_string());
         let k = counter.counts();
         field(
             &mut out,

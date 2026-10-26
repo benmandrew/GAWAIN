@@ -494,6 +494,29 @@ SPIN rechecked every repair that the explicit back end reported on RERS, as grou
 
 The search changed under this work: `6d5590a` gave each Spot exec of the validity filter, the counter and the gate's pruning 2 s, and moved the validity filter after scoring. After the rebase onto it, RERS and abp4 ran again on av2 (10 seeds, both arms, 14 concurrent runs, rows in `bench/results/graded-runs-rebased.csv` and `bench/results/graded-instances-rebased.csv`; 37 of 1060 runs gave no result). The conclusion holds. On the 52 RERS instances graded held 3.0 fewer proved candidates [−5.5, −2.25] (p < 0.0001, 47 lower), and the found-repair rate (p = 0.67), the repairs (p = 0.50) and the net subsumption share (p = 0.72, 18 higher and 16 lower) did not differ. Graded ran 0.15 s faster [−0.39, −0.03] (p = 0.021). Both arms made more back-end calls than before the rebase (binary's median rose from 86.75 to 102.75), so the absolute numbers in the tables above belong to `76966b1` and do not carry over.
 
+## Random-mutation baseline
+
+The baseline asks whether selection earns its cost. `search_bench --search random` runs `search::random_search` in place of the genetic loop, and the JSON line records `"search":"random"` or `"search":"ga"`. Everything except selection is shared: the same `breed` with crossover at 0.1 and mutation at 1.0, the same `filter`, the same three objectives from `score`, and the same `drop_valid` against the invariant, which includes the initial-state predicate under the default `--initial filter`.
+
+The run keeps an *archive*, the distinct candidates kept so far, up to `canonical()`. It starts as φ alone, scored as the genetic search scores its seed. Each of G rounds draws P parents uniformly, with replacement, from the archive, and draws each crossover partner uniformly from it too. The P offspring are filtered and scored, valid ones are dropped, and the new distinct ones join the archive. No objective steers which parent breeds, so a candidate that fails on M is as likely a parent as one that holds. Depth still grows, since a child of a child is a mutation of a mutation.
+
+The budget is the number of candidates bred, and it is equal by construction. Both searches breed φ and then G rounds of P offspring, 1 + G × P in all, which the JSON line reports as `bred`. The number scored, `scored`, is what passes `filter`, and it differs between the two, since the filter drops repeats within a round, bloat and tautologies at rates that depend on the parents. A fixed number of scored candidates was not used, since the genetic search's count is known only after it runs. The oracle's caches stay on in both, so back-end calls are a measured outcome, not part of the budget.
+
+At the end, the archive is regraded once (under a graded status) and cut to P by `select`, the crowded-comparison step that forms each generation of the genetic search. The same `gate` then runs on those P. The two arms therefore differ only in the absence of selection during the run.
+
+A smoke test on abp4 `p2false` at 30 × 40 (release build, local machine, seeds 1 to 3, six runs at once, `--status binary`) gave the counts below. Both arms found repairs on every seed. The full comparison runs through the `mutation` and `forced-mutation` arms of `bench/graded_run.py`.
+
+| Search | Seed | Bred | Scored | Back-end calls | Repairs | Wall |
+|---|---|---|---|---|---|---|
+| ga | 1 | 1201 | 1130 | 171 | 2 | 46.1 s |
+| ga | 2 | 1201 | 1139 | 203 | 5 | 49.8 s |
+| ga | 3 | 1201 | 1133 | 205 | 1 | 48.7 s |
+| random | 1 | 1201 | 1125 | 149 | 2 | 29.9 s |
+| random | 2 | 1201 | 1106 | 164 | 2 | 34.6 s |
+| random | 3 | 1201 | 1109 | 146 | 3 | 32.1 s |
+
+Three seeds on one instance say nothing about which search is better. They show that the budget matches and that the baseline reaches the gate with proved repairs.
+
 ## Left out of PEREDUR
 
 | PEREDUR piece | Why it is not here |

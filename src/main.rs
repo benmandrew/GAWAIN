@@ -297,7 +297,7 @@ fn run<B: Backend>(
     }
     let mut rng = Rng::new(args.seed);
     let mut counter = Counter::new(phi, oracle.semantics(), SEARCH_LIMITS);
-    let (population, _) = search(
+    let (population, _, _) = search(
         phi,
         &mut oracle,
         &mut counter,

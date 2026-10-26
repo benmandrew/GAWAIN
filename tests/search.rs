@@ -2,6 +2,8 @@
 //! way it says (checked by Spot), the output gate keeps only maximal proved
 //! weakenings, and the `weaken` binary finds repairs that a direct nuXmv
 //! check and Spot confirm, on a small model and on LMCS-2006 abp4 `p2false`.
+//! `search_bench --search random`, the random-mutation baseline, finds
+//! such repairs too, reproducibly, on the same budget as the genetic search.
 //!
 //! Each test skips, with a reason on stderr, when a tool or the benchmark
 //! data is missing.
@@ -491,4 +493,61 @@ fn weaken_runs_on_lmcs_abp4_p2false() {
     assert_eq!(oracle.check(&eventual), Verdict::Holds);
     let found = vacuity(&eventual, &mut oracle, &mut VacuityCounts::default());
     assert!(found.subformulae.contains(&parse("s_get")), "{found:?}");
+}
+
+/// The value of the count field `name` in a `search_bench` JSON line.
+fn count(line: &str, name: &str) -> usize {
+    let key = format!("\"{name}\":");
+    let at = line
+        .find(&key)
+        .unwrap_or_else(|| panic!("no {name}: {line}"));
+    let digits: String = line[at + key.len()..]
+        .chars()
+        .take_while(char::is_ascii_digit)
+        .collect();
+    digits.parse().expect("a count")
+}
+
+/// The repair formulas in a `search_bench` JSON line.
+fn bench_repairs(line: &str) -> Vec<Formula> {
+    line.split("{\"formula\":\"")
+        .skip(1)
+        .map(|rest| parse(rest.split('"').next().unwrap()))
+        .collect()
+}
+
+#[test]
+fn search_bench_random_mutation_finds_repairs_that_hold() {
+    let test = "search_bench_random_mutation_finds_repairs_that_hold";
+    if !have(&["nuXmv", "ltlfilt", "ltl2tgba"], test) {
+        return;
+    }
+    let model = write_model("ack-random.smv", MODEL);
+    let run = |search: &str| {
+        let output = Command::new(env!("CARGO_BIN_EXE_search_bench"))
+            .args(["--backend", "nuxmv", "--model"])
+            .arg(&model)
+            .args(["--atoms", ATOMS, "--ltl", PHI, "--seed", "4"])
+            .args(["--generations", "30", "--population", "40"])
+            .args(["--status", "binary", "--search", search])
+            .output()
+            .expect("run search_bench");
+        assert!(output.status.success(), "{output:?}");
+        String::from_utf8(output.stdout).unwrap()
+    };
+    let first = run("random");
+    say(&first);
+    assert!(first.contains("\"search\":\"random\""), "{first}");
+    let found = bench_repairs(&first);
+    assert!(!found.is_empty(), "no repair: {first}");
+    confirm(&model, ATOMS, &parse(PHI), &found);
+    // The same seed gives the same repairs.
+    assert_eq!(bench_repairs(&run("random")), found);
+    // Both searches breed 1 + G × P candidates and score at most that.
+    let genetic = run("ga");
+    assert!(genetic.contains("\"search\":\"ga\""), "{genetic}");
+    for line in [&first, &genetic] {
+        assert_eq!(count(line, "bred"), 1 + 30 * 40, "{line}");
+        assert!(count(line, "scored") <= 1 + 30 * 40, "{line}");
+    }
 }

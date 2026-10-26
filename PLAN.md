@@ -141,7 +141,7 @@ Not yet investigated, and close in spirit: the Lockheed Martin Cyber-Physical Ch
 - [x] Investigate LMCPS, ARCH-COMP falsification and parametric STL mining (`bench/notes/simulink-sources.md`). ARCH-COMP models are continuous hybrid systems, and STL mining produces satisfied formulas, so neither is usable. LMCPS has 74 discrete-time requirements, about 23 of them violated, but its models need MATLAB and it carries no licence, so at most a few small models could be hand-translated to nuXmv.
 - [x] Cache hit rates on GA populations (`bench/ga_hit_rates.py`, "Hit rates on GA populations" in `docs/dev/oracle-measurements.md`): the cheap tiers answer 91.6% of 742,994 queries over 838 binary-arm runs, against 72.6–75.7% on mutants.
 - [x] Evaluation plan and instance sets (`docs/dev/evaluation.md`, `bench/eval_prep.sh`; arms `default` and `forced-default`).
-- [ ] Random-mutation baseline (`search_bench --search random`, arms `mutation` and `forced-mutation`).
+- [x] Random-mutation baseline (`search_bench --search random`, arms `mutation` and `forced-mutation`, "Random-mutation baseline" in `docs/dev/search.md`): parents drawn uniformly from an archive of distinct candidates, the same final selection and gate, and 1 + G × P bred candidates in both searches. On abp4 at 30×40, seeds 1–3: GA 1,130–1,139 scored and 1–5 repairs, random 1,106–1,125 scored and 2–3 repairs.
 - [ ] Headline run: `default` against `mutation` on `bench/data/eval`, `eval-traces` and `cegiw`, as in `docs/dev/evaluation.md`.
 - [ ] Case studies and a hand classification of repair shapes.
 
