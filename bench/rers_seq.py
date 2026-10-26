@@ -190,8 +190,9 @@ def run(cmd, timeout, **kw):
     return r
 
 
-def compile_problem(year, prob, workdir, opt):
-    """Build the explorer for one problem. Return the executable's path."""
+def compile_problem(year, prob, workdir, opt, harness="rers_seq_explore.c"):
+    """Build the explorer (or another harness) for one problem. Return the
+    executable's path."""
     wrap = workdir / "wrap.c"
     wrap.write_text(WRAPPER.format(source=problem_source(year, prob).resolve()))
     obj = workdir / "problem.o"
@@ -207,7 +208,7 @@ def compile_problem(year, prob, workdir, opt):
         raise RuntimeError(f"unexpected writable sections {writable}")
     run(["objcopy", "--rename-section", ".data=rers_state", str(obj)], 600)
     exe = workdir / "explore"
-    run(["gcc", "-O2", "-no-pie", str(HERE / "rers_seq_explore.c"), str(obj), "-o", str(exe)],
+    run(["gcc", "-O2", "-no-pie", str(HERE / harness), str(obj), "-o", str(exe)],
         600)
     obj.unlink()
     return exe

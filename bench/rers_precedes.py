@@ -32,7 +32,9 @@ RERS gloss.) For each affected property the script
      abstract counterexamples kept only when they replay), the output
      alphabet (outputs that no printf in the program can print are false
      on every run) and bench/rers_seq_walk.py (random walks that close a
-     lasso, kept only when the lasso replays and Spot accepts it);
+     lasso, kept only when the lasso replays and Spot accepts it) and
+     bench/rers_seq_back.py (a backward search that proves an event never
+     occurs; such events join the never-printed outputs of the alphabet);
   4. shows phi degenerate (M |= !phi) with Spot: phi is unsatisfiable on
      any infinite run with one event per position and infinitely many
      inputs and outputs, which every run of M is.
@@ -43,13 +45,13 @@ has the G(Q & ...) shape, so the set is sequential only.
 Columns: `phi` is the shipped formula and `weakening` the fix, both in
 Spot syntax; `*_verdict` is holds, fails or unknown on M; `degenerate`
 and `weakening_degenerate` say whether M |= !phi and M |= !fix; each
-`*_route` names the routes (spot, explicit, nuxmv, abstract, alphabet, walk,
-official)
+`*_route` names the routes (spot, explicit, nuxmv, abstract, alphabet,
+backward, walk, official)
 that agree on the value next to it.
 
-Usage: rers_precedes.py EXPLICIT_DIR SMV_DIR ABS_DIR WALK_DIR   (the
-output directories of rers_seq.py, rers_seq_smv.py, rers_seq_abs.py and
-rers_seq_walk.py)
+Usage: rers_precedes.py EXPLICIT_DIR SMV_DIR ABS_DIR WALK_DIR BACK_DIR
+(the output directories of rers_seq.py, rers_seq_smv.py, rers_seq_abs.py,
+rers_seq_walk.py and rers_seq_back.py)
 """
 
 import csv
@@ -183,6 +185,20 @@ def walk_verdicts(walk_dir):
     return got
 
 
+def back_unreachable(back_dir):
+    """The events that bench/rers_seq_back.py proves never occur, as
+    {(year, problem): {atom}}. A proof counts only when the search dropped
+    no out-of-bounds array read."""
+    got = {}
+    for path in sorted(Path(back_dir).glob("back-*.tsv")):
+        rows, _ = read_table(path)
+        for r in rows:
+            if r["verdict"] == "unreachable" and r["oob_dropped"] == "0" and \
+                    r["oob_interval"] == "0":
+                got.setdefault((int(r["year"]), int(r["problem"])), set()).add(r["event"])
+    return got
+
+
 def decide(claims, what):
     """Merge (route, answer) claims; all decided routes must agree."""
     claims = [(r, a) for r, a in claims if a is not None]
@@ -193,10 +209,12 @@ def decide(claims, what):
     return answers.pop(), "+".join(sorted({r for r, _ in claims}))
 
 
-def main(explicit_dir, smv_dir, abs_dir, walk_dir):
+def main(explicit_dir, smv_dir, abs_dir, walk_dir, back_dir):
     walks = walk_verdicts(walk_dir)
+    unreachable = back_unreachable(back_dir)
     rows = []
     alphabet_proved = {}
+    back_proved = {}
     for year in (2016, 2017):
         for prob in range(1, 10):
             atoms, props = rers_seq.load_properties(year, prob)
@@ -220,6 +238,15 @@ def main(explicit_dir, smv_dir, abs_dir, walk_dir):
                     if unsat(f"{runs} & !({rers_seq.to_spot(f)})"):
                         assert official[n] == "holds", (year, prob, n, "alphabet")
                         alphabet_proved[official[n]] = alphabet_proved.get(official[n], 0) + 1
+            # Unreachable events: like the alphabet, false at every position
+            # of every run. Validated the same way on every shipped property.
+            gone = unreachable.get((year, prob), set())
+            back_runs = runs + "".join(f" & G !{a}" for a in sorted(gone))
+            if gone:
+                for n, _, f in props:
+                    if unsat(f"{back_runs} & !({rers_seq.to_spot(f)})"):
+                        assert official[n] == "holds", (year, prob, n, "backward")
+                        back_proved[official[n]] = back_proved.get(official[n], 0) + 1
             for n, gloss, f in props:
                 fixed = rers_seq.corrected(f)
                 if fixed is None:
@@ -254,7 +281,10 @@ def main(explicit_dir, smv_dir, abs_dir, walk_dir):
                 # Alphabet: an output the program never prints is false on
                 # every run, and the fix may hold on every such word.
                 alpha = "holds" if unsat(f"{runs} & !({fix})") else None
+                back = "holds" if gone and not alpha and \
+                    unsat(f"{back_runs} & !({fix})") else None
                 fix_v, fix_r = decide([("alphabet", alpha),
+                                       ("backward", back),
                                        ("nuxmv", hv.get(sm.get((n, "fix")))),
                                        ("abstract", ab.get((n, "fix"))),
                                        ("walk", walks.get((year, prob, n))),
@@ -283,6 +313,8 @@ def main(explicit_dir, smv_dir, abs_dir, walk_dir):
     print(f"{len(rows)} rows -> {OUT}", file=sys.stderr)
     print("shipped properties the alphabet route proves, by official verdict:",
           alphabet_proved, file=sys.stderr)
+    print("shipped properties the alphabet with unreachable events proves:",
+          back_proved, file=sys.stderr)
     for key in ("weakening_verdict", "weakening_degenerate", "degenerate"):
         counts = {}
         for r in rows:
@@ -291,4 +323,4 @@ def main(explicit_dir, smv_dir, abs_dir, walk_dir):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:5])
+    main(*sys.argv[1:6])
