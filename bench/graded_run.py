@@ -22,7 +22,8 @@ quarter or a half of the population kept for unproved candidates) and
 `forced` (binary, searching
 degenerate instances too, for the CEGIW case studies), and `initflag`,
 `initfilter` and their `forced-` twins for the initial-state check
-(bench/initial_stats.py); see ARMS. The `random` and
+(bench/initial_stats.py), and `default` and `forced-default` for the
+evaluation (docs/dev/evaluation.md); see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (branch `exp/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -59,6 +60,10 @@ ARMS = {
     'initfilter': ['--status', 'binary', '--initial', 'filter'],
     'forced-initflag': ['--status', 'binary', '--degenerate', 'search', '--initial', 'flag'],
     'forced-initfilter': ['--status', 'binary', '--degenerate', 'search', '--initial', 'filter'],
+    # The evaluation's configuration: search_bench's defaults, so binary
+    # status with the initial-state filter (docs/dev/evaluation.md).
+    'default': ['--status', 'binary'],
+    'forced-default': ['--status', 'binary', '--degenerate', 'search'],
 }
 
 
