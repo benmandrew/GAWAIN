@@ -339,7 +339,7 @@ Let *Init* be the *initial-state predicate* of M over φ's atoms: the disjunctio
 
 `instance::initial` finds Init through the oracle, so one routine serves every back end: SMV `INIT` and `init()` assignments, Promela initial values, a PNML initial marking and the first letters of a trace set's positive traces. It starts from the first letters of the runs the oracle has stored, which after `classify` include the run that refutes φ. It then asks whether M satisfies their disjunction. Each refutation starts with a letter outside the disjunction, which joins it, so the loop ends with the exact projection of M's initial states onto φ's atoms. It gives up after 16 letters or on an `Unknown`, since a partial disjunction would be stronger than Init. A run then keeps I alone.
 
-`search_bench --initial flag` finds Init and marks each repair that I ∧ Init implies, in one more `ltlfilt` batch after the gate, without changing the search. `--initial filter` also hands I ∧ Init to the search's validity filter and to the gate, so these candidates leave the population as soon as they are scored. The default, `ignore`, asks nothing. The `weaken` binary has no such option.
+`search_bench --initial flag` finds Init and marks each repair that I ∧ Init implies, in one more `ltlfilt` batch after the gate, without changing the search. `--initial filter` also hands I ∧ Init to the search's validity filter and to the gate, so these candidates leave the population as soon as they are scored. `--initial ignore` asks nothing. Since the measurements below, `filter` is the default, and `weaken` always filters, printing Init as `initial: …`. When Init is not found, both keep I alone, and `weaken` warns on stderr. The arms of `bench/graded_run.py` measured before the change pass `--initial ignore`, so they reproduce their recorded results.
 
 ### Is position 0 the right line?
 
@@ -395,7 +395,7 @@ Each cell is the median over instances of the per-instance value over the seeds 
 
 The cost is in the search, not in Init. `instance::initial` took a median of 18 ms and at most 0.95 s, and exactly one back-end call on every run, since the stored runs always held every initial letter. The filter arm makes a median 10.5 more back-end calls per run, while the final population holds as many proved candidates (median 24 against 23). On the four instances whose calls take tens of seconds, the extra calls pushed 9 of 40 runs past the cap.
 
-The filter removes half of what the gate reported, and what it removes is trivial by construction. Its price is about ten more back-end calls per run, which matters only where each call takes tens of seconds.
+The filter removes half of what the gate reported, and what it removes is trivial by construction. Its price is about ten more back-end calls per run, which matters only where each call takes tens of seconds. It became the default on 2026-10-26.
 
 ## The validity filter
 

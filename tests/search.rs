@@ -292,6 +292,19 @@ fn weaken_repairs_a_failing_property_reproducibly() {
     let found = repairs(&stdout);
     assert!(!found.is_empty(), "no repair:\n{stdout}");
     confirm(&model, ATOMS, &parse(PHI), &found);
+    // ack starts FALSE and req is free, so Init has both letters with !ack,
+    // and no repair follows from it.
+    let init = stdout
+        .lines()
+        .find_map(|line| line.strip_prefix("initial: "))
+        .map(parse)
+        .expect("an initial line");
+    assert_eq!(init, parse("!ack & !req | !ack & req"), "{stdout}");
+    let pairs: Vec<_> = found.iter().map(|r| (&init, r)).collect();
+    let proved = implications(&pairs, Semantics::Infinite, LIMITS).expect("the batch answers");
+    for (repair, proved) in found.iter().zip(proved) {
+        assert!(!proved, "{init} implies {repair}");
+    }
     say(&format!("weaken on ack.smv:\n{stdout}"));
 
     let second = weaken(&model, ATOMS, PHI, 4, 30, 40);
@@ -364,23 +377,29 @@ fn search_bench_flags_or_filters_repairs_true_at_the_start() {
         "toggle-initial.smv",
         "MODULE main\nVAR x : boolean;\nASSIGN init(x) := FALSE; next(x) := !x;\nDEFINE p := x;\n",
     );
-    let run = |initial: &str| {
-        let output = Command::new(env!("CARGO_BIN_EXE_search_bench"))
+    let run = |initial: Option<&str>| {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_search_bench"));
+        command
             .args(["--backend", "nuxmv", "--model"])
             .arg(&model)
             .args(["--atoms", "p", "--ltl", "G p", "--seed", "1"])
             .args(["--generations", "5", "--population", "8"])
-            .args(["--status", "binary", "--degenerate", "search"])
-            .args(["--initial", initial])
-            .output()
-            .expect("run search_bench");
+            .args(["--status", "binary", "--degenerate", "search"]);
+        if let Some(initial) = initial {
+            command.args(["--initial", initial]);
+        }
+        let output = command.output().expect("run search_bench");
         assert!(output.status.success(), "{output:?}");
         String::from_utf8(output.stdout).unwrap()
     };
-    let ignored = run("ignore");
+    let ignored = run(Some("ignore"));
     assert!(!ignored.contains("\"initial"), "{ignored}");
+    // The filter is the default.
+    let default = run(None);
+    assert!(default.contains("\"initial\":\"!p\""), "{default}");
+    assert!(!default.contains("\"initial_trivial\":true"), "{default}");
     for mode in ["flag", "filter"] {
-        let stdout = run(mode);
+        let stdout = run(Some(mode));
         say(&stdout);
         assert!(stdout.contains("\"initial\":\"!p\""), "{stdout}");
         assert!(!stdout.contains("\"initial_trivial\":true") || mode == "flag");

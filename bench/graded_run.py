@@ -40,16 +40,18 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 RUN_TIMEOUT = 3600
-# The search_bench flags of each arm.
+# The search_bench flags of each arm. The arms measured before the
+# initial-state filter became the default keep `--initial ignore`, so they
+# reproduce their recorded results.
 ARMS = {
-    'binary': ['--status', 'binary'],
-    'graded': ['--status', 'graded'],
+    'binary': ['--status', 'binary', '--initial', 'ignore'],
+    'graded': ['--status', 'graded', '--initial', 'ignore'],
     # The binary arm searching degenerate instances too, for the CEGIW
     # case studies (bench/baselines_cegiw.py).
-    'forced': ['--status', 'binary', '--degenerate', 'search'],
-    'feasible': ['--status', 'graded-feasible'],
-    'reserve4': ['--status', 'graded-reserve-4'],
-    'reserve2': ['--status', 'graded-reserve-2'],
+    'forced': ['--status', 'binary', '--degenerate', 'search', '--initial', 'ignore'],
+    'feasible': ['--status', 'graded-feasible', '--initial', 'ignore'],
+    'reserve4': ['--status', 'graded-reserve-4', '--initial', 'ignore'],
+    'reserve2': ['--status', 'graded-reserve-2', '--initial', 'ignore'],
     # Binary with the initial-state predicate: `initflag` only marks the
     # repairs that I ∧ Init implies, `initfilter` drops them in the loop
     # and the gate. The `forced-` arms search degenerate instances too.

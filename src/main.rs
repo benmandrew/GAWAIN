@@ -14,7 +14,12 @@
 //! are the file's, and formulas read under the file's semantics, LTLf for
 //! finite traces. Groups of mutually exclusive atoms come from the model's
 //! DEFINEs (`p := v = c`) and from each `--exclusive`, and print at
-//! start-up; a candidate valid modulo them is trivial and drops. Each
+//! start-up; a candidate valid modulo them is trivial and drops. So does a
+//! candidate that M's first letter alone makes true: `instance::initial`
+//! finds Init, the letters over φ's atoms that start a run of M, which
+//! prints as `initial: …`, and the invariant becomes I ∧ Init ("Triviality
+//! at the initial state" in `docs/dev/search.md`). If Init is not found, a
+//! warning goes to stderr and the search keeps I alone. Each
 //! repair prints on one line as
 //! `repair<TAB>similarity<TAB>semantic<TAB>vacuity<TAB>formula`, where
 //! similarity is syntactic, semantic is the model-counting similarity
@@ -35,8 +40,8 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use gawain::count::Counter;
-use gawain::instance::{classify, Instance};
-use gawain::ltl::Formula;
+use gawain::instance::{classify, initial, Instance};
+use gawain::ltl::{BinaryOp, Formula};
 use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::traces::TraceSet;
@@ -260,7 +265,7 @@ fn run<B: Backend>(
     traces: Option<&TraceSet>,
     start: Instant,
 ) -> ExitCode {
-    let invariant = invariant(groups);
+    let mut invariant = invariant(groups);
     let phi = &args.ltl;
     let check_start = Instant::now();
     let instance = classify(phi, &mut oracle);
@@ -282,6 +287,13 @@ fn run<B: Backend>(
     }
     println!("input: {phi}");
     println!("instance: proper time={check_wall:.2}s");
+    match initial(&phi.atoms(), &mut oracle) {
+        Ok(init) => {
+            println!("initial: {}", init.simplify());
+            invariant = Formula::binary(BinaryOp::And, invariant, init).simplify();
+        }
+        Err(reason) => eprintln!("weaken: warning: no initial-state predicate: {reason}"),
+    }
     let mut rng = Rng::new(args.seed);
     let mut counter = Counter::new(phi, oracle.semantics(), SEARCH_LIMITS);
     let (population, _) = search(

@@ -34,8 +34,8 @@
 //! predicate Init of M over φ's atoms ([`initial`]) and marks each repair
 //! that I ∧ Init implies; `--initial filter` also puts I ∧ Init in place of
 //! I in the search's validity filter and the gate, so those repairs drop
-//! ("Triviality at the initial state" in `docs/dev/search.md`). The
-//! default, `ignore`, asks nothing. The JSON line holds the instance class, the repairs with
+//! ("Triviality at the initial state" in `docs/dev/search.md`). `filter`
+//! is the default; `ignore` asks nothing. The JSON line holds the instance class, the repairs with
 //! their similarities, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
 
@@ -98,11 +98,11 @@ struct Args {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 enum Initial {
     /// Nothing.
-    #[default]
     Ignore,
     /// Find it and mark the repairs it makes trivial.
     Flag,
     /// Also conjoin it to the invariant, so those repairs drop.
+    #[default]
     Filter,
 }
 
