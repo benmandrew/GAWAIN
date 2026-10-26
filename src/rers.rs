@@ -3,38 +3,50 @@
 //!
 //! # Input
 //!
-//! The parser accepts only the shapes that the RERS 2016, 2017 and 2019
-//! parallel files use, and rejects any other line with its line number:
+//! The parser accepts only the shapes that the RERS 2016 to 2019 parallel
+//! files use, and rejects any other line with its line number:
 //!
 //! - one `mtype = { ... };` list of actions, which includes `nop`;
 //! - rendezvous channels, `chan c = [0] of {mtype};`, one of them `act`;
 //! - `mtype lastAction = nop;`;
 //! - an `Environment` process whose `do` loop offers `c ! m` on its channels;
 //! - a `Listener` process that receives on `act` into `lastAction`;
-//! - component processes with one local `int state`, written as
-//!   `:: state == k -> atomic { if :: c ? m -> act ! m; state = j; ... fi }`,
-//!   where a branch is a receive or a send, and `act ! m;` is optional;
+//! - component processes, each a `do` loop of `:: state == k -> atomic { if
+//!   ... fi }` blocks over one state variable;
 //! - atoms `#define p (lastAction == m)`;
 //! - `ltl` lines and one-line comments, which are skipped.
 //!
-//! The RERS 2018 files keep the component states in global variables and
-//! guard each branch on the states of other components. That is a different
-//! shape, and the parser rejects it.
+//! The 2016, 2017 and 2019 files give each component a local `int state`.
+//! A branch is a receive `c ? m ->` or a send `c ! m ->`, then an optional
+//! `act ! m;` and `state = j;`.
+//!
+//! The 2018 files declare `int state_K = N;` globals, one per component in
+//! the order of the processes. A branch is one of:
+//!
+//! - a receive with no output, `c ? m -> state_K = j`;
+//! - a receive that records or passes on, `c ? m -> {state_K = j; act ! m}`
+//!   or `c ? m -> {state_K = j; d ! m}`;
+//! - a guarded send, `G -> {state_K = j; d ! m}`, where `G` is a conjunction
+//!   of disjunctions of `state_I==N` over other components.
 //!
 //! # Semantics
 //!
 //! A state is the local state of every component plus the last action. A
-//! step is one of:
-//!
-//! - a component takes a receive branch on a channel where the environment
-//!   offers that message;
-//! - one component takes a send branch `c ! m` and another takes a receive
-//!   branch `c ? m` together, as a rendezvous.
+//! step starts in one component, with a receive branch on a channel where
+//! the environment offers that message, or with a send branch whose guard
+//! holds. A send hands its message to a component with a matching receive
+//! branch, which may send in turn, so one step can pass along a chain of
+//! components. Every component on the chain takes its branch.
 //!
 //! If the step sends on `act`, the last action becomes that message;
 //! otherwise it stays. Atom `p` holds at a state exactly when its
 //! `lastAction == m` holds. A state with no step gets a self-loop, as SPIN's
 //! stutter extension does.
+//!
+//! A send that begins its branch, as in 2016, is enabled only when some
+//! component can receive it. A send after an assignment, as in 2018, would
+//! block in SPIN with the assignment made. The guards are meant to rule this
+//! out, and the explorer fails if a chain ever finds no receiver.
 //!
 //! The first step of every component receives `nop` and sends nothing on
 //! `act`. These steps are taken before exploration starts, so the initial
@@ -44,7 +56,7 @@
 //! stutter.
 //!
 //! The Listener process, the `atomic` blocks and the rendezvous hand-over
-//! between the two sides of a step are not modelled. In SPIN these add
+//! between the components of a step are not modelled. In SPIN these add
 //! intermediate states where `lastAction` has not changed yet. An LTL
 //! formula without `X` cannot tell a run with these stutter steps from one
 //! without, so the structure keeps exactly what such a formula observes.
@@ -78,12 +90,17 @@ impl fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
-/// One branch of a component's `if`.
-#[derive(Clone, Copy, Debug)]
+/// One branch of a component's `if`. A branch with neither `recv` nor
+/// `guard` begins with its send.
+#[derive(Clone, Debug)]
 struct Branch {
-    send: bool,
-    chan: u32,
-    msg: u32,
+    /// The (channel, message) received first, if any.
+    recv: Option<(u32, u32)>,
+    /// For a 2018 send branch, each listed component must be in one of its
+    /// listed local states, sorted.
+    guard: Vec<(u32, Vec<u32>)>,
+    /// The (channel, message) sent to another component, if any.
+    send: Option<(u32, u32)>,
     /// The message sent on `act`, if any.
     act: Option<u32>,
     target: u32,
@@ -93,6 +110,8 @@ struct Branch {
 #[derive(Debug)]
 struct Component {
     initial: u32,
+    /// The value of the state variable in each local state, ascending.
+    values: Vec<u32>,
     /// The branches of each local state.
     branches: Vec<Vec<Branch>>,
 }
@@ -152,6 +171,8 @@ struct Parser {
     pos: usize,
     actions: HashMap<String, u32>,
     chans: HashMap<String, u32>,
+    /// The 2018 `int state_K = N;` globals, as (name, initial value).
+    globals: Vec<(String, u32)>,
 }
 
 impl Parser {
@@ -204,6 +225,45 @@ impl Parser {
         }
         Ok((op == "!", self.chan(line, chan)?, self.action(line, msg)?))
     }
+
+    /// Parses a 2018 guard, `((state_1==4 || state_1==7) && state_2==3)`
+    /// and the like, as (global index, values) pairs.
+    fn guard(&self, line: usize, text: &str) -> Result<Vec<(u32, Vec<u32>)>, Error> {
+        let bad = || error(line, format!("unsupported guard: `{text}`"));
+        let text = text.replace(' ', "");
+        let inner = text
+            .strip_prefix('(')
+            .and_then(|t| t.strip_suffix(')'))
+            .unwrap_or(&text);
+        let mut guard = Vec::new();
+        for conjunct in inner.split("&&") {
+            let conjunct = conjunct
+                .strip_prefix('(')
+                .and_then(|t| t.strip_suffix(')'))
+                .unwrap_or(conjunct);
+            let mut var = None;
+            let mut values = Vec::new();
+            for term in conjunct.split("||") {
+                let Some((name, value)) = term.split_once("==") else {
+                    return bad();
+                };
+                let Some(k) = self.globals.iter().position(|(g, _)| g == name) else {
+                    return bad();
+                };
+                if var.is_some_and(|v| v != k) {
+                    return bad();
+                }
+                var = Some(k);
+                let Ok(value) = value.parse() else {
+                    return bad();
+                };
+                values.push(value);
+            }
+            values.sort_unstable();
+            guard.push((var.unwrap() as u32, values));
+        }
+        Ok(guard)
+    }
 }
 
 impl Model {
@@ -215,6 +275,7 @@ impl Model {
             pos: 0,
             actions: HashMap::new(),
             chans: HashMap::new(),
+            globals: Vec::new(),
         };
         let mut actions: Option<Vec<String>> = None;
         let mut initial_action = None;
@@ -246,6 +307,18 @@ impl Model {
                 if !is_ident(name) || p.chans.insert(name.to_string(), id).is_some() {
                     return error(n, format!("bad or repeated channel `{name}`"));
                 }
+            } else if let Some((name, value)) = text
+                .strip_prefix("int ")
+                .and_then(|t| t.strip_suffix(';'))
+                .and_then(|t| t.split_once(" = "))
+            {
+                let Ok(value) = value.parse() else {
+                    return error(n, format!("unsupported Promela: `{text}`"));
+                };
+                if !is_ident(name) || p.globals.iter().any(|(g, _)| g == name) {
+                    return error(n, format!("bad or repeated variable `{name}`"));
+                }
+                p.globals.push((name.to_string(), value));
             } else if let Some(rest) = text.strip_prefix("mtype lastAction = ") {
                 let Some(name) = rest.strip_suffix(';') else {
                     return error(n, format!("unsupported Promela: `{text}`"));
@@ -289,7 +362,8 @@ impl Model {
                 }
                 listener = true;
             } else if text.starts_with("active proctype ") && text.ends_with("()") {
-                components.push(parse_component(&mut p)?);
+                let index = components.len();
+                components.push(parse_component(&mut p, index)?);
             } else {
                 return error(n, format!("unsupported Promela: `{text}`"));
             }
@@ -307,6 +381,22 @@ impl Model {
         }
         if components.is_empty() {
             return error(0, "the model has no component process");
+        }
+        if !p.globals.is_empty() && p.globals.len() != components.len() {
+            return error(0, "the model needs one state variable per component");
+        }
+        // Guards name raw values; number them as the components do. A
+        // value that is no state of its component never holds.
+        let values: Vec<Vec<u32>> = components.iter().map(|c| c.values.clone()).collect();
+        for c in &mut components {
+            for b in c.branches.iter_mut().flatten() {
+                for (k, allowed) in &mut b.guard {
+                    let of = &values[*k as usize];
+                    *allowed = (allowed.iter())
+                        .filter_map(|v| of.binary_search(v).ok().map(|d| d as u32))
+                        .collect();
+                }
+            }
         }
         Ok(Model {
             actions,
@@ -337,28 +427,37 @@ fn parse_environment(p: &mut Parser) -> Result<Vec<(u32, u32)>, Error> {
     Ok(offers)
 }
 
-/// Reads `int state = N;` and the `do` loop of one component.
-fn parse_component(p: &mut Parser) -> Result<Component, Error> {
+/// Reads the state variable and the `do` loop of the component at `index`:
+/// a local `int state = N;`, or else the `index`th global.
+fn parse_component(p: &mut Parser, index: usize) -> Result<Component, Error> {
     p.expect("{")?;
-    let (n, text) = p.next()?;
-    let Some(initial) = text
-        .strip_prefix("int state = ")
+    let local = p
+        .peek()
+        .and_then(|t| t.strip_prefix("int state = "))
         .and_then(|t| t.strip_suffix(';'))
-        .and_then(|t| t.parse::<u32>().ok())
-    else {
-        return error(n, format!("expected `int state = N;`, found `{text}`"));
+        .and_then(|t| t.parse::<u32>().ok());
+    let (var, initial) = match (local, p.globals.get(index)) {
+        (Some(initial), _) => {
+            p.pos += 1;
+            ("state".to_string(), initial)
+        }
+        (None, Some(global)) => global.clone(),
+        (None, None) => {
+            let (n, text) = p.next()?;
+            return error(n, format!("expected `int state = N;`, found `{text}`"));
+        }
     };
     p.expect("do")?;
-    // Branches by the value of `state`, before dense numbering.
+    // Branches by the value of the state variable, before dense numbering.
     let mut blocks: Vec<(u32, Vec<Branch>)> = Vec::new();
     while p.peek() != Some("od") {
         let (n, text) = p.next()?;
         let Some(k) = text
-            .strip_prefix(":: state == ")
+            .strip_prefix(&format!(":: {var} == "))
             .and_then(|t| t.strip_suffix(" ->"))
             .and_then(|t| t.parse::<u32>().ok())
         else {
-            return error(n, format!("expected `:: state == N ->`, found `{text}`"));
+            return error(n, format!("expected `:: {var} == N ->`, found `{text}`"));
         };
         if blocks.iter().any(|(b, _)| *b == k) {
             return error(n, format!("a second block for state {k}"));
@@ -367,7 +466,7 @@ fn parse_component(p: &mut Parser) -> Result<Component, Error> {
         p.expect("if")?;
         let mut branches = Vec::new();
         while p.peek() != Some("fi") {
-            branches.push(parse_branch(p)?);
+            branches.push(parse_branch(p, &var)?);
         }
         p.expect("fi")?;
         p.expect("}")?;
@@ -394,43 +493,100 @@ fn parse_component(p: &mut Parser) -> Result<Component, Error> {
     Ok(Component {
         initial: dense(initial),
         branches: dense_branches,
+        values,
     })
 }
 
-/// Reads `:: c ? m ->`, an optional `act ! a;`, and `state = j;`. The target
-/// is the raw value of `state`.
-fn parse_branch(p: &mut Parser) -> Result<Branch, Error> {
+/// Parses `var = N` as N.
+fn assignment(text: &str, var: &str) -> Option<u32> {
+    text.strip_prefix(var)?.strip_prefix(" = ")?.parse().ok()
+}
+
+/// Reads one branch in either shape of the module header. The target is
+/// the raw value of `var`, and guard values are raw too.
+fn parse_branch(p: &mut Parser, var: &str) -> Result<Branch, Error> {
     let (n, text) = p.next()?;
-    let Some(inner) = text.strip_prefix(":: ").and_then(|t| t.strip_suffix(" ->")) else {
-        return error(
-            n,
-            format!("expected a branch `:: c ? m ->`, found `{text}`"),
-        );
+    let Some(text) = text.strip_prefix(":: ") else {
+        return error(n, format!("expected a branch `:: ...`, found `{text}`"));
     };
-    let (send, chan, msg) = p.message(n, inner)?;
-    let (mut n, mut text) = p.next()?;
-    let mut act = None;
-    if let Some(name) = text
-        .strip_prefix("act ! ")
-        .and_then(|t| t.strip_suffix(';'))
-    {
-        act = Some(p.action(n, name)?);
-        (n, text) = p.next()?;
+    let mut branch = Branch {
+        recv: None,
+        guard: Vec::new(),
+        send: None,
+        act: None,
+        target: 0,
+    };
+    // 2016: `c ? m ->` alone, then lines.
+    if let Some(head) = text.strip_suffix(" ->").filter(|h| !h.starts_with('(')) {
+        let (send, chan, msg) = p.message(n, head)?;
+        if send {
+            branch.send = Some((chan, msg));
+        } else {
+            branch.recv = Some((chan, msg));
+        }
+        let (mut n, mut text) = p.next()?;
+        if let Some(name) = text
+            .strip_prefix("act ! ")
+            .and_then(|t| t.strip_suffix(';'))
+        {
+            branch.act = Some(p.action(n, name)?);
+            (n, text) = p.next()?;
+        }
+        let Some(target) = text.strip_suffix(';').and_then(|t| assignment(t, var)) else {
+            return error(n, format!("expected `{var} = N;`, found `{text}`"));
+        };
+        branch.target = target;
+        return Ok(branch);
     }
-    let Some(target) = text
-        .strip_prefix("state = ")
-        .and_then(|t| t.strip_suffix(';'))
-        .and_then(|t| t.parse::<u32>().ok())
-    else {
-        return error(n, format!("expected `state = N;`, found `{text}`"));
+    // 2018: a receive and its body on one line, or a guard over one or more
+    // lines and its body on the next.
+    let (n, body) = if text.starts_with('(') {
+        let mut guard = text.to_string();
+        while !guard.ends_with(" ->") {
+            guard.push(' ');
+            guard.push_str(&p.next()?.1);
+        }
+        branch.guard = p.guard(n, guard.strip_suffix(" ->").unwrap())?;
+        p.next()?
+    } else if let Some((head, body)) = text.split_once(" -> ") {
+        let (send, chan, msg) = p.message(n, head)?;
+        if send {
+            return error(n, format!("a 2018 send needs a guard: `{text}`"));
+        }
+        branch.recv = Some((chan, msg));
+        (n, body.to_string())
+    } else {
+        return error(n, format!("unsupported branch: `{text}`"));
     };
-    Ok(Branch {
-        send,
-        chan,
-        msg,
-        act,
-        target,
-    })
+    let (assign, out) = match body.strip_prefix('{').and_then(|b| b.strip_suffix('}')) {
+        Some(inner) => match inner.split_once("; ") {
+            Some((assign, out)) => (assign, Some(out)),
+            None => return error(n, format!("unsupported branch body: `{body}`")),
+        },
+        None => (body.as_str(), None),
+    };
+    let Some(target) = assignment(assign, var) else {
+        return error(n, format!("expected `{var} = N`, found `{assign}`"));
+    };
+    branch.target = target;
+    match out {
+        Some(out) => {
+            if let Some(name) = out.strip_prefix("act ! ") {
+                branch.act = Some(p.action(n, name)?);
+            } else {
+                let (send, chan, msg) = p.message(n, out)?;
+                if !send {
+                    return error(n, format!("a body may only send: `{body}`"));
+                }
+                branch.send = Some((chan, msg));
+            }
+        }
+        None if branch.recv.is_none() => {
+            return error(n, format!("a guarded branch must send: `{body}`"));
+        }
+        None => {}
+    }
+    Ok(branch)
 }
 
 /// A cheap multiplicative hash for the packed state keys.
@@ -507,6 +663,9 @@ impl Layout {
     }
 }
 
+/// Adds the state with these local states and this last action, if any.
+type AddState<'a> = dyn FnMut(&[u32], Option<u32>) -> Result<(), Error> + 'a;
+
 impl Model {
     /// The local state each component reaches by taking its silent `nop`
     /// receive, if that is its only branch, else its initial state.
@@ -514,11 +673,12 @@ impl Model {
         let nop = self.actions.iter().position(|a| a == "nop");
         self.components
             .iter()
-            .map(|c| match c.branches[c.initial as usize][..] {
-                [b] if !b.send
+            .map(|c| match &c.branches[c.initial as usize][..] {
+                [b] if b.send.is_none()
                     && b.act.is_none()
-                    && Some(b.msg as usize) == nop
-                    && self.offers.binary_search(&(b.chan, b.msg)).is_ok() =>
+                    && b.recv.is_some_and(|(chan, msg)| {
+                        Some(msg as usize) == nop && self.offers.binary_search(&(chan, msg)).is_ok()
+                    }) =>
                 {
                     b.target
                 }
@@ -527,8 +687,67 @@ impl Model {
             .collect()
     }
 
-    /// Explores the reachable states. Fails only when a state does not fit
-    /// in 128 bits or there are more states than a [`StateId`] can number.
+    /// Hands `message` from component `from` to each branch that can
+    /// receive it in `next`, follows any send that branch makes in turn, and
+    /// adds each state where the chain ends. Returns whether any branch
+    /// received it; fails when a send after the first finds no receiver.
+    fn deliver(
+        &self,
+        from: usize,
+        message: (u32, u32),
+        act: Option<u32>,
+        next: &mut [u32],
+        add: &mut AddState,
+    ) -> Result<bool, Error> {
+        let mut received = false;
+        for (j, d) in self.components.iter().enumerate() {
+            if j == from {
+                continue;
+            }
+            let local = next[j];
+            for r in &d.branches[local as usize] {
+                if r.recv != Some(message) {
+                    continue;
+                }
+                received = true;
+                next[j] = r.target;
+                let act = r.act.or(act);
+                match r.send {
+                    None => add(next, act)?,
+                    Some(onward) => self.deliver_or_block(j, onward, act, next, add)?,
+                }
+                next[j] = local;
+            }
+        }
+        Ok(received)
+    }
+
+    /// [`Model::deliver`] for a send that follows an assignment, which
+    /// would block in SPIN without a receiver.
+    fn deliver_or_block(
+        &self,
+        from: usize,
+        message: (u32, u32),
+        act: Option<u32>,
+        next: &mut [u32],
+        add: &mut AddState,
+    ) -> Result<(), Error> {
+        if self.deliver(from, message, act, next, add)? {
+            return Ok(());
+        }
+        let (chan, msg) = message;
+        error(
+            0,
+            format!(
+                "component {from} blocks sending `{}` on channel {chan}",
+                self.actions[msg as usize]
+            ),
+        )
+    }
+
+    /// Explores the reachable states. Fails when a state does not fit in
+    /// 128 bits, when there are more states than a [`StateId`] can number,
+    /// or when a send inside a step finds no receiver.
     pub fn explore(&self) -> Result<Kripke, Error> {
         let layout = Layout::new(self)?;
         let mut atom_of = vec![None; self.actions.len()];
@@ -568,25 +787,25 @@ impl Model {
             };
             for (i, c) in self.components.iter().enumerate() {
                 for b in &c.branches[locals[i] as usize] {
-                    if !b.send {
-                        if self.offers.binary_search(&(b.chan, b.msg)).is_ok() {
-                            next.copy_from_slice(&locals);
-                            next[i] = b.target;
-                            add(&next, b.act)?;
-                        }
+                    let enabled = match b.recv {
+                        Some(offer) => self.offers.binary_search(&offer).is_ok(),
+                        None => (b.guard.iter()).all(|(k, allowed)| {
+                            allowed.binary_search(&locals[*k as usize]).is_ok()
+                        }),
+                    };
+                    if !enabled {
                         continue;
                     }
-                    for (j, d) in self.components.iter().enumerate() {
-                        if j == i {
-                            continue;
+                    next.copy_from_slice(&locals);
+                    next[i] = b.target;
+                    match b.send {
+                        None => add(&next, b.act)?,
+                        // A send that begins its branch waits for a receiver.
+                        Some(message) if b.recv.is_none() && b.guard.is_empty() => {
+                            self.deliver(i, message, b.act, &mut next, &mut add)?;
                         }
-                        for r in &d.branches[locals[j] as usize] {
-                            if !r.send && r.chan == b.chan && r.msg == b.msg {
-                                next.copy_from_slice(&locals);
-                                next[i] = b.target;
-                                next[j] = r.target;
-                                add(&next, r.act.or(b.act))?;
-                            }
+                        Some(message) => {
+                            self.deliver_or_block(i, message, b.act, &mut next, &mut add)?
                         }
                     }
                 }
@@ -734,7 +953,7 @@ ltl p1\t { [] p_a }
                 "#define p_h (x > 1)",
                 "lastAction",
             ),
-            ("/* Actions */", "int state_0 = 16;", "unsupported Promela"),
+            ("/* Actions */", "int state_0 = x;", "unsupported Promela"),
         ];
         for (from, to, words) in cases {
             let line = 1 + SMALL[..SMALL.find(from).unwrap()].matches('\n').count();
@@ -744,5 +963,146 @@ ltl p1\t { [] p_a }
         }
         let e = explore("mtype = { nop };").unwrap_err();
         assert!(e.message.contains("needs"), "{e}");
+    }
+
+    /// The 2018 shape. Proc1 loops on `a` from the environment. When Proc1
+    /// is in state 11, Proc0 starts `h`, which Proc1 passes on to Proc2,
+    /// which records it; then all three deadlock.
+    const SMALL_2018: &str = "\
+/* State variables */
+int state_0 = 0;
+int state_1 = 10;
+int state_2 = 20;
+mtype = { nop, a, h };
+chan p0_1 = [0] of {mtype};
+chan p1_2 = [0] of {mtype};
+chan p0 = [0] of {mtype};
+chan p1 = [0] of {mtype};
+chan p2 = [0] of {mtype};
+active proctype Environment()
+{
+  do
+  :: p1 ! a
+  :: p0 ! nop
+  :: p1 ! nop
+  :: p2 ! nop
+  od
+}
+chan act = [0] of {mtype};
+mtype lastAction = nop;
+active proctype Listener()
+{
+  atomic {
+    do
+    :: act ? lastAction ->
+  step: skip
+    od
+  }
+}
+active proctype Proc0()
+{
+  do
+  :: state_0 == 0 ->
+    atomic {
+      if
+      :: p0 ? nop -> state_0 = 1
+      fi
+    }
+  :: state_0 == 1 ->
+    atomic {
+      if
+      :: ((state_1==11 || state_1==99)
+         && state_2==21) -> \n           {state_0 = 2; p0_1 ! h}
+      fi
+    }
+  od
+}
+active proctype Proc1()
+{
+  do
+  :: state_1 == 10 ->
+    atomic {
+      if
+      :: p1 ? nop -> state_1 = 11
+      fi
+    }
+  :: state_1 == 11 ->
+    atomic {
+      if
+      :: p1 ? a -> {state_1 = 11; act ! a}
+      :: p0_1 ? h -> {state_1 = 12; p1_2 ! h}
+      fi
+    }
+  od
+}
+active proctype Proc2()
+{
+  do
+  :: state_2 == 20 ->
+    atomic {
+      if
+      :: p2 ? nop -> state_2 = 21
+      fi
+    }
+  :: state_2 == 21 ->
+    atomic {
+      if
+      :: p1_2 ? h -> {state_2 = 22; act ! h}
+      fi
+    }
+  od
+}
+#define p_a\t (lastAction == a)
+#define p_h\t (lastAction == h)
+";
+
+    #[test]
+    fn a_guarded_send_passes_along_a_chain() {
+        let k = explore(SMALL_2018).unwrap();
+        // (1, 11, 21, nop) and (1, 11, 21, a) each loop on `a` or take the
+        // chain to (2, 12, 22, h), which deadlocks.
+        assert_eq!((k.state_count(), k.transition_count()), (3, 5));
+        // Proc0 comes first, so the chain's state is numbered first.
+        let [chain, loop_a] = k.successors(0) else {
+            panic!("two successors expected");
+        };
+        assert_eq!(atom(&k, *loop_a), Some("p_a"));
+        assert_eq!(atom(&k, *chain), Some("p_h"));
+        assert_eq!(k.successors(*loop_a), &[*chain, *loop_a]);
+        assert_eq!(k.successors(*chain), &[*chain]);
+    }
+
+    #[test]
+    fn a_false_guard_disables_the_chain() {
+        let k = explore(&SMALL_2018.replace("state_2==21", "state_2==22")).unwrap();
+        assert_eq!((k.state_count(), k.transition_count()), (2, 2));
+    }
+
+    #[test]
+    fn a_chain_with_no_receiver_fails() {
+        let e = explore(&SMALL_2018.replace("p1_2 ? h", "p1_2 ? a")).unwrap_err();
+        assert!(e.message.contains("blocks sending `h`"), "{e}");
+    }
+
+    #[test]
+    fn rejects_unsupported_2018_shapes() {
+        let cases = [
+            ("state_2==21)", "state_9==21)", "unsupported guard"),
+            ("state_2==21)", "state_2>21)", "unsupported guard"),
+            (
+                "{state_1 = 12; p1_2 ! h}",
+                "{state_0 = 12; p1_2 ! h}",
+                "state_1 = N",
+            ),
+            (
+                "{state_1 = 12; p1_2 ! h}",
+                "{state_1 = 12; p1_2 ? h}",
+                "only send",
+            ),
+        ];
+        for (from, to, words) in cases {
+            let e = explore(&SMALL_2018.replace(from, to)).unwrap_err();
+            assert!(e.message.contains(words), "{e}");
+        }
     }
 }

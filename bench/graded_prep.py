@@ -11,6 +11,11 @@ fixed so that a rerun builds the same set:
   the formula core does not have.
 - RERS 2016 parallel problems 101 to 106, every property that survives the
   filter (bench/results/rers-parallel-filter.csv); explicit back end.
+- RERS 2018 parallel problem 101, every property that survives the SPIN
+  filter or, where SPIN timed out on !phi, the explicit check in
+  bench/results/rers-2018-explicit.csv; explicit back end. Problem 102 did
+  not finish exploring in 50 minutes and 85 GB, and 103 exceeds the 128-bit
+  state key.
 - BEEM: the 20 pairs of bench/beem/search_models.py; SPIN, stepwise.
 - MCC: 20 properties of bench/results/mcc-subset.csv, drawn with seed 1,
   one per instance, among those with at least 2 atoms and with phi and
@@ -31,6 +36,7 @@ HERE = Path(__file__).resolve().parent
 DATA = HERE / 'data'
 RESULTS = HERE / 'results'
 RERS = DATA / 'rers/2016/ParallelRERS2016_version2/ParallelRERS2016_version2'
+RERS2018 = DATA / 'rers/2018/ParallelLtlRers2018WithPml/ParallelLtlRers2018WithPml'
 ABP4_DEFINES = """
 DEFINE
   s_get := sender.state = get;
@@ -75,6 +81,16 @@ def main(out):
                 p = int(r['prop'])
                 rows.append((f'rers2016-{problem}-p{p}', 'rers', 'explicit',
                              f'models/{src.name}', '', props[p], ''))
+
+    survivors = [r for name in ('rers-parallel-filter.csv', 'rers-2018-explicit.csv')
+                 for r in csv.DictReader(open(RESULTS / name))
+                 if r['year'] == '2018' and r['problem'] == '101' and r['survives'] == 'yes']
+    src = RERS2018 / 'problem101/problem101.pml'
+    shutil.copy(src, models / 'rers2018-problem101.pml')
+    props = rers_properties(src)
+    for p in sorted(int(r['prop']) for r in survivors):
+        rows.append((f'rers2018-101-p{p}', 'rers', 'explicit',
+                     'models/rers2018-problem101.pml', '', props[p], ''))
 
     beem = models / 'beem'
     subprocess.run([sys.executable, str(HERE / 'beem/search_models.py'),

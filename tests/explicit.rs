@@ -1,7 +1,8 @@
 //! End-to-end tests of the explicit back end: on RERS 2016 parallel
-//! problems 101 to 104, every property gets its official verdict; on 101
-//! and 102, formulas with `X` get nuXmv's verdict on the same structure;
-//! and every counterexample violates its formula when replayed.
+//! problems 101 to 104 and 2018 problem 101, every property gets its
+//! official verdict; on 2016 problems 101 and 102, formulas with `X` get
+//! nuXmv's verdict on the same structure; and every counterexample violates
+//! its formula when replayed.
 //!
 //! Each test skips, with a reason on stderr, when a tool it needs is not
 //! on `PATH` or the benchmark data is not unpacked under `bench/data/rers`.
@@ -45,20 +46,29 @@ fn properties(source: &str) -> Vec<(u32, Formula)> {
         .collect()
 }
 
-#[test]
-fn rers_2016_verdicts_match_the_solutions() {
-    let test = "rers_2016_verdicts_match_the_solutions";
+/// Checks every property of each problem under `problems` (relative to
+/// `bench/data/rers`) against the official verdicts in `solutions`, and
+/// returns how many matched, or `None` after printing why the test skips.
+/// The (problem, property) pairs in `opposite` must get the other verdict.
+fn verdicts_match(
+    test: &str,
+    problems: &str,
+    solutions: &str,
+    numbers: &[u32],
+    opposite: &[(u32, u32)],
+) -> Option<usize> {
     if !have(&["ltl2tgba"], test) {
-        return;
+        return None;
     }
-    let data = Path::new(env!("CARGO_MANIFEST_DIR")).join("bench/data/rers/2016");
-    let problems = data.join("ParallelRERS2016_version2/ParallelRERS2016_version2");
-    let Ok(solutions) =
-        std::fs::read_to_string(data.join("participantsolutions/Parallel-solution.csv"))
-    else {
-        return skip(test, &format!("{} is absent", data.display()));
+    let data = Path::new(env!("CARGO_MANIFEST_DIR")).join("bench/data/rers");
+    let Ok(solutions) = std::fs::read_to_string(data.join(solutions)) else {
+        skip(
+            test,
+            &format!("{} is absent", data.join(solutions).display()),
+        );
+        return None;
     };
-    // `101,1,true`, one per line, with CR line endings.
+    // `101,1,true`, one per line, with CR or LF line endings.
     let expected: HashMap<(u32, u32), bool> = solutions
         .split(['\r', '\n'])
         .filter(|line| !line.is_empty())
@@ -77,13 +87,13 @@ fn rers_2016_verdicts_match_the_solutions() {
         .collect();
 
     let mut checked = 0;
-    for problem in 101..=104 {
-        let path = problems.join(format!("problem{problem}/problem{problem}.pml"));
+    for &problem in numbers {
+        let path = data.join(format!("{problems}/problem{problem}/problem{problem}.pml"));
         let source = std::fs::read_to_string(&path).unwrap();
         let kripke = Model::parse(&source).and_then(|m| m.explore()).unwrap();
         let mut backend = Explicit::new(kripke, LIMITS);
         for (number, formula) in properties(&source) {
-            let holds = expected[&(problem, number)];
+            let holds = expected[&(problem, number)] != opposite.contains(&(problem, number));
             match backend.check(&formula) {
                 Verdict::Holds => assert!(holds, "{problem}/p{number}: proved {formula}"),
                 Verdict::Fails(lasso) => {
@@ -98,8 +108,43 @@ fn rers_2016_verdicts_match_the_solutions() {
             checked += 1;
         }
     }
-    assert_eq!(checked, 80);
-    let _ = writeln!(std::io::stderr(), "{test}: 80 of 80 verdicts match");
+    let _ = writeln!(
+        std::io::stderr(),
+        "{test}: {} of {checked} verdicts match, as expected",
+        checked - opposite.len()
+    );
+    Some(checked)
+}
+
+#[test]
+fn rers_2016_verdicts_match_the_solutions() {
+    let checked = verdicts_match(
+        "rers_2016_verdicts_match_the_solutions",
+        "2016/ParallelRERS2016_version2/ParallelRERS2016_version2",
+        "2016/participantsolutions/Parallel-solution.csv",
+        &[101, 102, 103, 104],
+        &[],
+    );
+    assert!(checked.is_none_or(|n| n == 80));
+}
+
+/// Problem 101 only: 102 has too many states for a test, and 103 does not
+/// fit the 128-bit state key. The dot/Petri answers are the official ones;
+/// their properties 1 to 20 are the file's `ltl` lines. Property 10 fails
+/// only on runs that end in one of the 12 deadlocks, where the structure
+/// repeats the last state as SPIN does. The official answer is true, so it
+/// counts infinite runs only (`docs/dev/rers-kripke.md`).
+#[test]
+fn rers_2018_verdicts_match_the_solutions() {
+    let checked = verdicts_match(
+        "rers_2018_verdicts_match_the_solutions",
+        "2018/ParallelLtlRers2018WithPml/ParallelLtlRers2018WithPml",
+        "2018/RERS_18_submissions_and_solutions/RERS_18_submissions_and_solutions/\
+         solutions/RERS_18_solutions_dot_petri.csv",
+        &[101],
+        &[(101, 10)],
+    );
+    assert!(checked.is_none_or(|n| n == 20));
 }
 
 #[test]

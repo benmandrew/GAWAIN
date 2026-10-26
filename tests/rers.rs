@@ -1,6 +1,7 @@
-//! End-to-end tests over the RERS parallel Promela files: every 2016, 2017
-//! and 2019 file parses, the 2018 files are refused, and 2016 problems 101
-//! to 104 explore to the sizes in `docs/dev/oracle-performance.md`.
+//! End-to-end tests over the RERS parallel Promela files: every 2016 to
+//! 2019 file parses, 2016 problems 101 to 104 explore to the sizes in
+//! `docs/dev/oracle-performance.md`, and 2018 problem 101 explores to the
+//! size that `bench/rers_dot_count.py` finds from its `.dot` file.
 //!
 //! Each test skips, with a reason on stderr, when the benchmark data is not
 //! unpacked under `bench/data/rers`.
@@ -62,23 +63,38 @@ fn parse(path: &Path) -> Result<Model, gawain::rers::Error> {
 }
 
 #[test]
-fn every_rers_file_parses_except_2018() {
+fn every_rers_file_parses() {
     for (year, _) in YEARS {
-        let Some(dir) = year_dir(year, "every_rers_file_parses_except_2018") else {
+        let Some(dir) = year_dir(year, "every_rers_file_parses") else {
             continue;
         };
         let files = problems(&dir);
         assert!(!files.is_empty(), "no problems in {}", dir.display());
         for path in files {
-            let result = parse(&path);
-            if *year == "2018" {
-                let e = result.unwrap_err();
-                assert!(e.message.contains("unsupported"), "{}: {e}", path.display());
-            } else if let Err(e) = result {
+            if let Err(e) = parse(&path) {
                 panic!("{}: {e}", path.display());
             }
         }
     }
+}
+
+#[test]
+fn rers_2018_sizes_match_the_dot_files() {
+    let Some(dir) = year_dir("2018", "rers_2018_sizes_match_the_dot_files") else {
+        return;
+    };
+    let k = parse(&dir.join("problem101/problem101.pml"))
+        .and_then(|m| m.explore())
+        .unwrap();
+    assert_eq!(
+        (k.state_count(), k.transition_count()),
+        (527_077, 2_341_935)
+    );
+    // 34 components need about 161 bits.
+    let e = parse(&dir.join("problem103/problem103.pml"))
+        .and_then(|m| m.explore())
+        .unwrap_err();
+    assert!(e.message.contains("128 bits"), "{e}");
 }
 
 #[test]
