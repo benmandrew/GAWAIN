@@ -175,4 +175,24 @@ Every `Unknown` was a back-end timeout. SPIN gave 721: 80 on rers2016-105, 103 o
 
 ## Caveats
 
-The candidate streams are `ltlgrind` mutants of each φ, which stand in for GA populations. A real GA run differs in two ways that move these numbers: later generations hold more true candidates, which only tier 2 can answer, and a GA re-proposes candidates more often than the overlap between two mutant lists does, which raises the memo rate. The hit rates here should be re-measured on real GA runs. On LMCS, mutants never touch a past subformula, since the abstraction makes each one an atom. Timings on av2 shared the machine with another user's SPIN jobs, so per-call times there carry some contention.
+The candidate streams are `ltlgrind` mutants of each φ, which stand in for GA populations. A real GA run differs in two ways that move these numbers: later generations hold more true candidates, which only tier 2 can answer, and a GA re-proposes candidates more often than the overlap between two mutant lists does, which raises the memo rate. "Hit rates on GA populations" below re-measures them on real GA runs. On LMCS, mutants never touch a past subformula, since the abstraction makes each one an atom. Timings on av2 shared the machine with another user's SPIN jobs, so per-call times there carry some contention.
+
+## Hit rates on GA populations
+
+The search records the same counters for every query of a run, its output gate included. `bench/ga_hit_rates.py` reads them from the 838 binary-arm runs at 30 × 40 in `bench/data/baselines/top-runs` (87 instances, seeds 1–10, initial-state filter off) and writes one row per run to `bench/results/ga-hit-rates.csv`. In every run the four tiers sum to the queries.
+
+```
+python3 -I bench/ga_hit_rates.py bench/data/baselines/top-runs \
+    bench/results/graded-runs.csv bench/results/ga-hit-rates.csv
+```
+
+| Family | Runs | Queries | Memo | Lasso | Implication | Back end | Cache hit rate | Median per run | Unknown |
+|---|---|---|---|---|---|---|---|---|---|
+| BEEM | 141 | 92,696 | 60.8% | 22.9% | 12.1% | 4.2% | 95.8% | 97.3% | 1,647 |
+| LMCS abp4 | 10 | 11,628 | 11.3% | 52.3% | 19.3% | 17.0% | 83.0% | 82.9% | 0 |
+| MCC | 186 | 194,630 | 14.6% | 48.6% | 29.1% | 7.7% | 92.3% | 93.1% | 189 |
+| RERS | 501 | 444,040 | 21.6% | 49.4% | 19.7% | 9.3% | 90.7% | 91.6% | 0 |
+| All | 838 | 742,994 | 24.5% | 46.0% | 21.2% | 8.4% | 91.6% | 92.8% | 1,836 |
+
+The cheap tiers answer 91.6% of the queries of a GA run, against 72.6% (SPIN) and 75.7% (nuXmv) on the mutant streams. The lowest run still reaches 72.2%. The memo tier moved most, from about 5% to 24.5%, as the caveat above predicted: selection keeps re-proposing the formulas it already holds. On BEEM the memo answers 60.8%, and the back end gets 4.2% of the queries. 1,647 of BEEM's 3,938 back-end calls ended `Unknown`, almost all on four instances (lamport.6-4, peterson.6-4, rether.4-5 and rether.6-5, about 350 each), where SPIN times out on most candidates. On abp4 the rate is 83.0%, close to the 78.3% that the mutants gave there.
+
