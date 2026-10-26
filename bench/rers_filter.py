@@ -67,11 +67,12 @@ TRUTH = {"true": True, "false": False, "yes": True, "no": False}
 
 LTL_RE = re.compile(r"^\s*ltl\s+(\w+)\s*\{(.*)\}\s*$")
 
+# Most specific first: a MEMLIM stop also prints "Search not completed".
 INCOMPLETE_MARKERS = (
     "max search depth too small",
-    "Search not completed",
     "reached -DMEMLIM bound",
     "out of memory",
+    "Search not completed",
     "VECTORSZ is too small",
     "aborted",
 )
@@ -279,6 +280,7 @@ def check_claim(workdir, body, formula):
     except subprocess.TimeoutExpired:
         return "unknown", "timeout", time.monotonic() - t0
     dt = time.monotonic() - t0
+    (workdir / "pan.out").write_text(r.stdout + r.stderr)
     if r.returncode == 124:
         return "unknown", "timeout", dt
     out = r.stdout + r.stderr
@@ -335,6 +337,10 @@ def main():
                 if ARGS.only_killed:
                     # Keep every verdict except claims that an outside signal killed.
                     keep = "exit -15" not in v
+                elif ARGS.only_unknown:
+                    # Rerun only the !phi claims of rows the filter left
+                    # unknown; their phi is already decided by the solution.
+                    keep = kind == "p" or r["survives"] != "unknown"
                 else:
                     keep = v in ("holds", "violated") or v == "unknown (timeout)"
                 if keep:
@@ -348,6 +354,10 @@ def main():
         for i, fut in enumerate(cf.as_completed(futs), 1):
             year, prob, claim = futs[fut][:3]
             res[(year, prob, claim)] = fut.result()
+            if ARGS.only_unknown:
+                v, why, dt = res[(year, prob, claim)]
+                print(f"  {year} {prob} {claim}: {v} {why} {dt:.1f}s",
+                      file=sys.stderr, flush=True)
             if i % 50 == 0:
                 print(f"  {i}/{len(tasks)}", file=sys.stderr, flush=True)
 
@@ -405,6 +415,9 @@ if __name__ == "__main__":
     ap.add_argument("--only-killed", action="store_true",
                     help="with --reuse, rerun only claims that ended with exit -15 "
                          "(killed by a signal); keep every other verdict")
+    ap.add_argument("--only-unknown", action="store_true",
+                    help="with --reuse, rerun only the !phi claims of rows whose "
+                         "survives is unknown; keep every other verdict")
     ap.add_argument("--keep", action="store_true", help="keep the work directory")
     ARGS = ap.parse_args()
     main()
