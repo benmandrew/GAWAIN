@@ -21,9 +21,10 @@
 //! at the initial state" in `docs/dev/search.md`). If Init is not found, a
 //! warning goes to stderr and the search keeps I alone. Each
 //! repair prints on one line as
-//! `repair<TAB>similarity<TAB>semantic<TAB>vacuity<TAB>formula`, where
-//! similarity is syntactic, semantic is the model-counting similarity
-//! (over finite words under LTLf), and vacuity names the subformulae in
+//! `repair<TAB>similarity<TAB>semantic<TAB>rejection<TAB>vacuity<TAB>formula`,
+//! where similarity is syntactic, semantic is the model-counting similarity
+//! (over finite words under LTLf), rejection is the rejection strength
+//! (`Counter::rejections`: ⊤ scores 0 and φ 1), and vacuity names the subformulae in
 //! which the repair is vacuous on M, separated by `; `, `?` for an unknown
 //! verdict, or `-`. With `--traces`, a line
 //! `negatives<TAB>rejected/total<TAB>formula` follows each repair. Then come
@@ -319,7 +320,9 @@ fn run<B: Backend>(
     for error in &outcome.errors {
         eprintln!("weaken: output gate: {error}");
     }
-    for repair in &outcome.repairs {
+    let formulas: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
+    let rejections = counter.rejections(&formulas);
+    for (repair, rejection) in outcome.repairs.iter().zip(rejections) {
         let mut flags: Vec<String> = repair
             .vacuity
             .subformulae
@@ -335,7 +338,7 @@ fn run<B: Backend>(
             flags.join("; ")
         };
         println!(
-            "repair\t{:.4}\t{:.4}\t{flags}\t{}",
+            "repair\t{:.4}\t{:.4}\t{rejection:.4}\t{flags}\t{}",
             repair.similarity, repair.semantic, repair.formula
         );
         if let Some(traces) = traces {

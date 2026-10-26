@@ -21,7 +21,10 @@ lasso count as the search, with 120 s per exec), and every distinct repair
 is asked whether it is valid, that is equivalent to ⊤, with one
 `ltlfilt --satisfiable` batch (Spot 2.15.1 on PATH). The closed share of a
 run is (best - top) / (1 - top), where best is the run's best semantic
-similarity and top is ⊤'s: 0 at the floor, 1 at φ itself.
+similarity and top is ⊤'s: 0 at the floor, 1 at φ itself. Every distinct
+repair is also scored by its rejection strength, under which ⊤ scores 0
+and φ 1, so a run's best rejection strength is its closed share without
+the normalisation; `closed_rejection` is its median over seeds.
 
 Writes OUT (one row per instance) and prints the summary that
 `bench/notes/baselines.md` quotes.
@@ -59,7 +62,7 @@ def load(runs_dir, csv_path):
 
 
 def scores(binary, pairs):
-    """The (semantic, syntactic) score of each (φ, φ') pair."""
+    """The (semantic, syntactic, rejection) score of each (φ, φ') pair."""
     text = ''.join(f'{phi}\t{candidate}\n' for phi, candidate in pairs)
     r = subprocess.run([binary, '--timeout', '120'], input=text, capture_output=True,
                        text=True, check=True)
@@ -99,16 +102,27 @@ def main():
                for n in names}
     flat = [(n, f) for n in names for f in repairs[n]]
     valid = dict(zip(flat, implications([('true', f) for _, f in flat])))
+    # The rejection strength of every distinct repair, one `score` exec per instance.
+    rejection = {}
+    for n in names:
+        if repairs[n]:
+            scored = scores(a.score, [(phis[n], f) for f in repairs[n]])
+            rejection[n] = {f: r for f, (_, _, r) in zip(repairs[n], scored)}
 
     out_rows = []
     for n in names:
         rows = [row for row, _ in runs[n]]
-        t_sem, t_syn = top[n]
+        t_sem, t_syn, _ = top[n]
+        # The runs store their scores to six places, and `score` prints
+        # fifteen, so ⊤ is rounded to compare like with like.
+        t_sem = round(t_sem, 6)
         best = best_of(rows)
         closed = [(b - t_sem) / (1 - t_sem) for b in best] if t_sem < 1 else []
         semantic = {rep['formula']: rep['semantic'] for _, run in runs[n] for rep in run['repairs']}
         syntactic = [max(rep['similarity'] for rep in run['repairs'])
                      for _, run in runs[n] if run['repairs']]
+        rejected = [max(rejection[n][rep['formula']] for rep in run['repairs'])
+                    for _, run in runs[n] if run['repairs']]
         small_best = best_of(small.get(n, []))
         out_rows.append({
             'instance': n,
@@ -120,6 +134,7 @@ def main():
             'best_semantic': f'{median(best):.6f}' if best else '',
             'best_semantic_max': f'{max(best):.6f}' if best else '',
             'closed_share': f'{median(closed):.4f}' if closed else '',
+            'closed_rejection': f'{median(rejected):.4f}' if rejected else '',
             'top_syntactic': f'{t_syn:.6f}',
             'best_syntactic': f'{median(syntactic):.6f}' if syntactic else '',
             'repairs': len(repairs[n]),
@@ -146,7 +161,8 @@ def report(rows):
         def col(key):
             return [float(r[key]) for r in rs if r[key] != '']
         parts = [f'{title} ({len(rs)} instances)']
-        for key in ('top_semantic', 'best_semantic', 'closed_share', 'closed_share_4x8'):
+        for key in ('top_semantic', 'best_semantic', 'closed_share', 'closed_rejection',
+                    'closed_share_4x8'):
             xs = col(key)
             if xs:
                 lo, hi = bootstrap_median(xs, rng)

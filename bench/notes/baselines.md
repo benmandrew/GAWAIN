@@ -30,6 +30,37 @@ The raw scores sit close to 1 because the similarity is a ratio of logarithms of
 
 The low end is safety. On RERS `G !p_c0_t2` (2016/102 p19 and 103 p2) ⊤ scores 0.3018, the best repair 0.3244, and the closed share is 0.03. The repairs there are `!p_c0_t2`, `X X !p_c0_t2` and `G F !p_c0_t2`. A violated invariant leaves no near neighbour that holds, and the score reports that honestly. The three BEEM anderson instances (`G(p_wait0 -> F p_cs0)`) have a median closed share of 0: every best repair there is a response variant whose score ties with ⊤.
 
+## ⊤ under the rejection strength
+
+The ties above are not exact. At full precision, on BEEM anderson `G(p_wait0 -> F p_cs0)`, ⊤ scores 0.999354024459263 and the repair `p_cs0 W F(p_wait0 -> F p_cs0 & !p_cs0)` 0.999354024459419. φ there accepts about 96% of all lassos, so a repair's gap from ⊤ is about 1e-11 of all lassos, near the noise of `f64`. The *rejection strength* (`Counter::rejections`, "Model-counting similarity" in `docs/dev/search.md`) measures from the other side: `log count(¬φ') / log count(¬φ)`, the log share of φ's violating lassos that φ' still rejects, with ¬φ' counted directly. ⊤ scores 0 and φ 1. It is a reporting score; the search does not use it. `score` prints it as a third column, and prints both counted scores to 15 places.
+
+`bench/baselines_rejection.py` scored the 1,371 distinct repairs of the 87 instances and ⊤ again, locally at four `score` processes at once. Every row is in `bench/results/baselines-rejection.csv`.
+
+```
+nix develop -c python3 bench/baselines_rejection.py bench/data/baselines/top-runs \
+    bench/results/graded-runs.csv bench/results/baselines-rejection.csv
+```
+
+No count failed. ⊤ scores 0 on every instance, and no repair does: every repair rejects at least one lasso of length 20, and none ties with ⊤. The lowest repair scores 0.1324 (BEEM), the median 0.9844, and 86 repairs score below 0.5. The 347 repairs that tie with ⊤ to six places under the similarity score from 0.1324 to 1.0000 here, with a median of 0.7879. By family the median repair scores 0.4287 on BEEM (147 repairs), 0.9829 on MCC (501), 0.9904 on RERS (687) and 0.9986 on abp4 (36). On anderson the repair above scores 0.1946 and the best repair `!p_wait0 W (F p_cs0 & p_wait0) | !p_cs0` 0.6482.
+
+On the 7 instances where ⊤ scored 1.000000, the repairs now spread out. RERS 2016/101 p13 has 16 repairs over 10 distinct values from 0.5374 to 0.9806, and 2016/103 p20 13 repairs from 0.5358 to 0.9556. The five MCC instances range from 0.5488 to 1.000000 to six places (SieveSingleMsgMbox), 0.6223 to 0.9735 (ParamProductionCell), 0.6891 to 0.9935 (Diffusion2D), 0.8515 to 0.9864 (MedleyA, `F a0 & X X !X G !X a1`) and 0.8590 to 0.9769 (AutoFlight). On SieveSingleMsgMbox 18 repairs score 1.000000 to six places under both scores: their negations have the log count of ¬φ to six places.
+
+The two scores rank the repairs of an instance alike. Kendall's tau-b between them is 1.000 at the median over the 85 instances where neither score is constant, and its lowest value is 0.948; Spearman's rho is also 1.000 at the median. Of the 15,978 pairs of repairs within an instance, 14,795 are ordered the same way, 1,119 tie under both, 62 tie under the similarity to 15 places and are separated by the rejection strength, none is separated only by the similarity, and 2 are ordered the opposite way, by one unit in the 15th place on two repairs of MedleyA with equal counts. This is expected: over one universe count(¬φ') is the number of all lassos minus count(φ'), so for implied repairs both scores are monotone in count(φ'). The rejection strength changes the scale, not the order.
+
+On abp4's 36 distinct repairs, a fresh counter took a median of 56 ms for the similarity (71 formulas translated, five repetitions) and 55 ms for the rejection strength (36 formulas, ¬φ and one negation per repair), with 36 to 56 ms over the repetitions. `ltl2tgba` took more than 90% of both. Scoring both in one counter therefore costs about twice the similarity alone.
+
+`bench/baselines_top.py` now also reports the closed share under the rejection strength. ⊤ scores 0 and φ 1, so a run's best rejection strength is its closed share with no normalisation. The `closed_rejection` column of `bench/results/baselines-top.csv` is its median over seeds, rerun with the command above (12 s locally). The script rounds ⊤'s similarity to six places, as the runs store their own scores, so the older columns are unchanged.
+
+| Family | Instances | Closed share, similarity | Closed share, rejection |
+|---|---|---|---|
+| All | 87 | 0.49 [0.42, 0.58] | 0.9912 [0.9833, 0.9957] |
+| RERS | 52 | 0.59 [0.20, 0.80] | 0.9945 [0.9912, 0.9969] |
+| MCC | 19 | 0.49 [0.16, 0.60] | 0.9874 [0.9759, 0.9979] |
+| BEEM | 15 | 0.49 [0.25, 0.49] | 0.9500 [0.6307, 0.9500] |
+| abp4 `p2false` | 1 | 0.55 | 0.9995 |
+
+The rejection column covers all 87 instances, including the 7 where the similarity cannot rank. There it runs from 0.9411 (RERS 2016/101 p13 and 103 p20) to 1.0000 (SieveSingleMsgMbox). Its interquartile range is 0.9588 to 0.9976, and no instance falls below 0.5. The 7 instances below 0.9 are all BEEM, from anderson.1-2 at 0.6127 to rether at 0.6307, where the similarity's closed share is 0 to 0.25. The figure is a log share, so 0.99 means that φ' rejects count(¬φ)^0.99 of φ's violating lassos, not 99% of them. The two columns therefore differ in scale, and the rejection column separates the low end, where the similarity reads 0.
+
 ## CEGIW: the common subset
 
 CEGIW reads an MTL formula, a de Bruijn index naming one temporal operator, and a nuXmv or SPIN model. It widens the interval of an `F` or `U`, or narrows that of a `G` or `R`, until the model satisfies the formula. An unbounded `F` or `U` cannot be weakened (`weaken.py` raises "Cannot weaken interval of F[a, ∞)"), and an unbounded `G` or `R` can only be narrowed to a finite prefix. So an instance is common ground only when φ has a bounded interval, which in LTL means an `X` chain.

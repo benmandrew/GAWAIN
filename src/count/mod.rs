@@ -14,6 +14,9 @@
 //! PEREDUR's logarithmic metric over the counts of φ, φ' and `φ & φ'`: the
 //! harmonic mean of `log shared / log count(φ)` and
 //! `log shared / log count(φ')`, each clamped to [0, 1].
+//! [`Counter::rejections`] gives a second, reporting score from the same
+//! counts: the rejection strength `log count(¬φ') / log count(¬φ)`, which
+//! separates near-⊤ candidates that the similarity scores alike.
 //!
 //! Under LTLf ([`Semantics::Finite`]) the count is instead the number of
 //! finite words over the universe, of each length from 1 to [`BOUND`], that
@@ -43,7 +46,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use crate::ltl::{BinaryOp, Formula};
+use crate::ltl::{BinaryOp, Formula, UnaryOp};
 use crate::oracle::hoa::{self, Guard, Marks, Raw};
 use crate::oracle::process::{self, Limits};
 use crate::oracle::Semantics;
@@ -232,6 +235,41 @@ impl Counter {
                 self.similarities.insert(key.clone(), score);
                 score
             })
+            .collect();
+        self.counts.time += start.elapsed();
+        scores
+    }
+
+    /// The rejection strength of each candidate, a reporting score that
+    /// the search does not use: [`rejection_from_logs`] over the counts of
+    /// ¬φ and ¬φ', both over the universe of φ and the candidate. ⊤ scores
+    /// 0 and φ 1. A candidate whose counts fail scores 0. The counts share
+    /// the cache of [`Counter::similarities`].
+    pub fn rejections(&mut self, candidates: &[Formula]) -> Vec<f64> {
+        let start = Instant::now();
+        let not = |f: &Formula| Formula::unary(UnaryOp::Not, f.clone()).canonical();
+        let entries: Vec<[(Formula, usize); 2]> = candidates
+            .iter()
+            .map(|candidate| {
+                let universe = self.universe(candidate);
+                [(not(&self.phi), universe), (not(candidate), universe)]
+            })
+            .collect();
+        let mut needed = Vec::new();
+        for entry in entries.iter().flatten() {
+            if !self.logs.contains_key(entry) && !needed.contains(entry) {
+                needed.push(entry.clone());
+            }
+        }
+        self.count_all(needed);
+        let scores = entries
+            .iter()
+            .map(
+                |[phi, candidate]| match (self.logs[phi], self.logs[candidate]) {
+                    (Some(phi), Some(candidate)) => rejection_from_logs(phi, candidate),
+                    _ => 0.0,
+                },
+            )
             .collect();
         self.counts.time += start.elapsed();
         scores
@@ -641,20 +679,42 @@ pub fn similarity_from_logs(phi: f64, candidate: f64, shared: f64) -> f64 {
     if empty(phi) || empty(candidate) {
         return 0.0;
     }
-    let containment = |whole: f64| {
-        if whole <= 0.0 {
-            return if shared >= whole { 1.0 } else { 0.0 };
-        }
-        if shared <= 0.0 {
-            return 0.0;
-        }
-        (shared / whole).clamp(0.0, 1.0)
-    };
-    let (first, second) = (containment(phi), containment(candidate));
+    let (first, second) = (containment(shared, phi), containment(shared, candidate));
     if first == 0.0 && second == 0.0 {
         return 0.0;
     }
     2.0 * first * second / (first + second)
+}
+
+/// The rejection strength from the log2 counts of ¬φ and ¬φ' (`-inf` for a
+/// count of 0): `log count(¬φ') / log count(¬φ)`, the log share of φ's
+/// violating lassos that φ' still rejects, clamped to [0, 1]. φ ⇒ φ' puts
+/// L(¬φ') inside L(¬φ), so the share needs no intersection. The boundaries
+/// are those of [`similarity_from_logs`]: two empty negations (φ and φ'
+/// both ⊤) score 1, one empty against one non-empty 0, and a count of ¬φ
+/// of at most 1 falls back to membership.
+pub fn rejection_from_logs(phi: f64, candidate: f64) -> f64 {
+    let empty = |log: f64| log == f64::NEG_INFINITY;
+    if empty(phi) && empty(candidate) {
+        return 1.0;
+    }
+    if empty(phi) || empty(candidate) {
+        return 0.0;
+    }
+    containment(candidate, phi)
+}
+
+/// One term of PEREDUR's logarithmic metric, `log shared / log whole`
+/// clamped to [0, 1], from non-empty log2 counts. A whole of at most one
+/// model has no growth rate, so the term is membership.
+fn containment(shared: f64, whole: f64) -> f64 {
+    if whole <= 0.0 {
+        return if shared >= whole { 1.0 } else { 0.0 };
+    }
+    if shared <= 0.0 {
+        return 0.0;
+    }
+    (shared / whole).clamp(0.0, 1.0)
 }
 
 /// One letter of an automaton: a class of valuations and, per state, the
@@ -1694,5 +1754,21 @@ mod tests {
         assert_eq!(similarity_from_logs(10.0, 20.0, ninf), 0.0);
         // A count of 1 against a larger shared count is contained.
         assert_eq!(similarity_from_logs(0.0, 0.0, 0.0), 1.0);
+    }
+
+    #[test]
+    fn rejection_is_the_log_share_of_the_negation() {
+        let ninf = f64::NEG_INFINITY;
+        // ⊤ rejects nothing; φ and ⊤ against ⊤ both reject nothing.
+        assert_eq!(rejection_from_logs(10.0, ninf), 0.0);
+        assert_eq!(rejection_from_logs(ninf, ninf), 1.0);
+        assert_eq!(rejection_from_logs(ninf, 3.0), 0.0);
+        assert_eq!(rejection_from_logs(10.0, 10.0), 1.0);
+        assert_eq!(rejection_from_logs(10.0, 4.0), 0.4);
+        // A larger negation than φ's is clamped.
+        assert_eq!(rejection_from_logs(10.0, 12.0), 1.0);
+        // One violating lasso: membership.
+        assert_eq!(rejection_from_logs(0.0, 0.0), 1.0);
+        assert_eq!(rejection_from_logs(5.0, 0.0), 0.0);
     }
 }

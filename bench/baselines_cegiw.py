@@ -130,7 +130,7 @@ def main():
         if c:
             holds = nuxmv_holds(model, c)
             valid, valid_i = implications([('true', c), (inv, c)])
-            sem, syn = subprocess.run(
+            sem, syn, _ = subprocess.run(
                 [a.score], input=f'{phi}\t{c}\n', capture_output=True, text=True,
                 check=True).stdout.split()
             rel = [relation(c, m, imp) for m in best]

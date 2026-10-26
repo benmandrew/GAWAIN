@@ -12,7 +12,7 @@ use std::time::Duration;
 
 use common::{have, parse};
 use gawain::count::{similarity_from_logs, Counter, BOUND};
-use gawain::ltl::Formula;
+use gawain::ltl::{Formula, UnaryOp};
 use gawain::oracle::process::Limits;
 use gawain::oracle::{implications, Semantics};
 use gawain::search::{monotone_rewrite, Direction, Rng};
@@ -134,6 +134,45 @@ fn liveness_weakenings_score_between_phi_and_top() {
     assert!(found[1] > found[2], "{found:?}");
 }
 
+#[test]
+fn rejections_match_closed_forms_over_one_atom() {
+    if !have(
+        &["ltl2tgba", "ltlf2dfa"],
+        "rejections_match_closed_forms_over_one_atom",
+    ) {
+        return;
+    }
+    // φ = G a over the one atom a. Under LTL each split has 2^k lassos, of
+    // which ¬G a has all but one and ¬a the 2^(k-1) that start with !a.
+    // ¬G F a = F G !a needs a loop of !a only, so a split with |v| = j has
+    // 2^(k-j) lassos, 2^k - 1 in all.
+    let k = BOUND as i32;
+    let candidates = [Formula::tt(), parse("G a"), parse("a"), parse("G F a")];
+    let mut counter = Counter::new(&parse("G a"), Semantics::Infinite, LIMITS);
+    let found = counter.rejections(&candidates);
+    let not_phi = splits((2f64.powi(k) - 1.0).log2());
+    let expected = [
+        0.0,
+        1.0,
+        splits((k - 1) as f64) / not_phi,
+        (2f64.powi(k) - 1.0).log2() / not_phi,
+    ];
+    for ((candidate, found), expected) in candidates.iter().zip(found).zip(expected) {
+        assert!(
+            (found - expected).abs() < 1e-12,
+            "{candidate}: {found} against {expected}"
+        );
+    }
+    // Under LTLf, of the 2^n words of length n, ¬G a has all but one and
+    // ¬a half.
+    let sum = |term: &dyn Fn(i32) -> f64| (1..=k).map(term).sum::<f64>().log2();
+    let mut counter = Counter::new(&parse("G a"), Semantics::Finite, LIMITS);
+    let found = counter.rejections(&[Formula::tt(), parse("a")]);
+    let expected = sum(&|n| 2f64.powi(n - 1)) / sum(&|n| 2f64.powi(n) - 1.0);
+    assert_eq!(found[0], 0.0);
+    assert!((found[1] - expected).abs() < 1e-12, "{found:?} {expected}");
+}
+
 /// 1,200 pairs (ψ, χ) with ψ ⇒ χ, from the monotone rewrite of random
 /// depth-4 formulas over three atoms, as in `tests/search.rs`. Each
 /// implication holds under LTL, as Spot must prove. Under LTLf the rewrites
@@ -193,9 +232,13 @@ fn assert_monotone(test: &str, semantics: Semantics, every: f64) {
     let pairs = implied_pairs(semantics);
     // φ fixes the universe at the three atoms.
     let mut counter = Counter::new(&parse("a & b & c"), semantics, LIMITS);
+    // Each pair, then each pair negated and swapped, since ψ ⇒ χ is
+    // ¬χ ⇒ ¬ψ: the counts of the rejection strength.
+    let not = |f: &Formula| Formula::unary(UnaryOp::Not, f.clone());
     let formulas: Vec<Formula> = pairs
         .iter()
         .flat_map(|(p, q)| [p.clone(), q.clone()])
+        .chain(pairs.iter().flat_map(|(p, q)| [not(q), not(p)]))
         .chain([Formula::tt()])
         .collect();
     let start = std::time::Instant::now();
@@ -211,21 +254,28 @@ fn assert_monotone(test: &str, semantics: Semantics, every: f64) {
     let top = *top;
     assert!((top - every).abs() < 1e-9, "⊤ counts {top}, not {every}");
     let above_top = logs.iter().filter(|&&l| l > top + 1e-9).count();
-    let violations: Vec<_> = pairs
-        .iter()
-        .zip(logs.chunks(2))
-        .filter(|(_, l)| l[0] > l[1] + 1e-9)
-        .collect();
-    let strict = logs.chunks(2).filter(|l| l[0] < l[1] - 1e-9).count();
-    eprintln!(
-        "{test}: {} of {} pairs have count(ψ) > count(χ); {above_top} counts exceed ⊤; {strict} pairs strictly ordered",
-        violations.len(),
-        pairs.len()
-    );
-    for ((p, q), l) in violations.iter().take(5) {
-        eprintln!("  {p}  =>  {q}: {:.12} > {:.12}", l[0], l[1]);
+    let (positive, negated) = logs.split_at(2 * pairs.len());
+    for (logs, what) in [
+        (positive, "count(ψ) > count(χ)"),
+        (negated, "count(¬χ) > count(¬ψ)"),
+    ] {
+        let violations: Vec<_> = pairs
+            .iter()
+            .zip(logs.chunks(2))
+            .filter(|(_, l)| l[0] > l[1] + 1e-9)
+            .collect();
+        let strict = logs.chunks(2).filter(|l| l[0] < l[1] - 1e-9).count();
+        eprintln!(
+            "{test}: {} of {} pairs have {what}; {strict} pairs strictly ordered",
+            violations.len(),
+            pairs.len()
+        );
+        for ((p, q), l) in violations.iter().take(5) {
+            eprintln!("  {p}  =>  {q}: {:.12} > {:.12}", l[0], l[1]);
+        }
+        assert!(violations.is_empty());
     }
-    assert!(violations.is_empty());
+    eprintln!("{test}: {above_top} counts exceed ⊤");
     assert_eq!(above_top, 0);
 }
 
