@@ -119,16 +119,12 @@ fn finite_implication_is_not_infinite_implication() {
     }
 }
 
-#[test]
-fn weaken_repairs_a_trace_set() {
-    if !have(&["ltlfilt"], "weaken_repairs_a_trace_set") {
-        return;
-    }
-    // Every positive has b eventually after a, but not always the step
-    // after; G (a -> X[!] b) fails, G (a -> F b) is a weakening that holds.
-    // With weak X, G (a -> X b) does not imply G (a -> F b): a at the last
-    // position satisfies the first and not the second.
-    let text = "\
+/// Every positive has b eventually after a, but not always the step after;
+/// G (a -> X[!] b) fails, on the second positive only, and G (a -> F b) is
+/// a weakening that holds. With weak X, G (a -> X b) does not imply
+/// G (a -> F b): a at the last position satisfies the first and not the
+/// second.
+const SET: &str = "\
 semantics finite
 atoms a b
 + 10 01 00
@@ -137,6 +133,13 @@ atoms a b
 + 00 00
 - 10 00 00
 ";
+
+#[test]
+fn weaken_repairs_a_trace_set() {
+    if !have(&["ltlfilt"], "weaken_repairs_a_trace_set") {
+        return;
+    }
+    let text = SET;
     let dir = std::env::temp_dir().join(format!("gawain-traces-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("set.trace");
@@ -171,4 +174,45 @@ atoms a b
         let proved = implications(&[(&phi, repair)], Semantics::Finite, LIMITS).unwrap();
         assert_eq!(proved, [true], "φ does not imply {repair}");
     }
+}
+
+#[test]
+fn the_graded_search_grades_against_the_positives() {
+    if !have(
+        &["ltlfilt", "ltl2tgba"],
+        "the_graded_search_grades_against_the_positives",
+    ) {
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("gawain-graded-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join("set.trace");
+    std::fs::write(&path, SET).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_search_bench"))
+        .args(["--backend", "traces", "--model", path.to_str().unwrap()])
+        .args(["--ltl", "G (a -> X[!] b)", "--seed", "1"])
+        .args(["--status", "graded"])
+        .args(["--generations", "15", "--population", "20"])
+        .output()
+        .expect("search_bench runs");
+    let _ = std::fs::remove_dir_all(&dir);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let _ = writeln!(std::io::stderr(), "{stdout}");
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    // The grader reads all four positives, one of which violates φ, and
+    // the oracle stores no lasso of its own.
+    for field in [
+        "\"lassos\":4,",
+        "\"refuting\":1,",
+        "\"lasso_hits\":0,",
+        "\"spot_calls\":0,",
+    ] {
+        assert!(stdout.contains(field), "no {field}");
+    }
+    assert!(!stdout.contains("\"rescores\":0,"), "never graded");
+    assert!(!stdout.contains("\"repairs\":[]"), "no repair");
 }

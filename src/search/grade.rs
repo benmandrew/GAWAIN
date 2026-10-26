@@ -11,11 +11,12 @@
 //! [`Status::GradedReserve`] also keeps a share of the population for the
 //! others. The default, [`Status::Binary`], scores every such candidate 0.
 
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use super::{Scored, STATUS};
 use crate::ltl::Formula;
-use crate::oracle::Lasso;
+use crate::oracle::{Lasso, Packed, Program};
 
 /// How the status objective scores a candidate the oracle does not prove.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -79,15 +80,43 @@ pub struct GradeCounts {
     pub time: Duration,
 }
 
-/// Grades candidates against the stored runs of M that violate φ.
+/// Grades candidates against the runs of M that violate φ, from
+/// [`Oracle::lassos`](crate::oracle::Oracle::lassos). For a model checker
+/// those are the lassos stored by tier 1, a list that grows; for a trace
+/// set they are the positive traces, a fixed list (see "Graded status on
+/// trace sets" in `docs/dev/trace-sets.md`).
+///
+/// Runs of at most 64 positions are packed over φ's atoms and read by the
+/// trace sets' evaluator (`oracle::packed`), which is about 20 times
+/// faster here ("Graded status on trace sets"). Longer runs, and any
+/// candidate with an atom outside φ's, which mutation never makes, are
+/// read by [`Lasso::satisfies`], with the same semantics.
 #[derive(Debug)]
 pub struct Grader {
     phi: Formula,
-    /// Indices into the oracle's lassos of those that violate φ.
-    refuting: Vec<usize>,
-    /// How many of the oracle's lassos have been sorted into `refuting`.
+    /// φ's atoms, in the order runs are packed over.
+    atoms: Vec<Arc<str>>,
+    /// The oracle's runs that violate φ: each one's index in the oracle's
+    /// list, and its packed form when it fits.
+    refuting: Vec<(usize, Option<Packed>)>,
+    /// How many of the oracle's runs have been sorted into `refuting`.
     scanned: usize,
     counts: GradeCounts,
+}
+
+/// Whether the run `lassos[i]`, packed as `packed`, satisfies `formula`,
+/// compiled as `program` when its atoms are all packed.
+fn satisfies(
+    (i, packed): &(usize, Option<Packed>),
+    program: Option<&Program>,
+    formula: &Formula,
+    lassos: &[Lasso],
+    stack: &mut Vec<u64>,
+) -> bool {
+    match (packed, program) {
+        (Some(packed), Some(program)) => program.satisfies(packed, stack),
+        _ => lassos[*i].satisfies(formula),
+    }
 }
 
 impl Grader {
@@ -95,6 +124,7 @@ impl Grader {
     pub fn new(phi: &Formula) -> Self {
         Grader {
             phi: phi.clone(),
+            atoms: phi.atoms().into_iter().collect(),
             refuting: Vec::new(),
             scanned: 0,
             counts: GradeCounts::default(),
@@ -111,18 +141,22 @@ impl Grader {
     /// extend the list given to the previous call.
     pub fn rescore(&mut self, pool: &mut [Scored], lassos: &[Lasso]) {
         let start = Instant::now();
+        let mut stack = Vec::new();
+        let phi = Program::new(&self.phi, &self.atoms);
         for (i, lasso) in lassos.iter().enumerate().skip(self.scanned) {
-            if !lasso.satisfies(&self.phi) {
-                self.refuting.push(i);
+            let run = (i, Packed::new(lasso, &self.atoms));
+            if !satisfies(&run, Some(&phi), &self.phi, lassos, &mut stack) {
+                self.refuting.push(run);
             }
         }
         self.scanned = lassos.len();
         let denominator = (self.refuting.len() + 1) as f64;
         for scored in pool.iter_mut().filter(|s| !s.holds()) {
-            let satisfied = self
-                .refuting
-                .iter()
-                .filter(|&&i| lassos[i].satisfies(&scored.formula))
+            let formula = &scored.formula;
+            let packable = formula.atoms().iter().all(|a| self.atoms.contains(a));
+            let program = packable.then(|| Program::new(formula, &self.atoms));
+            let satisfied = (self.refuting.iter())
+                .filter(|run| satisfies(run, program.as_ref(), formula, lassos, &mut stack))
                 .count();
             self.counts.evaluations += self.refuting.len() as u64;
             scored.objectives[STATUS] = satisfied as f64 / denominator;
@@ -138,7 +172,9 @@ impl Grader {
 mod tests {
     use super::*;
     use crate::ltl::tests::f;
-    use crate::oracle::Valuation;
+    use crate::oracle::traces::TraceSet;
+    use crate::oracle::{Oracle, Valuation};
+    use crate::search::Rng;
 
     /// A lasso from strings of atom letters, as in `lasso.rs`.
     fn lasso(prefix: &[&str], cycle: &[&str]) -> Lasso {
@@ -232,5 +268,63 @@ mod tests {
         assert!(s.windows(2).all(|w| w[0] <= w[1]), "{s:?}");
         assert_eq!(s[0], 0.0);
         assert!(s[4] < 1.0);
+    }
+
+    #[test]
+    fn a_trace_set_grades_against_its_positives_under_ltlf() {
+        // The first positive satisfies φ = G a under LTLf and the other
+        // three violate it. The last has a at 69 positions and then none,
+        // 70 in all, too long to pack.
+        let long = ["10"; 69].join(" ") + " 00";
+        let text = format!("semantics finite\natoms a b\n+ 10 10\n+ 00 11\n+ 01\n+ {long}\n");
+        let set = TraceSet::parse(&text).unwrap();
+        // memo_only stores no lasso, so the grader reads the positives.
+        let oracle = Oracle::memo_only(set.clone());
+        assert_eq!(oracle.lassos(), set.positives());
+        let mut grader = Grader::new(&f("G a"));
+        let mut pool: Vec<Scored> = ["G a", "F a", "G (a | X false)", "G F a", "true"]
+            .iter()
+            .map(|t| scored(t, 0.0))
+            .collect();
+        grader.rescore(&mut pool, oracle.lassos());
+        // n = 3. F a holds on the second and fourth. X false holds only
+        // at a word's last position (weak next), so G (a | X false) holds
+        // on the third and fourth. G F a needs a at the last position: the
+        // second only. true holds on all three and still scores below 1.
+        assert_eq!(statuses(&pool), [0.0, 0.5, 0.5, 0.25, 0.75]);
+        let counts = grader.counts();
+        assert_eq!((counts.lassos, counts.refuting), (4, 3));
+    }
+
+    #[test]
+    fn the_score_is_monotone_under_ltlf_implication() {
+        // Each formula implies the next under LTLf, where weak X b holds at
+        // a word's last position, so on any finite words the scores rise.
+        // φ mentions both atoms, so every run is packed.
+        let chain = ["G (a & b)", "G (a | X b)", "a | X b", "F (a | X b)", "true"];
+        let mut rng = Rng::new(7);
+        for _ in 0..50 {
+            let words: Vec<Lasso> = (0..20)
+                .map(|_| {
+                    let length = 1 + rng.below(6);
+                    let mut word = Vec::new();
+                    for _ in 0..length {
+                        let v: Valuation = ["a", "b"]
+                            .into_iter()
+                            .filter(|_| rng.coin())
+                            .map(Arc::from)
+                            .collect();
+                        word.push(v);
+                    }
+                    Lasso::finite(word).unwrap()
+                })
+                .collect();
+            let mut grader = Grader::new(&f(chain[0]));
+            let mut pool: Vec<Scored> = chain.iter().map(|t| scored(t, 0.0)).collect();
+            grader.rescore(&mut pool, &words);
+            let s = statuses(&pool);
+            assert!(s.windows(2).all(|w| w[0] <= w[1]), "{s:?}");
+            assert!(s[0] == 0.0 && s[4] < 1.0, "{s:?}");
+        }
     }
 }

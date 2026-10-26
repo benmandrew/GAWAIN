@@ -106,10 +106,12 @@ impl<B: Backend> Oracle<B> {
         self.backend.semantics()
     }
 
-    /// The runs of M stored by tier 1, oldest first. Each refuted some
-    /// earlier query, and the list only grows.
+    /// The runs of M to grade against (`search::grade`), oldest first: every
+    /// run of M when the back end lists them ([`Backend::runs`]), else the
+    /// runs stored by tier 1, each of which refuted some earlier query.
+    /// Either list only grows.
     pub fn lassos(&self) -> &[Lasso] {
-        self.lassos.lassos()
+        self.backend.runs().unwrap_or(self.lassos.lassos())
     }
 
     /// Decides whether the model satisfies `formula`, cheapest tier first.

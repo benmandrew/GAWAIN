@@ -181,6 +181,11 @@ impl Backend for TraceSet {
     fn semantics(&self) -> Semantics {
         self.semantics
     }
+
+    /// The positive traces.
+    fn runs(&self) -> Option<&[Lasso]> {
+        Some(&self.positives)
+    }
 }
 
 /// One trace: positions separated by spaces, with `|` before a lasso's

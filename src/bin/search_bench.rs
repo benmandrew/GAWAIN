@@ -4,7 +4,7 @@
 //! other back ends and the status flag.
 //!
 //! ```text
-//! search_bench --backend nuxmv|explicit|spin|tapaal --model PATH
+//! search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH
 //!     [--atoms a,b,...] [--ltl 'φ'] [--property ID]
 //!     --seed N --generations G --population P
 //!     --status binary|graded|graded-feasible|graded-reserve-D
@@ -21,6 +21,9 @@
 //!   `bench/beem/search_models.py`, `--atoms` its atom macros.
 //! - `tapaal`: `--model` is an MCC instance directory and `--property` the
 //!   full id of one LTL property, which gives φ and the atoms.
+//! - `traces`: `--model` is a trace-set file (`oracle::traces`) and `--ltl`
+//!   φ. M is its positive traces, read under its semantics, behind
+//!   `Oracle::memo_only` as in `weaken --traces`.
 //!
 //! Every group keeps only φ's atoms, since mutation draws no other.
 //! `--timeout` and `--memory-mb` bound each back-end call (default 120 s
@@ -51,11 +54,12 @@ use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::spin::Spin;
 use gawain::oracle::tapaal::Tapaal;
+use gawain::oracle::traces::TraceSet;
 use gawain::oracle::{implications_each, Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -228,6 +232,13 @@ fn run() -> Result<(), String> {
             let backend = Tapaal::new(&pnml, net, property.atoms, limits);
             search_on(&args, backend, property.formula, &atoms, Vec::new(), start)
         }
+        "traces" => {
+            let phi = need_phi()?;
+            let set =
+                TraceSet::parse(&read(&args.model)?).map_err(|e| format!("{}: {e}", args.model))?;
+            let atoms: Vec<String> = set.atoms().iter().map(|a| a.to_string()).collect();
+            search_on(&args, set, phi, &atoms, Vec::new(), start)
+        }
         other => Err(format!("unknown back end {other}")),
     }
 }
@@ -256,7 +267,12 @@ fn search_on<B: Backend>(
         .collect();
     let invariant = invariant(&groups);
     let words = Words::sample(atoms.iter().map(String::as_str), args.seed);
-    let mut oracle = Oracle::new(backend, words, SPOT_LIMITS);
+    // A back end that lists its runs is a trace set, which answers faster
+    // than tiers 1 and 2, as in `weaken --traces`.
+    let mut oracle = match backend.runs() {
+        Some(_) => Oracle::memo_only(backend),
+        None => Oracle::new(backend, words, SPOT_LIMITS),
+    };
     let mut out = String::from("{");
     field(&mut out, "phi", &json(&phi.to_string()));
     field(&mut out, "seed", &args.seed.to_string());

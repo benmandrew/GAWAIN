@@ -4,7 +4,7 @@
 Usage:
   python3 -I bench/traces_run.py INSTANCES.csv WEAKEN OUT.csv
       [--per-family K] [--seed S] [--jobs J] [--generations G] [--population P]
-      [--timeout SECONDS]
+      [--timeout SECONDS] [--graded DIR]
 
 INSTANCES.csv is the output of `trace_bench instances`. K instances are drawn
 per family (source and directory) with Python's random.Random(S). Each run
@@ -19,6 +19,13 @@ exec runs past 60 s, each pair gets its own 60 s exec, and a pair whose
 exec fails reads as not proved, as in `implications_each`. A run still
 going after SECONDS (default 600) has its process group killed and is
 recorded with exit `timeout`.
+
+With `--graded DIR`, nothing runs: the sample is written as
+DIR/instances.tsv for bench/graded_run.py, with each set copied to
+DIR/models/, and WEAKEN and OUT.csv are ignored. Each row runs
+`search_bench --backend traces`, and its `semantics` column tells
+bench/graded_stats.py to compare repairs under LTLf for finite traces;
+see "Graded status on trace sets" in docs/dev/trace-sets.md.
 """
 
 import argparse
@@ -28,6 +35,7 @@ import csv
 import os
 import random
 import re
+import shutil
 import signal
 import subprocess
 import sys
@@ -128,6 +136,23 @@ FIELDS = ["file", "family", "semantics", "psi", "phi", "exit", "repairs",
           "spot_calls", "spot_errors", "backend_calls", "backend_unknowns"]
 
 
+def write_graded(sample, out):
+    """The sample as an instances.tsv of bench/graded_run.py, in out."""
+    models = os.path.join(out, "models")
+    os.makedirs(models, exist_ok=True)
+    with open(os.path.join(out, "instances.tsv"), "w") as f:
+        f.write("name\tfamily\tbackend\tmodel\tatoms\tphi\tproperty\tsemantics\n")
+        for row in sorted(sample, key=lambda r: r["file"]):
+            name = (family(row["file"]).replace("/", "_") + "_"
+                    + os.path.basename(row["file"]).removesuffix(".trace"))
+            name = re.sub(r"[^A-Za-z0-9_.=]", "_", name)
+            shutil.copy(row["file"], os.path.join(models, name + ".trace"))
+            f.write("\t".join([name, family(row["file"]), "traces",
+                               f"models/{name}.trace", "", row["phi"], "",
+                               row["semantics"]]) + "\n")
+    print(f"{len(sample)} instances in {out}/instances.tsv", file=sys.stderr)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("instances")
@@ -139,6 +164,7 @@ def main():
     parser.add_argument("--generations", type=int, default=30)
     parser.add_argument("--population", type=int, default=30)
     parser.add_argument("--timeout", type=float, default=600)
+    parser.add_argument("--graded")
     args = parser.parse_args()
     with open(args.instances) as f:
         rows = [r for r in csv.DictReader(f) if not r["error"]]
@@ -150,6 +176,9 @@ def main():
     for name in sorted(groups):
         members = groups[name]
         sample += rng.sample(members, min(args.per_family, len(members)))
+    if args.graded:
+        write_graded(sample, args.graded)
+        return
     with open(args.out, "w", newline="") as f, \
             concurrent.futures.ThreadPoolExecutor(args.jobs) as pool:
         writer = csv.DictWriter(f, FIELDS, extrasaction="ignore")

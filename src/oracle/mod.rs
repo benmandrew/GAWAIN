@@ -25,6 +25,7 @@ use crate::ltl::Formula;
 
 pub use implication::{Fingerprint, KnownTruths, Words};
 pub use lasso::LassoCache;
+pub(crate) use packed::{Packed, Program};
 pub use spot::{implications, implications_each, syntactic_implications, ALIVE};
 pub use tiered::{Counters, Oracle};
 
@@ -116,6 +117,13 @@ pub trait Backend {
     /// infinite runs; a set of finite traces reads LTLf.
     fn semantics(&self) -> Semantics {
         Semantics::Infinite
+    }
+
+    /// Every run of the model, when the back end holds the model as a
+    /// finite list of runs, as a trace set does; `None` for a model
+    /// checker.
+    fn runs(&self) -> Option<&[Lasso]> {
+        None
     }
 }
 

@@ -1,4 +1,5 @@
-//! The trace-set back end's evaluator: [`Lasso::satisfies`] over runs of at
+//! The evaluator of the trace-set back end and of the grader
+//! (`search::grade`): [`Lasso::satisfies`] over runs of at
 //! most 64 positions, one machine word per subformula.
 //!
 //! A run is packed once, as one `u64` per atom with bit `i` set where the
@@ -22,7 +23,7 @@ pub(super) const MAX_LEN: usize = 64;
 
 /// A run packed into words.
 #[derive(Clone, Debug)]
-pub(super) struct Packed {
+pub(crate) struct Packed {
     len: usize,
     /// The cycle's first position, or `len` for a finite word.
     start: usize,
@@ -33,7 +34,7 @@ pub(super) struct Packed {
 impl Packed {
     /// Packs `run` over `atoms`, or `None` when it is longer than
     /// [`MAX_LEN`].
-    pub(super) fn new(run: &Lasso, atoms: &[Arc<str>]) -> Option<Self> {
+    pub(crate) fn new(run: &Lasso, atoms: &[Arc<str>]) -> Option<Self> {
         let positions = [run.prefix(), run.cycle()].concat();
         if positions.len() > MAX_LEN {
             return None;
@@ -117,13 +118,13 @@ enum Op {
 }
 
 /// A formula compiled against a trace set's atoms.
-pub(super) struct Program {
+pub(crate) struct Program {
     ops: Vec<Op>,
 }
 
 impl Program {
     /// Compiles `formula`, reading atoms by their index in `atoms`.
-    pub(super) fn new(formula: &Formula, atoms: &[Arc<str>]) -> Self {
+    pub(crate) fn new(formula: &Formula, atoms: &[Arc<str>]) -> Self {
         fn walk(f: &Formula, atoms: &[Arc<str>], ops: &mut Vec<Op>) {
             match f.node() {
                 Node::True => ops.push(Op::True),
@@ -147,7 +148,7 @@ impl Program {
 
     /// Whether `run` satisfies the formula from its first position.
     /// `stack` is scratch space, reused across calls.
-    pub(super) fn satisfies(&self, run: &Packed, stack: &mut Vec<u64>) -> bool {
+    pub(crate) fn satisfies(&self, run: &Packed, stack: &mut Vec<u64>) -> bool {
         stack.clear();
         let mask = run.mask();
         for op in &self.ops {

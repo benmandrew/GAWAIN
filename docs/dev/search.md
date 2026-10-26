@@ -52,7 +52,7 @@ The NSGA-II functions take objective vectors of any width, so nothing else chang
 
 ### Graded status
 
-`Status::Graded` (`src/search/grade.rs`) replaces the 0 of a candidate that is not proved with a grade. Let n be the number of lassos the oracle has stored that violate φ, and k the number of those that φ' satisfies. A candidate the oracle proves scores 1, and any other scores k / (n + 1). φ satisfies none of its own counterexamples, so it scores 0, and for a fixed set of lassos the grade is monotone under implication. It costs no back-end call, since the lassos are runs of M that tier 1 already keeps, and it works on every back end that returns counterexamples.
+`Status::Graded` (`src/search/grade.rs`) replaces the 0 of a candidate that is not proved with a grade. Let n be the number of lassos the oracle has stored that violate φ, and k the number of those that φ' satisfies. A candidate the oracle proves scores 1, and any other scores k / (n + 1). φ satisfies none of its own counterexamples, so it scores 0, and for a fixed set of lassos the grade is monotone under implication. It costs no back-end call, since the lassos are runs of M that tier 1 already keeps, and it works on every back end that returns counterexamples. On a trace set the grading set is the fixed set of positive traces instead, measured in "Graded status on trace sets" in `trace-sets.md`.
 
 Three choices fix the grade.
 

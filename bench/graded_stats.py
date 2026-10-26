@@ -9,8 +9,9 @@ writes two CSVs into OUT:
   calls and the grading counters).
 - graded-instances.csv: one row per instance and arm against the baseline,
   over the seeds both have run: the found-repair rate and the medians of
-  the other measures for both, the sizes of the two pooled maximal sets and
-  the net subsumption share.
+  the other measures for both, the sizes of the two pooled maximal sets,
+  the net subsumption share and the number of implication pairs Spot left
+  undecided.
 
 It then prints, for each arm against the baseline, over all instances and
 per family: the median of each measure for both arms (bootstrap 95% CI), the
@@ -24,12 +25,19 @@ other pooled repair strictly implies, one per equivalence class. The net
 subsumption share of A against B is the share of B's maximal set strictly
 implied by some repair in A's, minus the converse; it is positive when A's
 repairs are the stronger. Implication is plain LTL implication, decided by
-`ltlfilt --satisfiable` (Spot 2.15.1 on PATH). The share is defined only
+`ltlfilt --satisfiable` (Spot 2.15.1 on PATH), and LTLf implication with
+`--from-ltlf` for an instance whose `semantics` column in instances.tsv
+is `finite` (a trace set of finite traces). The share is defined only
 where both arms found a repair on some seed; the found-repair rate covers
 the rest.
 
-usage: graded_stats.py DIR OUT [--baseline binary] [--runs runs]
+Every implication verdict is cached in OUT/implications.json, so a rerun
+over a growing sweep asks Spot only about new pairs. `--jobs J` (default 1)
+compares J instances at once.
+
+usage: graded_stats.py DIR OUT [--baseline binary] [--runs runs] [--jobs J]
 """
+import concurrent.futures as cf
 import csv
 import json
 import math
@@ -37,6 +45,8 @@ import random
 import statistics
 import subprocess
 import sys
+import threading
+import time
 from collections import defaultdict
 from pathlib import Path
 
@@ -47,13 +57,74 @@ MEASURES = [('found rate', 'found_rate'), ('best semantic', 'best_semantic'),
             ('back-end calls', 'backend_calls')]
 
 
-def implications(pairs):
-    """For each (x, y), whether x implies y, in one ltlfilt call."""
+UNDECIDED = set()
+# (finite, x, y) -> whether x implies y; None when undecided.
+CACHE = {}
+LOCK = threading.Lock()
+
+
+def load_cache(path):
+    if path.exists():
+        for finite, x, y, v in json.loads(path.read_text()):
+            CACHE[(finite, x, y)] = v
+
+
+SAVED = [0.0]
+
+
+def save_cache(path, every=0):
+    """Writes CACHE to path, at most once per `every` seconds."""
+    with LOCK:
+        if time.time() - SAVED[0] < every:
+            return
+        SAVED[0] = time.time()
+        items = [[*k, v] for k, v in CACHE.items()]
+    path.write_text(json.dumps(items))
+
+
+def implications(pairs, finite=False):
+    """implications_uncached, through CACHE."""
+    with LOCK:
+        todo = [p for p in pairs if (finite, *p) not in CACHE]
+    got = implications_uncached(todo, finite)
+    with LOCK:
+        for p, v in zip(todo, got):
+            CACHE[(finite, *p)] = v
+        values = [CACHE[(finite, *p)] for p in pairs]
+    with LOCK:
+        UNDECIDED.update((finite, *p) for p, v in zip(pairs, values) if v is None)
+    return [bool(v) for v in values]
+
+
+def implications_uncached(pairs, finite=False):
+    """For each (x, y), whether x implies y, in one ltlfilt call; under LTLf
+    when finite. A batch that runs past BATCH_LIMIT seconds or fails is
+    retried one pair per call, and a pair that runs past PAIR_LIMIT seconds
+    or fails is None, read as not implied and listed in UNDECIDED, as in
+    bench/traces_run.py: some LTLf pairs never finish, and some exceed
+    Spot's 32 acceptance sets."""
+    try:
+        return implications_batch(pairs, finite, BATCH_LIMIT)
+    except (subprocess.TimeoutExpired, RuntimeError):
+        out = []
+        for pair in pairs:
+            try:
+                out += implications_batch([pair], finite, PAIR_LIMIT)
+            except (subprocess.TimeoutExpired, RuntimeError):
+                out.append(None)
+        return out
+
+
+BATCH_LIMIT, PAIR_LIMIT = 30, 2
+
+
+def implications_batch(pairs, finite, limit):
     if not pairs:
         return []
     text = ''.join(f'({x}) & !({y})\n' for x, y in pairs)
-    r = subprocess.run(['ltlfilt', '-F', '-', '-v', '--satisfiable', '--format=%L'],
-                       input=text, capture_output=True, text=True)
+    ltlf = ['--from-ltlf=gawain_alive'] if finite else []
+    r = subprocess.run(['ltlfilt', *ltlf, '-F', '-', '-v', '--satisfiable', '--format=%L'],
+                       input=text, capture_output=True, text=True, timeout=limit)
     # ltlfilt exits 1 when it prints nothing, that is when no pair implies.
     if r.returncode not in (0, 1) or r.stderr:
         raise RuntimeError(f'ltlfilt failed: {r.stderr}')
@@ -82,13 +153,16 @@ def net_share(a, b, imp):
     return ab - ba
 
 
-def strength(a, b):
-    """The sizes of the maximal sets of repair lists a and b, and a's net share."""
+def strength(a, b, finite=False):
+    """The sizes of the maximal sets of repair lists a and b, a's net share,
+    and how many of the pairs compared were undecided."""
     formulas = sorted(set(a) | set(b))
     pairs = [(x, y) for x in formulas for y in formulas if x != y]
-    imp = dict(zip(pairs, implications(pairs)))
+    imp = dict(zip(pairs, implications(pairs, finite)))
+    with LOCK:
+        undecided = sum(CACHE[(finite, *p)] is None for p in pairs)
     ma, mb = maximal(sorted(set(a)), imp), maximal(sorted(set(b)), imp)
-    return len(ma), len(mb), net_share(ma, mb, imp)
+    return len(ma), len(mb), net_share(ma, mb, imp), undecided
 
 
 def summarise(rs):
@@ -185,8 +259,9 @@ def main(argv):
     d, out = Path(argv[0]), Path(argv[1])
     baseline = argv[argv.index('--baseline') + 1] if '--baseline' in argv else 'binary'
     runs_dir = d / (argv[argv.index('--runs') + 1] if '--runs' in argv else 'runs')
-    family = {r['name']: r['family']
-              for r in csv.DictReader(open(d / 'instances.tsv'), delimiter='\t')}
+    instances = list(csv.DictReader(open(d / 'instances.tsv'), delimiter='\t'))
+    family = {r['name']: r['family'] for r in instances}
+    finite = {r['name'] for r in instances if r.get('semantics') == 'finite'}
     runs = []
     for path in sorted(runs_dir.glob('*.json')):
         r = json.loads(path.read_text())
@@ -210,23 +285,38 @@ def main(argv):
     # Each arm meets the baseline on the seeds both have run, so a partial
     # sweep stays paired.
     rows, compared = [], defaultdict(list)
+    out.mkdir(parents=True, exist_ok=True)
+    cache = out / 'implications.json'
+    load_cache(cache)
+    jobs = []
     for arm in arms:
         for name in sorted({n for n, a in by if a == arm}):
             seeds = sorted(set(by[(name, arm)]) & set(by.get((name, baseline), {})))
-            if not seeds:
-                continue
-            a = summarise([by[(name, arm)][s] for s in seeds])
-            b = summarise([by[(name, baseline)][s] for s in seeds])
-            ma, mb, share = strength(
-                [f for s in seeds for f in by[(name, arm)][s]['formulas']],
-                [f for s in seeds for f in by[(name, baseline)][s]['formulas']])
-            rows.append({'instance': name, 'family': family[name], 'arm': arm,
-                         'seeds': len(seeds), 'maximal': ma, 'baseline_maximal': mb,
-                         'net_share': share, **a,
-                         **{f'baseline_{k}': v for k, v in b.items()}})
-            compared[arm].append({'name': name, 'a': a, 'b': b, 'net_share': share})
+            if seeds:
+                jobs.append((arm, name, seeds))
 
-    out.mkdir(parents=True, exist_ok=True)
+    def measure(job):
+        arm, name, seeds = job
+        result = strength(
+            [f for s in seeds for f in by[(name, arm)][s]['formulas']],
+            [f for s in seeds for f in by[(name, baseline)][s]['formulas']],
+            name in finite)
+        save_cache(cache, every=1800)
+        return result
+
+    with cf.ThreadPoolExecutor(int(argv[argv.index('--jobs') + 1])
+                               if '--jobs' in argv else 1) as pool:
+        strengths = list(pool.map(measure, jobs))
+    save_cache(cache)
+    for (arm, name, seeds), (ma, mb, share, undecided) in zip(jobs, strengths):
+        a = summarise([by[(name, arm)][s] for s in seeds])
+        b = summarise([by[(name, baseline)][s] for s in seeds])
+        rows.append({'instance': name, 'family': family[name], 'arm': arm,
+                     'seeds': len(seeds), 'maximal': ma, 'baseline_maximal': mb,
+                     'net_share': share, 'undecided_pairs': undecided, **a,
+                     **{f'baseline_{k}': v for k, v in b.items()}})
+        compared[arm].append({'name': name, 'a': a, 'b': b, 'net_share': share})
+
     for fname, data in (('graded-runs.csv', [{k: v for k, v in r.items() if k != 'formulas'}
                                              for r in runs]),
                         ('graded-instances.csv', rows)):
@@ -235,7 +325,8 @@ def main(argv):
             w.writeheader()
             w.writerows(data)
 
-    print(f'{len(runs)} runs, {len(errors)} without a result')
+    print(f'{len(runs)} runs, {len(errors)} without a result; '
+          f'{len(UNDECIDED)} implication pairs undecided, read as not implied')
     for e in errors:
         print(f'  no result: {e}')
     rng = random.Random(SEED)
