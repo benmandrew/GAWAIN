@@ -29,7 +29,10 @@ the normalisation; `closed_rejection` is its median over seeds.
 Writes OUT (one row per instance) and prints the summary that
 `bench/notes/baselines.md` quotes.
 
-usage: baselines_top.py RUNS CSV OUT [--csv-4x8 PATH] [--score PATH]
+`--arm` reads another arm, such as the evaluation's `default` or
+`mutation` (docs/dev/evaluation.md), with RUNS and CSV to match.
+
+usage: baselines_top.py RUNS CSV OUT [--csv-4x8 PATH] [--score PATH] [--arm binary]
 """
 import argparse
 import csv
@@ -47,13 +50,13 @@ SEED = 20261024
 TIE = 1e-6
 
 
-def load(runs_dir, csv_path):
-    """The binary rows of csv_path by instance, each with its JSON run."""
+def load(runs_dir, csv_path, arm):
+    """The rows of arm in csv_path by instance, each with its JSON run."""
     by_instance = defaultdict(list)
     for row in csv.DictReader(open(csv_path)):
-        if row['arm'] != 'binary':
+        if row['arm'] != arm:
             continue
-        path = Path(runs_dir) / f"{row['instance']}-binary-{row['seed']}.json"
+        path = Path(runs_dir) / f"{row['instance']}-{arm}-{row['seed']}.json"
         run = json.loads(path.read_text().strip().splitlines()[-1])
         if abs(run['wall'] - float(row['wall'])) > 0.01:
             raise SystemExit(f'{path}: wall {run["wall"]} != {row["wall"]} in {csv_path}')
@@ -85,9 +88,10 @@ def main():
     p.add_argument('out')
     p.add_argument('--csv-4x8')
     p.add_argument('--score', default='target/release/score')
+    p.add_argument('--arm', default='binary')
     a = p.parse_args()
 
-    runs = load(a.runs, a.csv)
+    runs = load(a.runs, a.csv, a.arm)
     small = defaultdict(list)
     if a.csv_4x8:
         for row in csv.DictReader(open(a.csv_4x8)):

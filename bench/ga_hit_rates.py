@@ -15,7 +15,9 @@ Inputs:
 Writes OUT, one row per run, and prints a pooled row per family and the
 median per-run hit rate.
 
-usage: ga_hit_rates.py RUNS CSV OUT
+`--arm` reads another arm, such as the evaluation's `default`.
+
+usage: ga_hit_rates.py RUNS CSV OUT [--arm binary]
 """
 import argparse
 import csv
@@ -33,11 +35,12 @@ def main():
     p.add_argument('runs')
     p.add_argument('csv')
     p.add_argument('out')
+    p.add_argument('--arm', default='binary')
     a = p.parse_args()
     family = {r['instance']: r['family'] for r in csv.DictReader(open(a.csv))}
     rows = []
-    for path in sorted(Path(a.runs).glob('*-binary-*.json')):
-        m = re.fullmatch(r'(.+)-binary-(\d+)\.json', path.name)
+    for path in sorted(Path(a.runs).glob(f'*-{a.arm}-*.json')):
+        m = re.fullmatch(rf'(.+)-{re.escape(a.arm)}-(\d+)\.json', path.name)
         run = json.loads(path.read_text().strip().splitlines()[-1])
         if sum(run[t] for t in TIERS) != run['queries']:
             raise SystemExit(f'{path}: the tiers do not sum to the queries')

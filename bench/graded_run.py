@@ -14,7 +14,9 @@ The budget is fixed for every instance: by default 30 generations of 40
 for a larger budget or a rerun of the runs a cap killed). `--out` names the directory under DIR that
 takes the results (default `runs`). Each run sits in its
 own systemd scope when `systemd-run --user` works, and under `ulimit -v`
-otherwise.
+otherwise. The script stops before the first run unless the `ltlfilt` on
+PATH is Spot 2.15.1: an older Spot lacks `--satisfiable`, so the output
+gate fails on every run and the runs report no repairs.
 
 The arms are `binary`, `graded` (option B), `feasible` (B with every
 proved candidate ranked first), `reserve4` and `reserve2` (feasible with a
@@ -42,6 +44,7 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+SPOT = '2.15.1'
 # The search_bench flags of each arm. The arms measured before the
 # initial-state filter became the default keep `--initial ignore`, so they
 # reproduce their recorded results.
@@ -133,6 +136,9 @@ def main():
     p.add_argument('--memory-gb', type=int, default=8)
     p.add_argument('--run-timeout', type=int, default=3600)
     a = p.parse_args()
+    version = subprocess.run(['ltlfilt', '--version'], capture_output=True, text=True).stdout
+    if f'(spot) {SPOT}' not in version.splitlines()[0]:
+        raise SystemExit(f'ltlfilt on PATH is {version.splitlines()[0]!r}, not Spot {SPOT}')
     d = Path(a.dir).resolve()
     out = d / a.out
     out.mkdir(exist_ok=True)
