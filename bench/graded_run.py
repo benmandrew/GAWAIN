@@ -10,8 +10,8 @@ interleaved, so a partial sweep stays paired.
 
 The budget is fixed for every instance: by default 30 generations of 40
 (`--budget GxP` sets another), 120 s and 4 GB per back-end call, and
-3600 s and 8 GB per run (`--memory-gb` sets another cap, for a rerun of
-the runs the cap killed). `--out` names the directory under DIR that
+3600 s and 8 GB per run (`--run-timeout` and `--memory-gb` set others,
+for a larger budget or a rerun of the runs a cap killed). `--out` names the directory under DIR that
 takes the results (default `runs`). Each run sits in its
 own systemd scope when `systemd-run --user` works, and under `ulimit -v`
 otherwise.
@@ -29,7 +29,8 @@ for its random-mutation baseline; see ARMS. The `random` and
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
 usage: graded_run.py DIR JOBS --seeds 1-10 --arms binary,graded
-                     [--budget 30x40] [--out runs] [--memory-gb 8] [--bin PATH]
+                     [--budget 30x40] [--out runs] [--memory-gb 8] [--run-timeout 3600]
+                     [--bin PATH]
                      [--filter REGEX]
 """
 import argparse
@@ -41,7 +42,6 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-RUN_TIMEOUT = 3600
 # The search_bench flags of each arm. The arms measured before the
 # initial-state filter became the default keep `--initial ignore`, so they
 # reproduce their recorded results.
@@ -92,7 +92,7 @@ def scoped(gb):
     return ['prlimit', f'--as={gb << 30}']
 
 
-def run(job, d, out, budget, binary, prefix):
+def run(job, d, out, budget, binary, prefix, limit):
     row, seed, arm = job
     base = f"{row['name']}-{arm}-{seed}"
     json_path, err_path = out / f'{base}.json', out / f'{base}.err'
@@ -106,8 +106,8 @@ def run(job, d, out, budget, binary, prefix):
             args += [flag, row[key]]
     start = time.time()
     try:
-        r = subprocess.run(prefix + ['nice', '-n', '10', 'timeout', str(RUN_TIMEOUT)] + args,
-                           capture_output=True, text=True, timeout=RUN_TIMEOUT + 60)
+        r = subprocess.run(prefix + ['nice', '-n', '10', 'timeout', str(limit)] + args,
+                           capture_output=True, text=True, timeout=limit + 60)
         stdout, stderr = r.stdout, r.stderr
     except subprocess.TimeoutExpired:
         stdout, stderr = '', 'killed by the runner\n'
@@ -131,6 +131,7 @@ def main():
     p.add_argument('--budget', default='30x40')
     p.add_argument('--out', default='runs')
     p.add_argument('--memory-gb', type=int, default=8)
+    p.add_argument('--run-timeout', type=int, default=3600)
     a = p.parse_args()
     d = Path(a.dir).resolve()
     out = d / a.out
@@ -142,7 +143,7 @@ def main():
     prefix = scoped(a.memory_gb)
     done = {}
     with cf.ThreadPoolExecutor(a.jobs) as pool:
-        for status in pool.map(lambda j: run(j, d, out, budget, a.bin, prefix), jobs):
+        for status in pool.map(lambda j: run(j, d, out, budget, a.bin, prefix, a.run_timeout), jobs):
             done[status] = done.get(status, 0) + 1
     print(done)
 
