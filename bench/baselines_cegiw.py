@@ -20,10 +20,14 @@ each case it
   formula against each member: stronger, weaker, equivalent or
   incomparable, both plainly and modulo I.
 
+`--runs` names another run directory under DIR, and `--arm` takes every
+case from one arm, such as the evaluation's `forced-default` or
+`forced-mutation` (docs/dev/evaluation.md).
+
 Writes OUT (one row per case) and prints a table. Spot 2.15.1 and nuXmv
 must be on PATH.
 
-usage: baselines_cegiw.py DIR OUT [--score PATH]
+usage: baselines_cegiw.py DIR OUT [--score PATH] [--runs runs] [--arm ARM]
 """
 import argparse
 import csv
@@ -78,6 +82,8 @@ def main():
     p.add_argument('dir', type=Path)
     p.add_argument('out')
     p.add_argument('--score', default='target/release/score')
+    p.add_argument('--runs', default='runs')
+    p.add_argument('--arm')
     a = p.parse_args()
 
     instances = {r['name']: r for r in csv.DictReader(open(a.dir / 'instances.tsv'),
@@ -92,11 +98,11 @@ def main():
         phi = inst['phi']
         def runs_of(arm):
             return [json.loads(path.read_text().strip().splitlines()[-1])
-                    for path in sorted((a.dir / 'runs').glob(f'{name}-{arm}-*.json'))]
-        runs = runs_of('binary')
+                    for path in sorted((a.dir / a.runs).glob(f'{name}-{arm}-*.json'))]
+        arm = a.arm or 'binary'
+        runs = runs_of(arm)
         klass = runs[0]['instance'] if runs else ''
-        arm = 'binary'
-        if klass == 'degenerate':
+        if klass == 'degenerate' and not a.arm:
             runs, arm = runs_of('forced'), 'forced'
         reps = cegiw[name]
         outcomes = {r['outcome'] for r in reps}
