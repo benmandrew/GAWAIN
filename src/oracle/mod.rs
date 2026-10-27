@@ -26,7 +26,7 @@ use crate::ltl::Formula;
 pub use implication::{Fingerprint, KnownTruths, Words};
 pub use lasso::LassoCache;
 pub(crate) use packed::{Packed, Program};
-pub use spot::{implications, implications_each, syntactic_implications, ALIVE};
+pub use spot::{implications, implications_each, simplifications, syntactic_implications, ALIVE};
 pub use tiered::{Counters, Oracle};
 
 /// The atoms that hold at one position of a run.

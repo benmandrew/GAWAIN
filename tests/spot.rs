@@ -1,6 +1,7 @@
 //! End-to-end tests: the batched Spot implication check gives the verdicts
 //! of known pairs, agrees with one `ltlfilt` validity check per pair, and
-//! reports its cost per pair.
+//! reports its cost per pair. Spot's simplifier shortens a bloated repair
+//! to an equivalent formula.
 //!
 //! The per-pair reference asks whether `ψ -> φ` is equivalent to `true`.
 //! Spot 2.15.1's `--imply` filter is not used there: it wrongly rejects
@@ -18,7 +19,10 @@ use std::time::{Duration, Instant};
 use common::{have, mutant, parse, Rng};
 use gawain::ltl::Formula;
 use gawain::oracle::process::Limits;
-use gawain::oracle::{implications, implications_each, syntactic_implications, Semantics};
+use gawain::oracle::{
+    implications, implications_each, simplifications, syntactic_implications, Semantics,
+};
+use gawain::search::simplified;
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(60),
@@ -226,4 +230,28 @@ fn a_hard_pair_leaves_the_rest_of_its_batch_decided() {
     let easy = [pairs[0], pairs[2]];
     let (proved, error) = implications_each(&easy, Semantics::Infinite, limits);
     assert_eq!((proved, error), (vec![true, false], None));
+}
+
+#[test]
+fn simplification_shortens_a_bloated_repair_to_an_equivalent() {
+    if !have(
+        &["ltlfilt"],
+        "simplification_shortens_a_bloated_repair_to_an_equivalent",
+    ) {
+        return;
+    }
+    // A repair the gate reported on a CEGIW case, where `a_p -> !a_p` is
+    // `!a_p`.
+    let bloated = parse("G !(a_p & X(a_p & X X(!a_p & X(a_p & X(a_p -> !a_p)))))");
+    let simple = parse("G (a -> F b)");
+    let texts = simplifications(&[&bloated, &simple], LIMITS).expect("ltlfilt -r");
+    let shorter = parse(&simplified(&bloated, Some(&texts[0])));
+    assert!(
+        shorter.n_subformulae() < bloated.n_subformulae(),
+        "{shorter}"
+    );
+    let both_ways = [(bloated.clone(), shorter.clone()), (shorter, bloated)];
+    assert_eq!(batch(&both_ways), [true, true]);
+    // Spot spells `a -> F b` as `!a | F b`, which is no shorter.
+    assert_eq!(simplified(&simple, Some(&texts[1])), simple.to_string());
 }

@@ -38,7 +38,7 @@
 //! is the default; `ignore` asks nothing. `--search random` runs the
 //! random-mutation baseline ([`random_search`]) in place of the genetic
 //! search, the default `ga`. The JSON line holds the instance class, the repairs with
-//! their similarities, the search that ran, the candidates it bred and
+//! their simplified forms and similarities, the search that ran, the candidates it bred and
 //! scored, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
 
@@ -398,8 +398,9 @@ fn search_on<B: Backend>(
             }
             let _ = write!(
                 repairs,
-                "{{\"formula\":{},\"similarity\":{:.6},\"semantic\":{:.6},\"vacuous\":{}",
+                "{{\"formula\":{},\"simplified\":{},\"similarity\":{:.6},\"semantic\":{:.6},\"vacuous\":{}",
                 json(&repair.formula.to_string()),
+                json(&repair.simplified),
                 repair.similarity,
                 repair.semantic,
                 repair.vacuity.subformulae.len()

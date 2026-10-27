@@ -115,7 +115,7 @@ def run(row, args):
     rejected = []
     for line in stdout.splitlines():
         if line.startswith("repair\t"):
-            repairs.append(line.rsplit("\t", 1)[1])
+            repairs.append(line.split("\t")[5])
         elif line.startswith("negatives\t"):
             rejected.append(int(line.split("\t")[1].split("/")[0]))
         elif line.startswith("oracle: "):

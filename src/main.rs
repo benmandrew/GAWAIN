@@ -26,7 +26,8 @@
 //! (over finite words under LTLf), rejection is the rejection strength
 //! (`Counter::rejections`: ⊤ scores 0 and φ 1), and vacuity names the subformulae in
 //! which the repair is vacuous on M, separated by `; `, `?` for an unknown
-//! verdict, or `-`. With `--traces`, a line
+//! verdict, or `-`. When Spot's simplifier shortens the repair, its
+//! simplified form follows as a seventh column. With `--traces`, a line
 //! `negatives<TAB>rejected/total<TAB>formula` follows each repair. Then come
 //! the oracle counters (search and gate together), the cost of the model
 //! counts and the cost of the vacuity flags.
@@ -337,9 +338,15 @@ fn run<B: Backend>(
         } else {
             flags.join("; ")
         };
+        let formula = repair.formula.to_string();
+        let simplified = if repair.simplified == formula {
+            String::new()
+        } else {
+            format!("\t{}", repair.simplified)
+        };
         println!(
-            "repair\t{:.4}\t{:.4}\t{rejection:.4}\t{flags}\t{}",
-            repair.similarity, repair.semantic, repair.formula
+            "repair\t{:.4}\t{:.4}\t{rejection:.4}\t{flags}\t{formula}{simplified}",
+            repair.similarity, repair.semantic
         );
         if let Some(traces) = traces {
             println!(

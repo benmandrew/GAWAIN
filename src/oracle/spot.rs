@@ -15,6 +15,10 @@
 //!   it answers in milliseconds where the complete check times out, and it
 //!   proves less.
 //!
+//! [`simplifications`] runs `ltlfilt -F - -r`, Spot's simplifier at its
+//! highest level, over one formula per line, for the gate to report a
+//! shorter equivalent form of each repair.
+//!
 //! A line that does not parse is skipped and so never reads as proved.
 //! Start-up dominates a single `ltlfilt` call (about 13 ms), so one exec per
 //! batch is the point; see "Implication from known truths" in
@@ -131,6 +135,24 @@ pub fn syntactic_implications(
     parse(&stdout, pairs.len(), |rest| rest == ",0")
 }
 
+/// Each formula rewritten by Spot's simplifier at its highest level
+/// (`ltlfilt -r`), in Spot's syntax, in one exec. The rewrite keeps each
+/// formula equivalent over infinite words, not finite ones. An `Err` covers
+/// the whole batch, as in [`implications`].
+pub fn simplifications(formulas: &[&Formula], limits: Limits) -> Result<Vec<String>, String> {
+    let lines: Vec<String> = formulas.iter().map(|f| f.to_string()).collect();
+    let stdout = exec(&lines, &["-r"], Semantics::Infinite, limits)?;
+    let simplified: Vec<String> = stdout.lines().map(str::to_owned).collect();
+    if simplified.len() != formulas.len() {
+        return Err(format!(
+            "ltlfilt: {} lines for {} formulas",
+            simplified.len(),
+            formulas.len()
+        ));
+    }
+    Ok(simplified)
+}
+
 /// Runs `ltlfilt -F - args` with one line `(ψ) & !(φ)` per pair on stdin,
 /// under `semantics`, and returns its stdout. An empty batch starts no
 /// process.
@@ -140,18 +162,32 @@ fn ltlfilt(
     semantics: Semantics,
     limits: Limits,
 ) -> Result<String, String> {
-    if pairs.is_empty() {
+    let lines: Vec<String> = (pairs.iter())
+        .map(|(psi, phi)| format!("({psi}) & !({phi})"))
+        .collect();
+    exec(&lines, args, semantics, limits)
+}
+
+/// Runs `ltlfilt -F - args` with `lines` on stdin, under `semantics`, and
+/// returns its stdout. An empty batch starts no process.
+fn exec(
+    lines: &[String],
+    args: &[&str],
+    semantics: Semantics,
+    limits: Limits,
+) -> Result<String, String> {
+    if lines.is_empty() {
         return Ok(String::new());
     }
     let mut input = String::new();
-    for (psi, phi) in pairs {
-        let line = format!("({psi}) & !({phi})\n");
+    for line in lines {
         // A newline inside a quoted atom would split the line and shift
         // every later line number.
-        if line.matches('\n').count() != 1 {
-            return Err(format!("cannot put {psi} => {phi} on one line"));
+        if line.contains('\n') {
+            return Err(format!("cannot put {line:?} on one line"));
         }
-        input.push_str(&line);
+        input.push_str(line);
+        input.push('\n');
     }
     let mut command = Command::new("ltlfilt");
     if semantics == Semantics::Finite {
@@ -233,5 +269,6 @@ mod tests {
         };
         none(Semantics::Infinite);
         none(Semantics::Finite);
+        assert_eq!(simplifications(&[], limits), Ok(Vec::new()));
     }
 }

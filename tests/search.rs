@@ -241,11 +241,10 @@ fn flagged(stdout: &str) -> Vec<(Formula, String)> {
         .lines()
         .filter_map(|line| line.strip_prefix("repair\t"))
         .map(|rest| {
-            let fields: Vec<&str> = rest.splitn(5, '\t').collect();
-            assert_eq!(
-                fields.len(),
-                5,
-                "similarity, semantic, rejection, vacuity, formula: {rest}"
+            let fields: Vec<&str> = rest.split('\t').collect();
+            assert!(
+                matches!(fields.len(), 5 | 6),
+                "similarity, semantic, rejection, vacuity, formula, simplified?: {rest}"
             );
             let rejection: f64 = fields[2].parse().expect("a rejection strength");
             assert!((0.0..=1.0).contains(&rejection), "{rest}");

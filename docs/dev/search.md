@@ -308,6 +308,14 @@ The gate (`search::gate`) runs once, on the final population.
 
 So every reported repair φ' has M ⊨ φ' proved by the oracle and φ ⇒ φ' proved by Spot. Spot does not prove I ⇒ φ', and does not prove any other reported repair stronger than it.
 
+### Simplified forms
+
+Repairs often carry unsimplified subterms. On a CEGIW case the gate reported `G !(a_p & X(a_p & X X(!a_p & X(a_p & X(a_p -> !a_p)))))`, where `a_p -> !a_p` is `!a_p`. GAWAIN's own `simplify` leaves this, and Spot's simplifier does much better. On the 157 distinct repairs of the CEGIW cases, `ltlfilt -r` (Spot's highest level, which keeps equivalence) shortens 111 and removes 31.6% of the formula nodes. Spot proved each rewrite equivalent to its repair. `bench/simplify_stats.py` makes this measurement.
+
+So after the last step the gate rewrites every kept repair in one more `ltlfilt -r` exec, under the same limits as the weakening batch (`spot::simplifications`). A result that parses is printed in GAWAIN's syntax, but only when it has fewer nodes than the repair, since Spot also spells `a -> b` as the larger `!a | b`. A result that does not parse is kept as Spot wrote it. It is only for the reader. The repair's formula, its scores and every step of the gate stay as they were. If the exec fails, each repair is its own simplified form, and the failure joins the gate's errors. Under LTLf every repair is its own simplified form, because Spot's rewrite keeps equivalence over infinite words only: it turns `X false` into `false`, but the weak `X false` of LTLf holds at the last position.
+
+`search_bench` writes the form as the `simplified` field of each repair. `weaken` prints it as a seventh column of the repair line, only when it differs from the formula.
+
 ## Triviality: validity modulo the encoding
 
 A candidate that holds on M can still hold for a trivial reason. On abp4, `G(s_get & s_wait -> X(…))` holds only because `s_get` and `s_wait` are two values of one enumerated variable, `sender.state`, and never hold together. Spot cannot see this, since it does not know the model, so plain validity lets the candidate through.

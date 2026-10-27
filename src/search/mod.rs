@@ -29,7 +29,7 @@ pub use rng::Rng;
 use crate::count::Counter;
 use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 use crate::oracle::process::Limits;
-use crate::oracle::{implications_each, Backend, Oracle, Semantics, Verdict};
+use crate::oracle::{implications_each, simplifications, Backend, Oracle, Semantics, Verdict};
 
 /// The chance that an offspring is crossed with a parent, PEREDUR's
 /// `crossover_rate` default.
@@ -383,6 +383,9 @@ pub struct Repair {
     /// Where it is vacuous on M. A flag for the reader, never a reason to
     /// drop it.
     pub vacuity: Vacuity,
+    /// An equivalent form of `formula` for the reader, from Spot's
+    /// simplifier (see [`simplified`]). Nothing else reads it.
+    pub simplified: String,
 }
 
 /// The subformula occurrences in which a repair is vacuous on M (see
@@ -402,7 +405,8 @@ pub struct Gate {
     /// The maximal repairs, most similar to φ first.
     pub repairs: Vec<Repair>,
     /// One reason per Spot batch that failed. A failed weakening batch drops
-    /// every candidate; a failed maximality batch drops none.
+    /// every candidate; a failed maximality batch drops none; a failed
+    /// simplification batch leaves every repair unsimplified.
     pub errors: Vec<String>,
     /// What the vacuity flags cost.
     pub vacuity: VacuityCounts,
@@ -457,8 +461,9 @@ pub fn vacuity<B: Backend>(
 /// `pruning`, since an undecided pair only keeps a candidate). Of two
 /// equivalent survivors the one more similar to φ stays, then the smaller
 /// in formula order. "Not proved" never counts as proved. Last, it flags
-/// where each repair is [`vacuity`]-vacuous on M, through `oracle`. Every
-/// implication is decided under the oracle's [`Semantics`].
+/// where each repair is [`vacuity`]-vacuous on M, through `oracle`, and
+/// gives each its [`simplified`] form, in one more batch under `limits`.
+/// Every implication is decided under the oracle's [`Semantics`].
 pub fn gate<B: Backend>(
     phi: &Formula,
     population: &[Scored],
@@ -492,6 +497,7 @@ pub fn gate<B: Backend>(
             similarity: s.objectives[SIMILARITY],
             semantic: s.objectives[SEMANTIC],
             vacuity: Vacuity::default(),
+            simplified: String::new(),
         })
         .collect();
     candidates.sort_by(|a, b| {
@@ -528,7 +534,35 @@ pub fn gate<B: Backend>(
     for repair in &mut gate.repairs {
         repair.vacuity = vacuity(&repair.formula, oracle, &mut gate.vacuity);
     }
+    // Spot's rewrite keeps equivalence over infinite words only, so under
+    // LTLf every repair stands as it is.
+    let formulas: Vec<&Formula> = gate.repairs.iter().map(|r| &r.formula).collect();
+    let texts = match semantics {
+        Semantics::Infinite => simplifications(&formulas, limits).unwrap_or_else(|error| {
+            gate.errors.push(error);
+            Vec::new()
+        }),
+        Semantics::Finite => Vec::new(),
+    };
+    for (i, repair) in gate.repairs.iter_mut().enumerate() {
+        repair.simplified = simplified(&repair.formula, texts.get(i).map(String::as_str));
+    }
     gate
+}
+
+/// How a repair reads once simplified, from `spot`, Spot's text for it.
+/// Text that parses is printed as the rest of the output prints formulas,
+/// but only when it has fewer nodes, since Spot also spells `a -> b` as the
+/// larger `!a | b`; text that does not parse is kept as Spot wrote it. With
+/// no shorter text the repair is its own simplified form.
+pub fn simplified(formula: &Formula, spot: Option<&str>) -> String {
+    match spot.map(|text| (text, text.parse::<Formula>())) {
+        Some((_, Ok(shorter))) if shorter.n_subformulae() < formula.n_subformulae() => {
+            shorter.to_string()
+        }
+        Some((text, Err(_))) => text.to_owned(),
+        _ => formula.to_string(),
+    }
 }
 
 #[cfg(test)]
@@ -577,6 +611,19 @@ mod tests {
             Vacuity::default()
         );
         assert_eq!(counts.unknowns, 0);
+    }
+
+    #[test]
+    fn a_simplified_repair_is_shorter_and_in_gawain_syntax() {
+        let repair = f("G (a -> !a)");
+        assert_eq!(simplified(&repair, None), repair.to_string());
+        assert_eq!(simplified(&repair, Some("G!a")), f("G !a").to_string());
+        let implication = f("G (a -> b)");
+        assert_eq!(
+            simplified(&implication, Some("G(!a | b)")),
+            implication.to_string()
+        );
+        assert_eq!(simplified(&repair, Some("G {a}")), "G {a}");
     }
 
     #[test]

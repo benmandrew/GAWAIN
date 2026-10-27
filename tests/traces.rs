@@ -161,7 +161,7 @@ fn weaken_repairs_a_trace_set() {
     let repairs: Vec<Formula> = stdout
         .lines()
         .filter_map(|l| l.strip_prefix("repair\t"))
-        .map(|l| parse(l.rsplit('\t').next().unwrap()))
+        .map(|l| parse(l.split('\t').nth(4).unwrap()))
         .collect();
     assert!(!repairs.is_empty(), "no repair");
     let set = gawain::oracle::traces::TraceSet::parse(text).unwrap();
