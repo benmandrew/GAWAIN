@@ -50,17 +50,106 @@ The arms in `bench/graded_run.py` are `default` and `mutation`. The CEGIW set us
 
 ## Commands
 
-Preparation runs locally in `nix develop`. The directories and a release build are then copied to av2 and av3. Other users share those hosts, so check `uptime` and `free -g` before starting and keep within the job count.
+Preparation runs locally in `nix develop`. The directories and a release build are then copied to av2 and av3. Other users share those hosts, so check `uptime` and `free -g` before starting and keep within the job count. Spot 2.15.1 must come first on `PATH` there, since `/usr/local/bin` holds Spot 2.14.5.
+
+The model and trace runs split the seeds between the hosts, with `S` = `1-5` on av2 and `6-10` on av3. The CEGIW run and the 15×20 budget run ran locally. `F` stands for the filter of the first run, which drops the excluded instances.
 
 ```
 nix develop -c bench/eval_prep.sh
-bench/graded_remote.sh bench/data/eval 26 eval --seeds 1-10 --arms default,mutation --out runs-eval \
-    --filter '^(?!beem-anderson\.(3-2|3-4|5-2|5-4|7-4)$|beem-lamport\.8-4$|mcc-MedleyA-PT-09-)'
-bench/graded_remote.sh bench/data/eval-traces 8 eval --seeds 1-10 --arms default,mutation --budget 30x30 --out runs-eval
-bench/graded_run.py bench/data/cegiw 2 --seeds 1-10 --arms forced-default,forced-mutation --out runs-eval
+F='^(?!beem-anderson\.(3-2|3-4|5-2|5-4|7-4)$|beem-lamport\.8-4$|mcc-MedleyA-PT-09-)'
+python3 -I bench/graded_run.py bench/data/eval 8 --seeds S --arms default,mutation --out runs-eval --filter "$F"
+python3 -I bench/graded_run.py bench/data/eval-traces 8 --seeds S --arms default,mutation --budget 30x30 --out runs-eval
+python3 bench/graded_run.py bench/data/cegiw 3 --seeds 1-10 --arms forced-default,forced-mutation --out runs-eval
 ```
 
-Three scripts do the analysis. `bench/graded_stats.py` pairs the arms. `bench/baselines_top.py` gives the closed share against ⊤ in its `closed_rejection` column. `bench/ga_hit_rates.py` gives the hit rates.
+The budget runs and the probe of the large BEEM instances use the same arms. The 15×20 run ran locally with 3 jobs. The 60×80 run split its seeds between the hosts (1–3 on av2, 4–5 on av3) and the 120×80 run ran on av2, both with 8 jobs. The probe ran seeds 1–3 locally with 2 jobs and seeds 4–10 on av3 with 4.
+
+```
+python3 -I bench/graded_run.py bench/data/eval 3 --seeds 1-5 --arms default,mutation --filter "$F" \
+    --budget 15x20 --out runs-b15x20
+python3 -I bench/graded_run.py bench/data/eval 8 --seeds S --arms default,mutation --filter "$F" \
+    --budget 60x80 --out runs-b60x80 --run-timeout 14400
+python3 -I bench/graded_run.py bench/data/eval 8 --seeds 1-2 --arms default,mutation --filter "$F" \
+    --budget 120x80 --out runs-b120x80 --run-timeout 14400
+python3 -I bench/graded_run.py bench/data/eval J --seeds S --arms default,mutation \
+    --filter '^beem-(anderson\.(3-2|3-4|5-2|5-4|7-4)|lamport\.8-4)$' --out runs-beem-probe \
+    --memory-gb 10 --run-timeout 14400
+```
+
+The probe used `--memory-gb 16` on av3.
+
+Four scripts do the analysis. `bench/graded_stats.py` pairs the arms. `bench/baselines_top.py --arm <arm>` gives the closed share against ⊤ in its `closed_rejection` column, and `bench/ga_hit_rates.py --arm <arm>` gives the hit rates. `bench/budget_curve.py` sets the budgets side by side.
+
+```
+python3 bench/budget_curve.py bench/data/eval 15x20=runs-b15x20 30x40=runs-eval 60x80=runs-b60x80 120x80=runs-b120x80
+```
+
+## Results
+
+The model and trace runs use the search of commit `7fae687`. The rows are in `bench/results/eval-{instances,runs,top-default,top-mutation,hit-rates-default,hit-rates-mutation,simplify,traces-instances,traces-runs,beem-probe,cegiw-forced-default,cegiw-forced-mutation}.csv` and `bench/results/eval-budget-{15x20,60x80,120x80}-{instances,runs}.csv`. In the paired tables, the medians are over instances and the p-values come from Wilcoxon signed-rank tests. "Higher/lower/equal" counts the instances on which default is higher than mutation, lower or equal.
+
+### Spot version
+
+The first attempt at the remote runs picked up Spot 2.14.5 from `/usr/local/bin` on av2 and av3. That version lacks `ltlfilt --satisfiable`, so the output gate failed on every run, and all 1,992 model runs reported no repairs. Those runs are set aside in `runs-eval-spot2145`, and the rerun used Spot 2.15.1. `bench/graded_run.py` now refuses to start under any other Spot version.
+
+### Models
+
+The model set ran at 30×40 on 100 instances × 10 seeds × 2 arms. 1,994 of the 2,000 runs gave a result. The 6 without one are on mcc-SieveSingleMsgMbox-PT-d2m06-LTLFireability-00, 1 default and 5 mutation, all at the 3,600 s cap. The *best semantic score* is the model-counting similarity of a run's best repair to φ.
+
+| Measure | Mutation | Default | Paired difference | p | Higher/lower/equal |
+|---|---|---|---|---|---|
+| Found rate | 0.70 | 0.85 | mean +0.085 | <0.0001 | 36/7/57 |
+| Best semantic score | 0.994 | 0.995 | | 0.0004 | 31/14/35 |
+| Net subsumption | | | median 0.000 [0.000, 0.222], mean +0.188 | <0.0001 | 38/7/35 |
+| Back-end calls | 55 | 65.75 | +6.0 | <0.0001 | 64/28/8 |
+| Wall time | 9.0 s | 11.9 s | +0.7 s | 0.029 | |
+
+The GA finds a repair more often than random mutation, and its repairs are stronger. It pays for this with 6.0 more back-end calls per run and 0.7 s more wall time. The gain is in RERS and MCC. On the 66 RERS instances the found rate is 0.60 against 0.50 (p = 0.0001, 27/6/33), and net subsumption favours the GA (p = 0.0008, 22/4/21). On the 19 MCC instances the found rate gives p = 0.042 (6/1/12), and net subsumption has a median of 0.361 (p = 0.0092, 15/2/1). The 14 BEEM instances are level on every measure: the found rate is 2/0/12 (p = 0.5), and net subsumption 0/1/13. On LMCS abp4 the found rate is 1.0 against 0.9.
+
+**Against ⊤.** `bench/baselines_top.py --arm` gives a median closed share under the semantic score of 0.122 [0.029, 0.408] for default and 0.046 [0.016, 0.100] for mutation. Under the rejection strength the median closed share is 0.971 [0.955, 0.988] and 0.953 [0.923, 0.969]. No repair is valid, so every repair is strictly stronger than ⊤. Default's repairs still tie ⊤'s semantic score on 47 instances, and mutation's on 56. By family, default's closed share is 0.294 on RERS (mutation 0.067) and 0.399 on MCC (mutation 0.184). On BEEM it is 0.0007 for both arms, and 100 of the 111 BEEM runs that found a repair score exactly ⊤'s value, with a closed rejection of 0.31. On BEEM the semantic score therefore cannot separate the repairs from ⊤.
+
+**Cache hit rates.** `bench/ga_hit_rates.py --arm` gives the share of queries that the cheap tiers answer. For default this is 92.1% of 963,457 queries over 999 runs. The memo answers 22.0%, the lasso tier 44.0% and the implication tier 26.1%, and 7.9% reach the back end. For mutation the cheap tiers answer 93.6% of 946,630 queries.
+
+**Simplification.** `bench/simplify_stats.py` rewrites each distinct repair with `ltlfilt -r` and proves the rewrite equivalent in both directions. Over 2,008 distinct repairs the median size falls from 13 to 11 nodes, 889 repairs get shorter, and the total node count falls by 6.9%. By family it falls by 12.5% on MCC, 3.6% on RERS and 2.8% on BEEM, and it rises by 4.4% on LMCS. The search output keeps Spot's form only when it is smaller (the `simplified` field, commit `aa69274`).
+
+### Trace sets
+
+The trace sets ran at 30×30 on 125 instances × 10 seeds × 2 arms. 2,516 of the 2,520 runs gave a result. 14 runs of ltlf-learning RandomBooleanCombinationsofFactors (trace_length=16, seed=47) died at the 8 GB cap. A rerun at 16 GB finished 10 of them, and the other 4 died again. The paired analysis ran before the rerun, on 2,506 runs.
+
+| Measure | Mutation | Default | Paired difference | p | Higher/lower/equal |
+|---|---|---|---|---|---|
+| Found rate | | | | 0.051 | 17/8/100 |
+| Best semantic score | 0.987 | 0.989 | | <0.0001 | 57/7/53 |
+| Net subsumption | | | median 0.126 [0.000, 0.250], mean +0.162 | <0.0001 | 68/20/29 |
+| Back-end calls | 661 | 682 | | 0.77 | |
+| Wall time | | | | 0.99 | |
+
+Both arms find a repair on nearly every run, so the found rate does not separate them. The GA's repairs are stronger, at no measurable extra cost in calls or wall time. The gain is in ltlf-learning and scarlet, where on most 5-instance families default has the higher best semantic score on 4 or 5 of the 5. Flie is level. Spot left 27,727 implication pairs undecided, and they count as not implied, so net subsumption is a lower bound on what Spot could decide. The simplification measurement ran out of memory at 16 GB on the trace repairs and was dropped. The search computes the simplified form only under infinite-word semantics.
+
+### CEGIW cases and the precedes set
+
+These two sets ran on the search of commit `ec8a3f9`. On the nine CEGIW instances the GA finds a repair on 66 of 90 runs against 53 for random mutation, and on both foraging absence cases its single maximal repair is equivalent to CEGIW's interval (`bench/notes/case-studies.md`). On the RERS precedes set, on the 7 instances where the intended weakening ψ holds, the GA reached ψ on 32 of 70 runs against 19 of 70 for mutation, ahead on all 7 (sign test p = 0.016; `bench/notes/precedes-reference.md`).
+
+### Budget
+
+`bench/budget_curve.py` compares four budgets on the 196 instance and seed pairs, from seeds 1 and 2, that gave a result at every budget under both arms. Wall time and back-end calls are medians.
+
+| Budget | Found, default | Found, mutation | Wall, default | Wall, mutation | Calls, default | Calls, mutation |
+|---|---|---|---|---|---|---|
+| 15×20 | 0.490 | 0.454 | 3.3 s | 3.0 s | 26 | 23 |
+| 30×40 | 0.684 | 0.571 | 11.2 s | 8.2 s | 66 | 50 |
+| 60×80 | 0.867 | 0.679 | 39.5 s | 30.2 s | 124 | 122 |
+| 120×80 | 0.944 | 0.704 | 76.8 s | 58.5 s | 164 | 184 |
+
+The gap in found rate widens from 3.6 points at 15×20 to 24.0 points at 120×80. Random mutation levels off near 0.70, while the GA keeps gaining. `bench/graded_stats.py` pairs the arms over all seeds of each budget.
+
+- **15×20, 5 seeds.** Found rate 32/9/59 (p = 0.0004). Net subsumption gives p = 0.15, with a mean of 0.093.
+- **60×80, 5 seeds.** Found rate 33/4/63 (p < 0.0001). Net subsumption has median 0.200 and mean 0.314 (p < 0.0001, 50/2/31). Default makes 7 more back-end calls (p = 0.0001).
+- **120×80, 2 seeds.** 396 of 400 runs gave a result. Two Sieve mutation runs hit the 14,400 s cap, and two rers2018-101-p5 mutation runs died at about 183 s, most likely at the 8 GB cap. Found rate 32/1/65 (p < 0.0001). Net subsumption has median 0.325 and mean 0.313 (p < 0.0001, 43/7/26). Back-end calls give p = 0.16.
+
+### Large BEEM instances
+
+The probe ran the 6 BEEM instances that the headline excludes (anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4) at 30×40, with 4 h and 10–16 GB per run. It completed 73 runs before the host window ended. Seeds 1–3 are complete for both arms, and 37 runs come from seeds 4–10. No run hit the cap, and the longest took 6,609 s. Default found a repair on 32 of 37 runs, and mutation on 25 of 36. These instances fail under the headline's 3,600 s cap, and not in general.
 
 ## Order of work
 
