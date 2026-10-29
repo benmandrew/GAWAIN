@@ -62,7 +62,7 @@ python3 -I bench/graded_run.py bench/data/eval-traces 8 --seeds S --arms default
 python3 bench/graded_run.py bench/data/cegiw 3 --seeds 1-10 --arms forced-default,forced-mutation --out runs-eval
 ```
 
-The budget runs and the probe of the large BEEM instances use the same arms. The 15×20 run ran locally with 3 jobs. The 60×80 run split its seeds between the hosts (1–3 on av2, 4–5 on av3) and the 120×80 run ran on av2, both with 8 jobs. The probe ran seeds 1–3 locally with 2 jobs and seeds 4–10 on av3 with 4.
+The budget runs and the probe of the large BEEM instances use the same arms. The 15×20 run ran locally with 3 jobs. The 60×80 run split its seeds between the hosts (1–3 on av2, 4–5 on av3) and the 120×80 run ran on av2, both with 8 jobs. The probe ran seeds 1–3 locally with 2 jobs and seeds 4–10 on av3 with 4 and then 6 jobs.
 
 ```
 python3 -I bench/graded_run.py bench/data/eval 3 --seeds 1-5 --arms default,mutation --filter "$F" \
@@ -149,7 +149,7 @@ The gap in found rate widens from 3.6 points at 15×20 to 24.0 points at 120×80
 
 ### Large BEEM instances
 
-The probe ran the 6 BEEM instances that the headline excludes (anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4) at 30×40, with 4 h and 10–16 GB per run. It completed 73 runs before the host window ended. Seeds 1–3 are complete for both arms, and 37 runs come from seeds 4–10. No run hit the cap, and the longest took 6,609 s. Default found a repair on 32 of 37 runs, and mutation on 25 of 36. These instances fail under the headline's 3,600 s cap, and not in general.
+The probe ran the 6 BEEM instances that the headline excludes (anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4) at 30×40, with 4 h and 10–16 GB per run. All 120 runs completed (6 instances, 2 arms, seeds 1–10). No run hit the cap, and the longest took 6,609 s. Default found a repair on 51 of 60 runs, and mutation on 37 of 60. Over the 60 paired runs, default alone found a repair on 14 and mutation alone on none (sign test p = 0.0001). The gap is on anderson 3-2 and 5-2, where default found a repair on all 10 seeds and mutation on 3. Both arms found one on every seed of anderson 3-4, 5-4 and 7-4, and on 1 of 10 seeds of lamport 8-4. The median run took 1,089 s for default and 1,192 s for mutation, with 21 and 22 back-end calls. These instances fail under the headline's 3,600 s cap, and not in general.
 
 ## Order of work
 
