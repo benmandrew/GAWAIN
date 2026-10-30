@@ -27,7 +27,7 @@ degenerate instances too, for the CEGIW case studies), and `initflag`,
 (bench/initial_stats.py), `default` and `forced-default` for the
 evaluation (docs/dev/evaluation.md), and `mutation` and `forced-mutation`
 for its random-mutation baseline; see ARMS. The `random` and
-`states` arms of the ablation ran from commit `ddd9648` (branch `exp/graded-arms`),
+`states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
 usage: graded_run.py DIR JOBS --seeds 1-10 --arms binary,graded
