@@ -16,7 +16,7 @@ Each question names its metric, its current status and where the existing eviden
 
 **RQ5, design ablations.** These are already measured and stay in `docs/dev/search.md`, cited rather than rerun. They cover the status variants (binary, graded, graded-feasible and graded-reserve, with binary kept), the model-counting objective, the initial-state filter and the budget (4×8 against 30×40). Filtering at the initial state in the loop raised the found rate from 0.70 to 0.90.
 
-**Qualitative.** A few case studies show readable repairs, among them abp4 `p2false` and the CEGIW foraging robots. A hand classification of repair shapes on a sample goes with them. Neither is collected yet.
+**Qualitative.** A few case studies show readable repairs, among them abp4 `p2false` and the CEGIW foraging robots. A hand classification of the best repair on each of the 89 headline instances with a repair goes with them. Both are in `bench/notes/case-studies.md`.
 
 ## Instance sets
 
