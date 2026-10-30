@@ -1,9 +1,11 @@
 //! End-to-end tests of the trace-set back end: the LTLf evaluator agrees
-//! with Spot's `--from-ltlf` on random formulas and words, LTLf implication
-//! differs from LTL implication where it should, and the `weaken` binary
-//! repairs a small trace set.
+//! with Spot's `ltlf2dfa` on random formulas and words, LTLf implication
+//! differs from LTL implication where it should, a pair that `ltlfilt
+//! --from-ltlf` takes seconds over is decided within the search's 2 s limit,
+//! and the `weaken` binary repairs a small trace set.
 //!
-//! Each test skips, with a reason on stderr, when `ltlfilt` is missing.
+//! Each test skips, with a reason on stderr, when `ltlfilt` or `ltlf2dfa`
+//! is missing.
 
 mod common;
 
@@ -53,7 +55,10 @@ fn describe(word: &[Valuation]) -> Formula {
 
 #[test]
 fn the_ltlf_evaluator_agrees_with_spot() {
-    if !have(&["ltlfilt"], "the_ltlf_evaluator_agrees_with_spot") {
+    if !have(
+        &["ltlfilt", "ltlf2dfa"],
+        "the_ltlf_evaluator_agrees_with_spot",
+    ) {
         return;
     }
     let mut rng = Rng(0x5eed_f1a7);
@@ -96,7 +101,7 @@ fn the_ltlf_evaluator_agrees_with_spot() {
 #[test]
 fn finite_implication_is_not_infinite_implication() {
     if !have(
-        &["ltlfilt"],
+        &["ltlfilt", "ltlf2dfa"],
         "finite_implication_is_not_infinite_implication",
     ) {
         return;
@@ -119,6 +124,30 @@ fn finite_implication_is_not_infinite_implication() {
     }
 }
 
+/// A pair from the headline trace-set analysis that `ltlfilt --from-ltlf`
+/// left undecided at 2 s: it takes 3.1 s there to find that neither side
+/// implies the other. `ltlf2dfa` takes a few milliseconds.
+#[test]
+fn a_slow_ltlf_pair_is_decided_within_the_search_limit() {
+    if !have(
+        &["ltlf2dfa"],
+        "a_slow_ltlf_pair_is_decided_within_the_search_limit",
+    ) {
+        return;
+    }
+    let x = parse("(!(G !a2 | X X a2) & F a4) W (a4 U F(F a3 <-> F a0))");
+    let y = parse(
+        "!G(((X(a4 <-> !a5) U G(X a1 & !a0) U (a3 & !F a1) -> F((a5 <-> !a3) U X(!a3 -> a5))) \
+         & a4 W !a4) R G !a0)",
+    );
+    let limits = Limits {
+        timeout: Duration::from_secs(2),
+        ..LIMITS
+    };
+    let got = implications(&[(&x, &y), (&y, &x)], Semantics::Finite, limits);
+    assert_eq!(got, Ok(vec![false, false]));
+}
+
 /// Every positive has b eventually after a, but not always the step after;
 /// G (a -> X[!] b) fails, on the second positive only, and G (a -> F b) is
 /// a weakening that holds. With weak X, G (a -> X b) does not imply
@@ -136,7 +165,7 @@ atoms a b
 
 #[test]
 fn weaken_repairs_a_trace_set() {
-    if !have(&["ltlfilt"], "weaken_repairs_a_trace_set") {
+    if !have(&["ltlfilt", "ltlf2dfa"], "weaken_repairs_a_trace_set") {
         return;
     }
     let text = SET;
