@@ -16,7 +16,9 @@ takes the results (default `runs`). Each run sits in its
 own systemd scope when `systemd-run --user` works, and under `ulimit -v`
 otherwise. The script stops before the first run unless the `ltlfilt` on
 PATH is Spot 2.15.1: an older Spot lacks `--satisfiable`, so the output
-gate fails on every run and the runs report no repairs.
+gate fails on every run and the runs report no repairs. It also stops
+unless `ltlf2dfa` is on PATH, since the oracle decides LTLf implications
+with it.
 
 The arms are `binary`, `graded` (option B), `feasible` (B with every
 proved candidate ranked first), `reserve4` and `reserve2` (feasible with a
@@ -39,6 +41,7 @@ import argparse
 import concurrent.futures as cf
 import csv
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -139,6 +142,8 @@ def main():
     version = subprocess.run(['ltlfilt', '--version'], capture_output=True, text=True).stdout
     if f'(spot) {SPOT}' not in version.splitlines()[0]:
         raise SystemExit(f'ltlfilt on PATH is {version.splitlines()[0]!r}, not Spot {SPOT}')
+    if not shutil.which('ltlf2dfa'):
+        raise SystemExit('ltlf2dfa is not on PATH')
     d = Path(a.dir).resolve()
     out = d / a.out
     out.mkdir(exist_ok=True)
