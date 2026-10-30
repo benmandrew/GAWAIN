@@ -25,14 +25,18 @@ other pooled repair strictly implies, one per equivalence class. The net
 subsumption share of A against B is the share of B's maximal set strictly
 implied by some repair in A's, minus the converse; it is positive when A's
 repairs are the stronger. Implication is plain LTL implication, decided by
-`ltlfilt --satisfiable` (Spot 2.15.1 on PATH), and LTLf implication with
-`--from-ltlf` for an instance whose `semantics` column in instances.tsv
-is `finite` (a trace set of finite traces). The share is defined only
+`ltlfilt --satisfiable` (Spot 2.15.1 on PATH), and LTLf implication for an
+instance whose `semantics` column in instances.tsv is `finite` (a trace set
+of finite traces). LTLf pairs go to `ltlf2dfa`: x implies y when the DFA of
+x & !y has no accepting transition. `ltlfilt --from-ltlf` left about a fifth
+of them undecided, by time-out or past Spot's 32 acceptance sets, and a DFA
+has neither problem. The share is defined only
 where both arms found a repair on some seed; the found-repair rate covers
 the rest.
 
 Every implication verdict is cached in OUT/implications.json, so a rerun
-over a growing sweep asks Spot only about new pairs. `--jobs J` (default 1)
+over a growing sweep asks Spot only about new pairs and undecided LTLf
+pairs, which earlier runs asked through `ltlfilt --from-ltlf`. `--jobs J` (default 1)
 compares J instances at once.
 
 usage: graded_stats.py DIR OUT [--baseline binary] [--runs runs] [--jobs J]
@@ -66,7 +70,8 @@ LOCK = threading.Lock()
 def load_cache(path):
     if path.exists():
         for finite, x, y, v in json.loads(path.read_text()):
-            CACHE[(finite, x, y)] = v
+            if v is not None or not finite:
+                CACHE[(finite, x, y)] = v
 
 
 SAVED = [0.0]
@@ -122,14 +127,27 @@ def implications_batch(pairs, finite, limit):
     if not pairs:
         return []
     text = ''.join(f'({x}) & !({y})\n' for x, y in pairs)
-    ltlf = ['--from-ltlf=gawain_alive'] if finite else []
-    r = subprocess.run(['ltlfilt', *ltlf, '-F', '-', '-v', '--satisfiable', '--format=%L'],
+    if finite:
+        return dfa_empty(text, len(pairs), limit)
+    r = subprocess.run(['ltlfilt', '-F', '-', '-v', '--satisfiable', '--format=%L'],
                        input=text, capture_output=True, text=True, timeout=limit)
     # ltlfilt exits 1 when it prints nothing, that is when no pair implies.
     if r.returncode not in (0, 1) or r.stderr:
         raise RuntimeError(f'ltlfilt failed: {r.stderr}')
     unsat = {int(line) for line in r.stdout.split()}
     return [i + 1 in unsat for i in range(len(pairs))]
+
+
+def dfa_empty(text, n, limit):
+    """For each of the n LTLf formulas in text, whether no finite word
+    satisfies it: its minimal DFA, one HOA line each (`-Hl`), marks no
+    transition accepting."""
+    r = subprocess.run(['ltlf2dfa', '-Hl', '-F', '-'], input=text, capture_output=True,
+                       text=True, timeout=limit)
+    lines = r.stdout.splitlines()
+    if r.returncode != 0 or r.stderr or len(lines) != n:
+        raise RuntimeError(f'ltlf2dfa failed: {r.stderr}')
+    return ['{' not in line.split('--BODY--', 1)[1] for line in lines]
 
 
 def maximal(formulas, imp):
