@@ -114,17 +114,19 @@ The GA finds a repair more often than random mutation, and its repairs are stron
 
 ### Trace sets
 
-The trace sets ran at 30×30 on 125 instances × 10 seeds × 2 arms. 2,516 of the 2,520 runs gave a result. 14 runs of ltlf-learning RandomBooleanCombinationsofFactors (trace_length=16, seed=47) died at the 8 GB cap. A rerun at 16 GB finished 10 of them, and the other 4 died again. The paired analysis ran before the rerun, on 2,506 runs.
+The trace sets ran at 30×30 on 126 instances × 10 seeds × 2 arms. 2,516 of the 2,520 runs gave a result. 14 runs of ltlf-learning RandomBooleanCombinationsofFactors (trace_length=16, seed=47) died at the 8 GB cap. A rerun at 16 GB finished 10 of them, and the other 4 died again. The paired analysis covers all 2,516 runs and all 126 instances.
+
+The 16 GB rerun ran on av3 with `--seeds 1-10`. av3 held only its own seeds 6–10, so the rerun also repeated all 1,254 seed 1–5 runs, and copying av3's results back replaced av2's copies. The analysis uses av2's copies, as the method above describes, and av3's repeats are kept in `bench/data/eval-traces/runs-eval-av3-rerun`. The repair sets of the two copies agree on 1,197 of the 1,254 runs. The other 57 differ because Spot's time limits make a run depend on host load.
 
 | Measure | Mutation | Default | Paired difference | p | Higher/lower/equal |
 |---|---|---|---|---|---|
-| Found rate | | | | 0.051 | 17/8/100 |
-| Best semantic score | 0.987 | 0.989 | | <0.0001 | 57/7/53 |
-| Net subsumption | | | median 0.126 [0.000, 0.250], mean +0.162 | <0.0001 | 68/20/29 |
-| Back-end calls | 661 | 682 | | 0.77 | |
-| Wall time | | | | 0.99 | |
+| Found rate | | | | 0.051 | 17/8/101 |
+| Best semantic score | 0.988 | 0.989 | | <0.0001 | 58/7/53 |
+| Net subsumption | | | median 0.090 [0.000, 0.225], mean +0.151 | <0.0001 | 65/23/30 |
+| Back-end calls | 661 | 684 | | 0.87 | |
+| Wall time | | | | 0.91 | |
 
-Both arms find a repair on nearly every run, so the found rate does not separate them. The GA's repairs are stronger, at no measurable extra cost in calls or wall time. The gain is in ltlf-learning and scarlet, where on most 5-instance families default has the higher best semantic score on 4 or 5 of the 5. Flie is level. Spot left 27,727 implication pairs undecided, and they count as not implied, so net subsumption is a lower bound on what Spot could decide. The simplification measurement ran out of memory at 16 GB on the trace repairs and was dropped. The search computes the simplified form only under infinite-word semantics.
+Both arms find a repair on nearly every run, so the found rate does not separate them. The GA's repairs are stronger, at no measurable extra cost in calls or wall time. The gain is in ltlf-learning and scarlet, where on most 5-instance families default has the higher best semantic score on 4 or 5 of the 5. Flie is level. `bench/graded_stats.py` decides the LTLf implications with `ltlf2dfa`, from the minimal DFA of x & !y, and 902 pairs on 6 instances stay undecided and count as not implied. The first analysis used `ltlfilt --from-ltlf`, which left 27,727 pairs undecided on 2,506 runs and gave a median of 0.126 and a mean of +0.162. On 2,000 pairs that route decided, `ltlf2dfa` agrees on 1,999 and times out on 1. The simplification measurement ran out of memory at 16 GB on the trace repairs and was dropped. The search computes the simplified form only under infinite-word semantics.
 
 ### CEGIW cases and the precedes set
 
