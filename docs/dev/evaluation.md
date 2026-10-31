@@ -52,13 +52,14 @@ The arms in `bench/graded_run.py` are `default` and `mutation`. The CEGIW set us
 
 Preparation runs locally in `nix develop`. The directories and a release build are then copied to av2 and av3. Other users share those hosts, so check `uptime` and `free -g` before starting and keep within the job count. Spot 2.15.1 must come first on `PATH` there, since `/usr/local/bin` holds Spot 2.14.5.
 
-The model and trace runs split the seeds between the hosts, with `S` = `1-5` on av2 and `6-10` on av3. The CEGIW run and the 15×20 budget run ran locally. `F` stands for the filter of the first run, which drops the excluded instances.
+The model runs split the seeds between the hosts, with `S` = `1-5` on av2 and `6-10` on av3. The trace runs ran on av2 alone, in one systemd scope. The CEGIW run and the 15×20 budget run ran locally. `F` stands for the filter of the first run, which drops the excluded instances.
 
 ```
 nix develop -c bench/eval_prep.sh
 F='^(?!beem-anderson\.(3-2|3-4|5-2|5-4|7-4)$|beem-lamport\.8-4$|mcc-MedleyA-PT-09-)'
 python3 -I bench/graded_run.py bench/data/eval 8 --seeds S --arms default,mutation --out runs-eval --filter "$F"
-python3 -I bench/graded_run.py bench/data/eval-traces 8 --seeds S --arms default,mutation --budget 30x30 --out runs-eval
+systemd-run --user --scope -p MemoryMax=32G -p MemorySwapMax=0 -p OOMPolicy=continue \
+  python3 -I bench/graded_run.py bench/data/eval-traces 16 --seeds 1-10 --arms default,mutation --budget 30x30 --out runs-eval-dfa --memory-gb 16
 python3 bench/graded_run.py bench/data/cegiw 3 --seeds 1-10 --arms forced-default,forced-mutation --out runs-eval
 ```
 
@@ -86,7 +87,7 @@ python3 bench/budget_curve.py bench/data/eval 15x20=runs-b15x20 30x40=runs-eval 
 
 ## Results
 
-The model and trace runs use the search of commit `7fae687`. The rows are in `bench/results/eval-{instances,runs,top-default,top-mutation,hit-rates-default,hit-rates-mutation,simplify,traces-instances,traces-runs,beem-probe,cegiw-forced-default,cegiw-forced-mutation}.csv` and `bench/results/eval-budget-{15x20,60x80,120x80}-{instances,runs}.csv`. In the paired tables, the medians are over instances and the p-values come from Wilcoxon signed-rank tests. "Higher/lower/equal" counts the instances on which default is higher than mutation, lower or equal.
+The model runs use the search of commit `7fae687`, and the trace runs that of commit `1c71d8f`. The rows are in `bench/results/eval-{instances,runs,top-default,top-mutation,hit-rates-default,hit-rates-mutation,simplify,traces-instances,traces-runs,beem-probe,cegiw-forced-default,cegiw-forced-mutation}.csv` and `bench/results/eval-budget-{15x20,60x80,120x80}-{instances,runs}.csv`. In the paired tables, the medians are over instances and the p-values come from Wilcoxon signed-rank tests. "Higher/lower/equal" counts the instances on which default is higher than mutation, lower or equal.
 
 ### Spot version
 
@@ -114,19 +115,19 @@ The GA finds a repair more often than random mutation, and its repairs are stron
 
 ### Trace sets
 
-The trace sets ran at 30×30 on 126 instances × 10 seeds × 2 arms. 2,516 of the 2,520 runs gave a result. 14 runs of ltlf-learning RandomBooleanCombinationsofFactors (trace_length=16, seed=47) died at the 8 GB cap. A rerun at 16 GB finished 10 of them, and the other 4 died again. The paired analysis covers all 2,516 runs and all 126 instances.
+The trace sets ran at 30×30 on 126 instances × 10 seeds × 2 arms, and all 2,520 runs gave a result. They ran on av2 from 22:31 on 30 October to 01:47 on 31 October, 16 at a time at nice 19, in one systemd scope capped at 32 GB. A stub `systemd-run` on `PATH` sent `bench/graded_run.py` to its `prlimit` fallback, so every run stayed inside that scope. No run reached the cap.
 
-The 16 GB rerun ran on av3 with `--seeds 1-10`. av3 held only its own seeds 6–10, so the rerun also repeated all 1,254 seed 1–5 runs, and copying av3's results back replaced av2's copies. The analysis uses av2's copies, as the method above describes, and av3's repeats are kept in `bench/data/eval-traces/runs-eval-av3-rerun`. The repair sets of the two copies agree on 1,197 of the 1,254 runs. The other 57 differ because Spot's time limits make a run depend on host load.
+A first trace run used the search of commit `7fae687`, whose oracle decided LTLf implications with `ltlfilt --from-ltlf`. Its output gate failed on 318 runs with 427 errors, against 111 runs with 124 errors on commit `1c71d8f`. All 124 later errors are time-outs, 123 of them in `ltlf2dfa`. The first run gave 2,516 results, since 4 runs of ltlf-learning RandomBooleanCombinationsofFactors (trace_length=16, seed=47) died at 16 GB, and its repair sets match the second run's on 2,239 of them. Analysed with `ltlf2dfa`, it gave a net subsumption median of 0.090 [0.000, 0.225] and a mean of +0.151 (p<0.0001, 65/23/30), with calls and wall time level (p = 0.87 and 0.91). Its runs are in `bench/data/eval-traces/runs-eval` and its analysis in `stats-eval`. A 16 GB rerun of it on av3 repeated all 1,254 seed 1–5 runs by mistake, and those repeats are kept in `runs-eval-av3-rerun`.
 
 | Measure | Mutation | Default | Paired difference | p | Higher/lower/equal |
 |---|---|---|---|---|---|
-| Found rate | | | | 0.051 | 17/8/101 |
-| Best semantic score | 0.988 | 0.989 | | <0.0001 | 58/7/53 |
-| Net subsumption | | | median 0.090 [0.000, 0.225], mean +0.151 | <0.0001 | 65/23/30 |
-| Back-end calls | 661 | 684 | | 0.87 | |
-| Wall time | | | | 0.91 | |
+| Found rate | | | | 0.66 | 17/11/98 |
+| Best semantic score | 0.989 | 0.989 | | <0.0001 | 57/6/55 |
+| Net subsumption | | | median 0.077 [0.000, 0.233], mean +0.152 | <0.0001 | 64/24/30 |
+| Back-end calls | 661 | 684 | | 0.81 | |
+| Wall time | 1.815 s | 1.797 s | median +0.041 s, mean −16.6 s | 0.022 | 78/48/0 |
 
-Both arms find a repair on nearly every run, so the found rate does not separate them. The GA's repairs are stronger, at no measurable extra cost in calls or wall time. The gain is in ltlf-learning and scarlet, where on most 5-instance families default has the higher best semantic score on 4 or 5 of the 5. Flie is level. `bench/graded_stats.py` decides the LTLf implications with `ltlf2dfa`, from the minimal DFA of x & !y, and 902 pairs on 6 instances stay undecided and count as not implied. The first analysis used `ltlfilt --from-ltlf`, which left 27,727 pairs undecided on 2,506 runs and gave a median of 0.126 and a mean of +0.162. On 2,000 pairs that route decided, `ltlf2dfa` agrees on 1,999 and times out on 1. The simplification measurement ran out of memory at 16 GB on the trace repairs and was dropped. The search computes the simplified form only under infinite-word semantics.
+Both arms find a repair on nearly every run, so the found rate does not separate them. The GA's repairs are stronger at the same number of calls. Default takes a median of 41 ms longer per instance and 16.6 s less on the mean, which a few long instances decide. The gain is in ltlf-learning and scarlet, where on most 5-instance families default has the higher best semantic score on 4 or 5 of the 5. Flie is level. `bench/graded_stats.py` decides the LTLf implications with `ltlf2dfa`, from the minimal DFA of x & !y, and 433 pairs on 4 DoubleCounter and SingleCounter instances stay undecided and count as not implied. On the first run, `ltlfilt --from-ltlf` left 27,727 pairs undecided and gave a median of 0.126 and a mean of +0.162. On 2,000 pairs that route decided, `ltlf2dfa` agrees on 1,999 and times out on 1. The simplification measurement ran out of memory at 16 GB on the trace repairs and was dropped. The search computes the simplified form only under infinite-word semantics.
 
 ### CEGIW cases and the precedes set
 
