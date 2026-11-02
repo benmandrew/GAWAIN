@@ -11,7 +11,7 @@ mod common;
 use std::time::Duration;
 
 use common::{have, parse};
-use gawain::count::{similarity_from_logs, Counter, BOUND};
+use gawain::count::{similarity_from_logs, Counter, Side, BOUND};
 use gawain::ltl::{Formula, UnaryOp};
 use gawain::oracle::process::Limits;
 use gawain::oracle::{implications, Semantics};
@@ -171,6 +171,41 @@ fn rejections_match_closed_forms_over_one_atom() {
     let expected = sum(&|n| 2f64.powi(n - 1)) / sum(&|n| 2f64.powi(n) - 1.0);
     assert_eq!(found[0], 0.0);
     assert!((found[1] - expected).abs() < 1e-12, "{found:?} {expected}");
+}
+
+#[test]
+fn rejected_side_follows_rejections_on_weakenings_and_separates_near_top() {
+    if !have(
+        &["ltl2tgba"],
+        "rejected_side_follows_rejections_on_weakenings_and_separates_near_top",
+    ) {
+        return;
+    }
+    // On BEEM anderson, φ accepts about 96% of lassos, and the accepted-side
+    // similarity puts this weakening within 1e-11 of ⊤.
+    let phi = parse("G (w -> F c)");
+    let weakening = parse("c W F (w -> F c & !c)");
+    let candidates = [Formula::tt(), weakening, phi.clone()];
+    let mut accepted = Counter::new(&phi, Semantics::Infinite, LIMITS);
+    let near = accepted.similarities(&candidates);
+    assert!((near[1] - near[0]).abs() < 1e-6, "{near:?}");
+    let mut rejected = Counter::new(&phi, Semantics::Infinite, LIMITS).with_side(Side::Rejected);
+    let found = rejected.similarities(&candidates);
+    let strength = rejected.rejections(&candidates);
+    assert_eq!(found[0], 0.0, "⊤ rejects nothing");
+    assert_eq!(found[2], 1.0);
+    // For a weakening, ¬φ' is the shared count, so the harmonic mean is
+    // 2r / (1 + r) for the rejection strength r.
+    let r = strength[1];
+    assert!(
+        (found[1] - 2.0 * r / (1.0 + r)).abs() < 1e-12,
+        "{found:?} {strength:?}"
+    );
+    assert!(found[1] > 0.1, "{found:?}");
+    // A strengthening rejects more than φ and is penalised, where the
+    // rejection strength alone would clamp it to 1.
+    let stronger = rejected.similarities(&[parse("G (w -> c)"), Formula::ff()]);
+    assert!(stronger.iter().all(|&s| s < 1.0), "{stronger:?}");
 }
 
 /// 1,200 pairs (ψ, χ) with ψ ⇒ χ, from the monotone rewrite of random

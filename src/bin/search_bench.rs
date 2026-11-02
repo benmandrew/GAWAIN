@@ -10,6 +10,7 @@
 //!     --status binary|graded|graded-feasible|graded-reserve-D
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
 //!     [--initial ignore|flag|filter] [--search ga|random]
+//!     [--semantic accepted|rejected]
 //! ```
 //!
 //! - `nuxmv`: `--model` is an SMV file, `--atoms` its DEFINEs and `--ltl`
@@ -37,7 +38,9 @@
 //! ("Triviality at the initial state" in `docs/dev/search.md`). `filter`
 //! is the default; `ignore` asks nothing. `--search random` runs the
 //! random-mutation baseline ([`random_search`]) in place of the genetic
-//! search, the default `ga`. The JSON line holds the instance class, the repairs with
+//! search, the default `ga`. `--semantic rejected` counts the
+//! model-counting similarity over the negations ([`Side::Rejected`]), in
+//! place of the default `accepted`. The JSON line holds the instance class, the repairs with
 //! their simplified forms and similarities, the search that ran, the candidates it bred and
 //! scored, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
@@ -48,7 +51,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use gawain::count::Counter;
+use gawain::count::{Counter, Side};
 use gawain::instance::{classify, initial, Instance};
 use gawain::ltl::{BinaryOp, Formula};
 use gawain::mcc::{properties, Net};
@@ -62,7 +65,7 @@ use gawain::oracle::{implications_each, Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, random_search, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random] [--semantic accepted|rejected]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -96,6 +99,7 @@ struct Args {
     search_degenerate: bool,
     initial: Initial,
     random: bool,
+    side: Side,
 }
 
 /// What `--initial` asks of the initial-state predicate.
@@ -177,6 +181,13 @@ fn parse_args() -> Result<Args, String> {
                     "random" => true,
                     "ga" => false,
                     _ => return Err(format!("--search {value}: ga or random")),
+                }
+            }
+            "--semantic" => {
+                args.side = match value.as_str() {
+                    "accepted" => Side::Accepted,
+                    "rejected" => Side::Rejected,
+                    _ => return Err(format!("--semantic {value}: accepted or rejected")),
                 }
             }
             _ => return Err(format!("unknown flag {flag}")),
@@ -336,7 +347,8 @@ fn search_on<B: Backend>(
             status: args.status.unwrap_or_default(),
         };
         let mut rng = Rng::new(args.seed);
-        let mut counter = Counter::new(&phi, oracle.semantics(), SEARCH_LIMITS);
+        let mut counter =
+            Counter::new(&phi, oracle.semantics(), SEARCH_LIMITS).with_side(args.side);
         let searched = Instant::now();
         let run = if args.random { random_search } else { search };
         let (population, counts, budget) = run(

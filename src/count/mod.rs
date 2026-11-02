@@ -17,6 +17,11 @@
 //! [`Counter::rejections`] gives a second, reporting score from the same
 //! counts: the rejection strength `log count(¬φ') / log count(¬φ)`, which
 //! separates near-⊤ candidates that the similarity scores alike.
+//! [`Side::Rejected`] makes the similarity itself count from that side: the
+//! same metric over ¬φ, ¬φ' and `¬φ & ¬φ'`. For a weakening of φ the
+//! shared count is that of ¬φ', so the score is 2r/(1 + r) for the
+//! rejection strength r, and ranks weakenings as r does. It still
+//! penalises a candidate that drifts from φ, which r alone does not.
 //!
 //! Under LTLf ([`Semantics::Finite`]) the count is instead the number of
 //! finite words over the universe, of each length from 1 to [`BOUND`], that
@@ -85,6 +90,18 @@ pub const MONOID_BYTES: usize = 1 << 30;
 /// see "Lasso count time" in `docs/dev/search.md`.
 pub const COUNT_WORK: u64 = 1 << 32;
 
+/// Which languages [`Counter::similarities`] compares.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Side {
+    /// φ, φ' and `φ & φ'`, PEREDUR's metric. When φ accepts nearly every
+    /// lasso, the scores of its weakenings differ from ⊤'s by about 1e-11,
+    /// near the noise of `f64`.
+    #[default]
+    Accepted,
+    /// ¬φ, ¬φ' and `¬φ & ¬φ'`, which keeps that difference: ⊤ scores 0.
+    Rejected,
+}
+
 /// What one lasso count may spend before it fails.
 #[derive(Clone, Copy, Debug)]
 struct Budget {
@@ -131,6 +148,7 @@ pub struct Counter {
     phi: Formula,
     semantics: Semantics,
     phi_atoms: BTreeSet<Arc<str>>,
+    side: Side,
     limits: Limits,
     /// log2 counts by canonical formula and universe size; `None` when the
     /// formula could not be counted.
@@ -152,12 +170,19 @@ impl Counter {
             phi: phi.canonical(),
             semantics,
             phi_atoms: phi.atoms(),
+            side: Side::Accepted,
             limits,
             logs: HashMap::new(),
             similarities: HashMap::new(),
             ganak: HashMap::new(),
             counts: Counts::default(),
         }
+    }
+
+    /// This counter, comparing the languages of `side`.
+    pub fn with_side(mut self, side: Side) -> Self {
+        self.side = side;
+        self
     }
 
     /// What this counter has spent so far.
@@ -203,7 +228,7 @@ impl Counter {
                 continue;
             }
             let universe = self.universe(key);
-            for formula in [self.phi.clone(), key.clone(), self.conjunction(key)] {
+            for formula in self.terms(key) {
                 let entry = (formula, universe);
                 if !self.logs.contains_key(&entry) && !needed.contains(&entry) {
                     needed.push(entry);
@@ -221,12 +246,8 @@ impl Counter {
                     return score;
                 }
                 let universe = self.universe(key);
-                let log = |f: Formula| self.logs[&(f, universe)];
-                let score = match (
-                    log(self.phi.clone()),
-                    log(key.clone()),
-                    log(self.conjunction(key)),
-                ) {
+                let [phi, candidate, shared] = self.terms(key).map(|f| self.logs[&(f, universe)]);
+                let score = match (phi, candidate, shared) {
                     (Some(phi), Some(candidate), Some(shared)) => {
                         similarity_from_logs(phi, candidate, shared)
                     }
@@ -281,8 +302,17 @@ impl Counter {
         atoms.len()
     }
 
-    fn conjunction(&self, candidate: &Formula) -> Formula {
-        Formula::binary(BinaryOp::And, self.phi.clone(), candidate.clone()).canonical()
+    /// The formulas whose counts give `candidate`'s similarity: φ, φ' and
+    /// their conjunction, or under [`Side::Rejected`] their negations.
+    fn terms(&self, candidate: &Formula) -> [Formula; 3] {
+        let [phi, candidate] = match self.side {
+            Side::Accepted => [self.phi.clone(), candidate.clone()],
+            Side::Rejected => {
+                [&self.phi, candidate].map(|f| Formula::unary(UnaryOp::Not, f.clone()).canonical())
+            }
+        };
+        let shared = Formula::binary(BinaryOp::And, phi.clone(), candidate.clone()).canonical();
+        [phi, candidate, shared]
     }
 
     /// Fills `logs` for every entry of `needed`: one translation exec for

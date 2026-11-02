@@ -28,7 +28,8 @@ degenerate instances too, for the CEGIW case studies), and `initflag`,
 `initfilter` and their `forced-` twins for the initial-state check
 (bench/initial_stats.py), `default` and `forced-default` for the
 evaluation (docs/dev/evaluation.md), and `mutation` and `forced-mutation`
-for its random-mutation baseline; see ARMS. The `random` and
+for its random-mutation baseline, and `rejected` for the similarity counted
+over the negations; see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -77,6 +78,9 @@ ARMS = {
     # searches degenerate instances too, for the CEGIW case studies.
     'mutation': ['--status', 'binary', '--search', 'random'],
     'forced-mutation': ['--status', 'binary', '--degenerate', 'search', '--search', 'random'],
+    # The default with the model-counting similarity counted over the
+    # negations ("Rejected side" in docs/dev/search.md).
+    'rejected': ['--status', 'binary', '--semantic', 'rejected'],
 }
 
 
