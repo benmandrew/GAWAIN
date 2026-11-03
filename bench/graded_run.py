@@ -29,8 +29,9 @@ degenerate instances too, for the CEGIW case studies), and `initflag`,
 (bench/initial_stats.py), `default` and `forced-default` for the
 evaluation (docs/dev/evaluation.md), and `mutation` and `forced-mutation`
 for its random-mutation baseline, `rejected` for the similarity counted
-over the negations, and `crossover-0`, `crossover-0.5`, `monotone-0` and
-`monotone-0.5` for the operator-rate sweep; see ARMS. The `random` and
+over the negations, `crossover-0`, `crossover-0.5`, `monotone-0` and
+`monotone-0.5` for the operator-rate sweep, and `weakening` for the
+weakening filter, which is search_bench's default; see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -51,43 +52,48 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SPOT = '2.15.1'
 # The search_bench flags of each arm. The arms measured before the
-# initial-state filter became the default keep `--initial ignore`, so they
-# reproduce their recorded results.
+# initial-state filter became the default keep `--initial ignore`, and
+# those measured before the weakening filter keep `--weakening
+# ignore`, so they reproduce their recorded results.
 ARMS = {
-    'binary': ['--status', 'binary', '--initial', 'ignore'],
-    'graded': ['--status', 'graded', '--initial', 'ignore'],
+    'binary': ['--status', 'binary', '--initial', 'ignore', '--weakening', 'ignore'],
+    'graded': ['--status', 'graded', '--initial', 'ignore', '--weakening', 'ignore'],
     # The binary arm searching degenerate instances too, for the CEGIW
     # case studies (bench/baselines_cegiw.py).
-    'forced': ['--status', 'binary', '--degenerate', 'search', '--initial', 'ignore'],
-    'feasible': ['--status', 'graded-feasible', '--initial', 'ignore'],
-    'reserve4': ['--status', 'graded-reserve-4', '--initial', 'ignore'],
-    'reserve2': ['--status', 'graded-reserve-2', '--initial', 'ignore'],
+    'forced': ['--status', 'binary', '--degenerate', 'search', '--initial', 'ignore', '--weakening', 'ignore'],
+    'feasible': ['--status', 'graded-feasible', '--initial', 'ignore', '--weakening', 'ignore'],
+    'reserve4': ['--status', 'graded-reserve-4', '--initial', 'ignore', '--weakening', 'ignore'],
+    'reserve2': ['--status', 'graded-reserve-2', '--initial', 'ignore', '--weakening', 'ignore'],
     # Binary with the initial-state predicate: `initflag` only marks the
     # repairs that I ∧ Init implies, `initfilter` drops them in the loop
     # and the gate. The `forced-` arms search degenerate instances too.
-    'initflag': ['--status', 'binary', '--initial', 'flag'],
-    'initfilter': ['--status', 'binary', '--initial', 'filter'],
-    'forced-initflag': ['--status', 'binary', '--degenerate', 'search', '--initial', 'flag'],
-    'forced-initfilter': ['--status', 'binary', '--degenerate', 'search', '--initial', 'filter'],
-    # The evaluation's configuration: search_bench's defaults, so binary
-    # status with the initial-state filter (docs/dev/evaluation.md).
-    'default': ['--status', 'binary'],
-    'forced-default': ['--status', 'binary', '--degenerate', 'search'],
+    'initflag': ['--status', 'binary', '--initial', 'flag', '--weakening', 'ignore'],
+    'initfilter': ['--status', 'binary', '--initial', 'filter', '--weakening', 'ignore'],
+    'forced-initflag': ['--status', 'binary', '--degenerate', 'search', '--initial', 'flag', '--weakening', 'ignore'],
+    'forced-initfilter': ['--status', 'binary', '--degenerate', 'search', '--initial', 'filter', '--weakening', 'ignore'],
+    # The evaluation's configuration: binary status with the initial-state
+    # filter (docs/dev/evaluation.md), measured before the weakening filter.
+    'default': ['--status', 'binary', '--weakening', 'ignore'],
+    # search_bench's defaults: `default` with the weakening filter, so a
+    # candidate that holds but that φ is not proved to imply scores status
+    # 0 ("Keeping the search on weakenings" in docs/dev/search.md).
+    'weakening': ['--status', 'binary', '--weakening', 'demote'],
+    'forced-default': ['--status', 'binary', '--degenerate', 'search', '--weakening', 'ignore'],
     # The random-mutation baseline: binary status and the default
     # initial-state filter, with no selection during the run
     # ("Random-mutation baseline" in docs/dev/search.md). `forced-mutation`
     # searches degenerate instances too, for the CEGIW case studies.
-    'mutation': ['--status', 'binary', '--search', 'random'],
-    'forced-mutation': ['--status', 'binary', '--degenerate', 'search', '--search', 'random'],
+    'mutation': ['--status', 'binary', '--search', 'random', '--weakening', 'ignore'],
+    'forced-mutation': ['--status', 'binary', '--degenerate', 'search', '--search', 'random', '--weakening', 'ignore'],
     # The default with the model-counting similarity counted over the
     # negations ("Rejected side" in docs/dev/search.md).
-    'rejected': ['--status', 'binary', '--semantic', 'rejected'],
+    'rejected': ['--status', 'binary', '--semantic', 'rejected', '--weakening', 'ignore'],
     # The default with one operator rate moved off PEREDUR's default
     # (crossover 0.1, monotone share 0.25), for the rate sweep.
-    'crossover-0': ['--status', 'binary', '--crossover-rate', '0'],
-    'crossover-0.5': ['--status', 'binary', '--crossover-rate', '0.5'],
-    'monotone-0': ['--status', 'binary', '--monotone-share', '0'],
-    'monotone-0.5': ['--status', 'binary', '--monotone-share', '0.5'],
+    'crossover-0': ['--status', 'binary', '--crossover-rate', '0', '--weakening', 'ignore'],
+    'crossover-0.5': ['--status', 'binary', '--crossover-rate', '0.5', '--weakening', 'ignore'],
+    'monotone-0': ['--status', 'binary', '--monotone-share', '0', '--weakening', 'ignore'],
+    'monotone-0.5': ['--status', 'binary', '--monotone-share', '0.5', '--weakening', 'ignore'],
 }
 
 

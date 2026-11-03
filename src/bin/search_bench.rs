@@ -10,7 +10,7 @@
 //!     --status binary|graded|graded-feasible|graded-reserve-D
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
 //!     [--initial ignore|flag|filter] [--search ga|random]
-//!     [--semantic accepted|rejected]
+//!     [--semantic accepted|rejected] [--weakening ignore|demote]
 //!     [--crossover-rate R] [--monotone-share R]
 //! ```
 //!
@@ -41,7 +41,10 @@
 //! random-mutation baseline ([`random_search`]) in place of the genetic
 //! search, the default `ga`. `--semantic rejected` counts the
 //! model-counting similarity over the negations ([`Side::Rejected`]), in
-//! place of the default `accepted`. `--crossover-rate` and
+//! place of the default `accepted`. The default `--weakening demote` scores
+//! status 0 for a candidate that holds but that φ is not proved to imply
+//! ([`drop_valid`](gawain::search::drop_valid)); `ignore` keeps its status.
+//! `--crossover-rate` and
 //! `--monotone-share`, each in [0, 1], set [`Params::crossover_rate`] and
 //! [`Params::p_monotone`] for the rate sweep (defaults 0.1 and 0.25). The JSON line holds the instance class, the repairs with
 //! their simplified forms and similarities, the search that ran, the candidates it bred and
@@ -68,7 +71,7 @@ use gawain::oracle::{implications_each, Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, random_search, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random] [--semantic accepted|rejected] [--crossover-rate R] [--monotone-share R]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random] [--semantic accepted|rejected] [--weakening ignore|demote] [--crossover-rate R] [--monotone-share R]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -105,6 +108,7 @@ struct Args {
     side: Side,
     crossover_rate: f64,
     p_monotone: f64,
+    weakening: bool,
 }
 
 /// What `--initial` asks of the initial-state predicate.
@@ -123,6 +127,7 @@ fn parse_args() -> Result<Args, String> {
     let mut args = Args {
         timeout: 120,
         memory_mb: 4096,
+        weakening: Params::new(0, 0).weakening,
         crossover_rate: Params::new(0, 0).crossover_rate,
         p_monotone: Params::new(0, 0).p_monotone,
         ..Args::default()
@@ -201,6 +206,13 @@ fn parse_args() -> Result<Args, String> {
                     "accepted" => Side::Accepted,
                     "rejected" => Side::Rejected,
                     _ => return Err(format!("--semantic {value}: accepted or rejected")),
+                }
+            }
+            "--weakening" => {
+                args.weakening = match value.as_str() {
+                    "demote" => true,
+                    "ignore" => false,
+                    _ => return Err(format!("--weakening {value}: ignore or demote")),
                 }
             }
             _ => return Err(format!("unknown flag {flag}")),
@@ -356,6 +368,7 @@ fn search_on<B: Backend>(
     if class.starts_with("proper") || (args.search_degenerate && class == "degenerate") {
         let params = Params {
             status: args.status.unwrap_or_default(),
+            weakening: args.weakening,
             crossover_rate: args.crossover_rate,
             p_monotone: args.p_monotone,
             ..Params::new(args.generations, args.population)

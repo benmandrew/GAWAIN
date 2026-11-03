@@ -4,6 +4,8 @@
 //! check and Spot confirm, on a small model and on LMCS-2006 abp4 `p2false`.
 //! `search_bench --search random`, the random-mutation baseline, finds
 //! such repairs too, reproducibly, on the same budget as the genetic search.
+//! The weakening filter demotes a candidate that holds but that φ does not
+//! imply.
 //!
 //! Each test skips, with a reason on stderr, when a tool or the benchmark
 //! data is missing.
@@ -21,7 +23,8 @@ use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::{implications, Backend, Oracle, Semantics, Verdict, Words};
 use gawain::search::{
-    gate, invariant, monotone_rewrite, vacuity, Direction, Rng, Scored, Vacuity, VacuityCounts,
+    drop_valid, gate, invariant, monotone_rewrite, vacuity, Direction, Rng, Scored, Vacuity,
+    VacuityCounts, STATUS,
 };
 
 const LIMITS: Limits = Limits {
@@ -122,6 +125,53 @@ fn the_gate_keeps_maximal_proved_weakenings() {
     let kept: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
     assert_eq!(kept, [parse("G (a -> X b | X X b)")]);
     assert_eq!(outcome.repairs[0].vacuity, Vacuity::default());
+}
+
+#[test]
+fn the_weakening_filter_demotes_holders_that_phi_does_not_imply() {
+    if !have(
+        &["ltlfilt"],
+        "the_weakening_filter_demotes_holders_that_phi_does_not_imply",
+    ) {
+        return;
+    }
+    let phi = parse("G (a -> X b)");
+    let population = || {
+        vec![
+            scored("G (a -> F b)", true, &phi),
+            // Holds, but φ does not imply it.
+            scored("F b", true, &phi),
+            // Holds and φ implies it, but it is valid.
+            scored("G (a -> X b | a)", true, &phi),
+            // Fails, so Spot is not asked about it.
+            scored("G b", false, &phi),
+        ]
+    };
+    let statuses = |kept: Vec<Scored>| -> Vec<(String, f64)> {
+        kept.iter()
+            .map(|s| (s.formula.to_string(), s.objectives[STATUS]))
+            .collect()
+    };
+    let tt = Formula::tt();
+    let plain = drop_valid(population(), &tt, None, Semantics::Infinite, LIMITS);
+    let demoted = drop_valid(population(), &tt, Some(&phi), Semantics::Infinite, LIMITS);
+    let text = |s: &str| parse(s).to_string();
+    assert_eq!(
+        statuses(plain),
+        [
+            (text("G (a -> F b)"), 1.0),
+            (text("F b"), 1.0),
+            (text("G b"), 0.0)
+        ]
+    );
+    assert_eq!(
+        statuses(demoted),
+        [
+            (text("G (a -> F b)"), 1.0),
+            (text("F b"), 0.0),
+            (text("G b"), 0.0)
+        ]
+    );
 }
 
 /// A sender cycling through three states. `s_get & s_wait` never holds,

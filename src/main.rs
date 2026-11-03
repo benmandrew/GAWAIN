@@ -19,7 +19,10 @@
 //! finds Init, the letters over φ's atoms that start a run of M, which
 //! prints as `initial: …`, and the invariant becomes I ∧ Init ("Triviality
 //! at the initial state" in `docs/dev/search.md`). If Init is not found, a
-//! warning goes to stderr and the search keeps I alone. Each
+//! warning goes to stderr and the search keeps I alone. A candidate that
+//! holds but that φ is not proved to imply scores status 0, since the gate
+//! could never report it ("Keeping the search on weakenings" in
+//! `docs/dev/search.md`). Each
 //! repair prints on one line as
 //! `repair<TAB>similarity<TAB>semantic<TAB>rejection<TAB>vacuity<TAB>formula`,
 //! where similarity is syntactic, semantic is the model-counting similarity

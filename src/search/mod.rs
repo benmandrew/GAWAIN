@@ -61,11 +61,14 @@ pub struct Params {
     /// The chance that a mutation is a [`monotone_rewrite`], in [0, 1].
     /// PEREDUR's `p_monotone` default is 0.25.
     pub p_monotone: f64,
+    /// Whether a candidate that holds but that φ is not proved to imply
+    /// scores status 0, as one that fails ([`drop_valid`]).
+    pub weakening: bool,
 }
 
 impl Params {
     /// A run of `generations` rounds of `population`, with the default
-    /// status and PEREDUR's default rates.
+    /// status, PEREDUR's default rates and the weakening filter.
     pub fn new(generations: usize, population: usize) -> Self {
         Params {
             generations,
@@ -73,6 +76,7 @@ impl Params {
             status: Status::default(),
             crossover_rate: 0.1,
             p_monotone: 0.25,
+            weakening: true,
         }
     }
 }
@@ -179,6 +183,7 @@ pub fn search<B: Backend>(
         population.extend(drop_valid(
             scored,
             invariant,
+            params.weakening.then_some(phi),
             oracle.semantics(),
             spot_limits,
         ));
@@ -217,7 +222,13 @@ pub fn random_search<B: Backend>(
         budget.bred += parents.len();
         budget.scored += offspring.len();
         let scored = score(offspring, phi, oracle, counter);
-        let kept = drop_valid(scored, invariant, oracle.semantics(), spot_limits);
+        let kept = drop_valid(
+            scored,
+            invariant,
+            params.weakening.then_some(phi),
+            oracle.semantics(),
+            spot_limits,
+        );
         archive.extend(
             kept.into_iter()
                 .filter(|s| seen.insert(s.formula.canonical())),
@@ -293,26 +304,46 @@ pub fn filter(offspring: Vec<Formula>, phi: &Formula) -> Vec<Formula> {
 /// large LTLf formulas validity is the expensive question, and this asks
 /// it of fewer formulas; see "Slow implication batches" in
 /// `docs/dev/trace-sets.md`.
+///
+/// With `weakens` = φ, the same exec also asks whether φ implies each
+/// candidate that holds, and one that φ is not proved to imply scores
+/// status 0, as a candidate that fails on M does. The gate reports only
+/// proved weakenings, so such a candidate can never be a repair, but it
+/// still breeds. Here an unanswered pair demotes its candidate, as an
+/// unknown model-checking verdict scores below 1.
 pub fn drop_valid(
     scored: Vec<Scored>,
     invariant: &Formula,
+    weakens: Option<&Formula>,
     semantics: Semantics,
     limits: Limits,
 ) -> Vec<Scored> {
-    let holding: Vec<&Scored> = scored.iter().filter(|s| s.holds()).collect();
-    let pairs: Vec<(&Formula, &Formula)> =
-        holding.iter().map(|s| (invariant, &s.formula)).collect();
-    let (proved, _) = implications_each(&pairs, semantics, limits);
-    let valid: Vec<&Formula> = holding
+    let holding: Vec<usize> = (0..scored.len()).filter(|&i| scored[i].holds()).collect();
+    let width = 1 + usize::from(weakens.is_some());
+    let pairs: Vec<(&Formula, &Formula)> = holding
         .iter()
-        .zip(proved)
-        .filter(|&(_, valid)| valid)
-        .map(|(s, _)| &s.formula)
+        .flat_map(|&i| {
+            let formula = &scored[i].formula;
+            std::iter::once((invariant, formula)).chain(weakens.map(|phi| (phi, formula)))
+        })
         .collect();
-    let valid: HashSet<Formula> = valid.into_iter().cloned().collect();
+    let (proved, _) = implications_each(&pairs, semantics, limits);
+    let mut valid = vec![false; scored.len()];
+    let mut weakening = vec![true; scored.len()];
+    for (&i, proved) in holding.iter().zip(proved.chunks(width)) {
+        valid[i] = proved[0];
+        weakening[i] = proved.get(1).copied().unwrap_or(true);
+    }
     scored
         .into_iter()
-        .filter(|s| !valid.contains(&s.formula))
+        .enumerate()
+        .filter(|&(i, _)| !valid[i])
+        .map(|(i, mut s)| {
+            if !weakening[i] {
+                s.objectives[STATUS] = 0.0;
+            }
+            s
+        })
         .collect()
 }
 

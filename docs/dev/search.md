@@ -528,6 +528,32 @@ A smoke test on abp4 `p2false` at 30 × 40 (release build, local machine, seeds 
 
 Three seeds on one instance say nothing about which search is better. They show that the budget matches and that the baseline reaches the gate with proved repairs.
 
+## Keeping the search on weakenings
+
+The gate reports only proved weakenings, but until this change the search scored status 1 for any candidate that held on M. A holder that φ does not imply can never be a repair, yet it kept its place in the population and bred. On seed 1 of the evaluation sets the funnel measured how much of the final population this wasted. On the model sets a median run ended with 23 holders, of which φ implied 2, and the gate kept 1. On the trace sets it ended with 16 holders, of which 11 were implied and non-trivial, and the gate kept 2.
+
+The *weakening filter* closes that gap inside the search. `drop_valid` already sends each generation's holders to `ltlfilt` to ask whether I implies them. With the filter on, the same exec also asks whether φ implies each holder, and a holder that φ is not proved to imply scores status 0. An unanswered pair demotes too, so the filter never promotes a candidate that the gate would reject. The candidate stays in the population with its similarities, so the search can still pass through it on the way to a weakening. The filter is the default: `search_bench --weakening demote`, and always on in `weaken`. `--weakening ignore` restores the old scoring, and every arm of `bench/graded_run.py` measured before the change passes it.
+
+The ablation compares the `weakening` arm with `default` on the evaluation sets of `evaluation.md`, at the same budgets (30 × 40 on the 100 model instances, 30 × 30 on the 126 trace instances, seeds 1 to 10). The model runs went to av2 at 8 and then 16 concurrent runs, and the trace runs ran locally at 6, both from branch `weakening` at `4d83820`. Thirteen runs gave no result, 2 at the 3,600 s cap and 11 killed under the 8 GB cap without a message. They were rerun on av3 at 14,400 s and 16 GB, and the one that failed again, a weakening run on RandomBooleanCombinationsofFactors seed 47, at 40 GB. `bench/graded_stats.py --baseline default` gives the figures below, in the same form as "Graded status against binary".
+
+| Measure | Models, default | Models, weakening | Higher / lower / tie, p | Traces, default | Traces, weakening | Higher / lower / tie, p |
+|---|---|---|---|---|---|---|
+| Runs with a repair | 666 of 1000 | 665 of 1000 | 23 / 18 / 59, 0.81 | 1124 of 1260 | 1154 of 1260 | 18 / 3 / 105, 0.0052 |
+| Repairs, all runs | 1360 | 1508 | 28 / 14 / 58, 0.010 | 2866 | 3496 | 45 / 16 / 65, 0.0002 |
+| Back-end calls, median | 65.75 | 49.0 | 10 / 83 / 7, < 0.0001 | 684.25 | 681.25 | 52 / 41 / 33, 0.14 |
+| Wall time, median | 11.6 s | 9.5 s | 27 / 73 / 0, < 0.0001 | 2.04 s | 2.19 s | 73 / 53 / 0, 0.15 |
+| Net subsumption share | | 0.000 | 24 / 24 / 39, 0.83 | | 0.000 | 34 / 43 / 41, 0.23 |
+
+The holder count is left out, since the filter lowers it by construction (from 23.5 to 7.5 on the models).
+
+On the models the filter saves work. The median run made 9.75 fewer back-end calls [−17.5, −7.0], on 83 of 100 instances. The saving matters most on MCC, whose runs are the slowest: the median wall time over its 19 instances fell from 93 s to 29 s. The found rate did not move, and the repairs per run rose by 0.15 on average.
+
+On the traces the filter finds more. A trace set's back-end calls are packed evaluations, a median of 684 in a run of 2.0 s, and their number did not change. The gains sit in three `ltlf-learning` families whose φ is a long conjunction, of 8 to 117 conjuncts and 290 to 2,803 characters: SingleCounter and DoubleCounter (4 of 5 instances higher each) and Nim (3 of 5).
+
+Strength did not change on either set. The net subsumption share of the pooled maximal sets has median 0.000 on both. On the traces 1,887 LTLf pairs were left undecided and read as not implied.
+
+The filter costs one implication pair per holder per generation, in an exec the search already makes. It became the default on 2026-11-03. It answers the low repair counts in part only. Most of the gap between holders and repairs on the trace sets is subsumption among true weakenings, which the gate's maximality step removes by design.
+
 ## Left out of PEREDUR
 
 | PEREDUR piece | Why it is not here |
