@@ -46,7 +46,7 @@ The headline run uses the `search_bench` defaults. These are binary status with 
 | Per back-end call | 120 s, 4 GB |
 | Per run | 3,600 s, 8 GB `systemd` scope |
 
-The arms in `bench/graded_run.py` are `default` and `mutation`. The CEGIW set uses `forced-default` and `forced-mutation`.
+The arms in `bench/graded_run.py` are `default` and `mutation`. The CEGIW set uses `forced-default` and `forced-mutation`. These runs predate the weakening filter, which became `search_bench`'s default on 2026-11-03, so every arm here passes `--weakening ignore`. Against the filter's `weakening` arm, `default` finds a repair on as many model runs and on fewer trace runs (1,124 of 1,260 against 1,154), with no difference in strength ("Keeping the search on weakenings" in `docs/dev/search.md`).
 
 ## Commands
 
