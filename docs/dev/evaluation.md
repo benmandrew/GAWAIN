@@ -32,7 +32,7 @@ RERS is the Rigorous Examination of Reactive Systems challenge, and MCC is the M
 
 **Exclusions.** Seven model instances are left out, as in the ablations. Six are large BEEM instances that gave no result there: anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4. The seventh is MCC MedleyA-PT-09, which failed on every seed. That leaves 100 model instances.
 
-**Limitations.** The set carries three known biases. The RERS parallel unknowns cluster in the largest models ("The degeneracy filter" in `docs/dev/search.md`), so the proper instances lean towards smaller state spaces. RERS 2018 problems 102 and 103 are out of reach of the explicit front end: 102 exceeded 85 GB, and 103 needs about 161 bits of state key. On 2018 problem 101, the explicit structure keeps deadlocking runs, as SPIN does, while the official answers count only infinite runs (`docs/dev/rers-kripke.md`).
+**Limitations.** The set carries three known biases. The RERS parallel unknowns cluster in the largest models ("The degeneracy filter" in `docs/dev/search.md`), so the proper instances lean towards smaller state spaces. RERS 2018 problems 102 and 103 are out of reach of the explicit front end: 102 was still exploring at 46 GB when a 3,000 s timeout stopped it, and 103 needs more than the 128-bit state key holds. On 2018 problem 101, the explicit structure keeps deadlocking runs, as SPIN does, while the official answers count only infinite runs (`docs/dev/rers-kripke.md`).
 
 ## Configuration
 
@@ -79,7 +79,7 @@ python3 -I bench/graded_run.py bench/data/eval J --seeds S --arms default,mutati
 
 The probe used `--memory-gb 16` on av3.
 
-Four scripts do the analysis. `bench/graded_stats.py` pairs the arms. `bench/baselines_top.py --arm <arm>` gives the closed share against ⊤ in its `closed_rejection` column, and `bench/ga_hit_rates.py --arm <arm>` gives the hit rates. `bench/budget_curve.py` sets the budgets side by side.
+Four scripts do the analysis. `bench/graded_stats.py` pairs the arms. `bench/baselines_top.py --arm <arm>` gives the closed share against ⊤ in its `closed_rejection` column, and `bench/ga_hit_rates.py --arm <arm>` gives the hit rates. `bench/budget_curve.py` sets the budgets side by side. `bench/side_stats.py` rescores the repairs of the rejected-side ablation on one scale.
 
 ```
 python3 bench/budget_curve.py bench/data/eval 15x20=runs-b15x20 30x40=runs-eval 60x80=runs-b60x80 120x80=runs-b120x80
@@ -135,20 +135,20 @@ These two sets ran on the search of commit `ec8a3f9`. On the nine CEGIW instance
 
 ### Budget
 
-`bench/budget_curve.py` compares four budgets on the 196 instance and seed pairs, from seeds 1 and 2, that gave a result at every budget under both arms. Wall time and back-end calls are medians.
+`bench/budget_curve.py` compares four budgets on the 198 instance and seed pairs, from seeds 1 and 2, that gave a result at every budget under both arms. Wall time and back-end calls are medians.
 
 | Budget | Found, default | Found, mutation | Wall, default | Wall, mutation | Calls, default | Calls, mutation |
 |---|---|---|---|---|---|---|
-| 15×20 | 0.490 | 0.454 | 3.3 s | 3.0 s | 26 | 23 |
-| 30×40 | 0.684 | 0.571 | 11.2 s | 8.2 s | 66 | 50 |
-| 60×80 | 0.867 | 0.679 | 39.5 s | 30.2 s | 124 | 122 |
-| 120×80 | 0.944 | 0.704 | 76.8 s | 58.5 s | 164 | 184 |
+| 15×20 | 0.485 | 0.449 | 3.4 s | 3.0 s | 26 | 23 |
+| 30×40 | 0.677 | 0.566 | 11.5 s | 8.3 s | 64 | 50 |
+| 60×80 | 0.864 | 0.672 | 39.9 s | 32.1 s | 124 | 120 |
+| 120×80 | 0.939 | 0.697 | 78.7 s | 59.0 s | 164 | 180 |
 
-The gap in found rate widens from 3.6 points at 15×20 to 24.0 points at 120×80. Random mutation levels off near 0.70, while the GA keeps gaining. `bench/graded_stats.py` pairs the arms over all seeds of each budget.
+The gap in found rate widens from 3.6 points at 15×20 to 24.2 points at 120×80. Random mutation levels off near 0.70, while the GA keeps gaining. `bench/graded_stats.py` pairs the arms over all seeds of each budget.
 
 - **15×20, 5 seeds.** Found rate 32/9/59 (p = 0.0004). Net subsumption gives p = 0.15, with a mean of 0.093.
 - **60×80, 5 seeds.** Found rate 33/4/63 (p < 0.0001). Net subsumption has median 0.200 and mean 0.314 (p < 0.0001, 50/2/31). Default makes 7 more back-end calls (p = 0.0001).
-- **120×80, 2 seeds.** 396 of 400 runs gave a result. Two Sieve mutation runs hit the 14,400 s cap, and two rers2018-101-p5 mutation runs died at about 183 s, most likely at the 8 GB cap. Found rate 32/1/65 (p < 0.0001). Net subsumption has median 0.325 and mean 0.313 (p < 0.0001, 43/7/26). Back-end calls give p = 0.16.
+- **120×80, 2 seeds.** 398 of 400 runs gave a result. Two Sieve mutation runs hit the 14,400 s cap. Two rers2018-101-p5 mutation runs died at about 183 s under the 8 GB cap, and a rerun on av3 at 16 GB finished each in 168 s. Found rate 33/1/65 (p < 0.0001). Net subsumption has median 0.325 and mean 0.313 (p < 0.0001, 43/7/26). Back-end calls give p = 0.18.
 
 ### Large BEEM instances
 
