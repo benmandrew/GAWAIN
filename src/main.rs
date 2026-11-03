@@ -48,7 +48,7 @@ use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::traces::TraceSet;
 use gawain::oracle::{Backend, Oracle, Words};
-use gawain::search::{gate, invariant, search, Params, Rng, Status};
+use gawain::search::{gate, invariant, search, Params, Rng};
 
 const USAGE: &str = "usage: weaken (--model m.smv --atoms a,b,... | --traces t.trace) --ltl 'φ' --seed N --generations G --population P [--exclusive a,b,...]...";
 
@@ -149,11 +149,10 @@ fn parse_args() -> Result<Args, String> {
         exclusive,
         ltl: ltl.ok_or_else(|| missing("--ltl"))?,
         seed: seed.ok_or_else(|| missing("--seed"))?,
-        params: Params {
-            generations: generations.ok_or_else(|| missing("--generations"))?,
-            population: population.ok_or_else(|| missing("--population"))?,
-            status: Status::default(),
-        },
+        params: Params::new(
+            generations.ok_or_else(|| missing("--generations"))?,
+            population.ok_or_else(|| missing("--population"))?,
+        ),
     };
     if args.params.population == 0 {
         return Err("--population must be at least 1".into());

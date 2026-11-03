@@ -16,9 +16,6 @@ use std::sync::Arc;
 use super::Rng;
 use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 
-/// The chance that a mutation is a monotone rewrite, PEREDUR's
-/// `p_monotone` default.
-const P_MONOTONE: f64 = 0.25;
 /// The chance that a non-monotone mutation may change the temporal skeleton,
 /// PEREDUR's `tlsf_p_temporal` default.
 const P_TEMPORAL: f64 = 0.2;
@@ -26,14 +23,14 @@ const P_TEMPORAL: f64 = 0.2;
 /// Mutates `formula` once, drawing new atoms from `atoms`. With no atoms the
 /// formula is returned unchanged, as PEREDUR does for an empty pool.
 ///
-/// A quarter of mutations are a [`monotone_rewrite`] in a direction drawn on
-/// a fair coin. Of the rest, a fifth may add, drop or swap temporal operators
+/// A share `p_monotone` of mutations (PEREDUR's default is a quarter) are a
+/// [`monotone_rewrite`] in a direction drawn on a fair coin. Of the rest, a fifth may add, drop or swap temporal operators
 /// and the others rewrite only the propositional subtrees.
-pub fn mutate(formula: &Formula, atoms: &[Arc<str>], rng: &mut Rng) -> Formula {
+pub fn mutate(formula: &Formula, atoms: &[Arc<str>], p_monotone: f64, rng: &mut Rng) -> Formula {
     if atoms.is_empty() {
         return formula.clone();
     }
-    if rng.chance(P_MONOTONE) {
+    if rng.chance(p_monotone) {
         // Both directions, as PEREDUR: a search that only weakens cannot
         // recover from an ancestor that weakened past the best repair.
         let weaken = rng.coin();
@@ -735,7 +732,7 @@ mod tests {
             random_formulas(100, 11)
                 .iter()
                 .map(|x| {
-                    let m = mutate(x, &atoms, &mut rng);
+                    let m = mutate(x, &atoms, 0.25, &mut rng);
                     crossover(&m, x, &mut rng)
                 })
                 .collect::<Vec<_>>()
@@ -751,7 +748,7 @@ mod tests {
         let phi = f("G (a -> X b)");
         let mut changed = 0;
         for _ in 0..500 {
-            let child = mutate(&phi, &atoms, &mut rng);
+            let child = mutate(&phi, &atoms, 0.25, &mut rng);
             assert!(child.atoms().iter().all(|a| atoms.contains(a)), "{child}");
             changed += usize::from(child != phi);
         }
@@ -762,7 +759,7 @@ mod tests {
     fn an_empty_pool_leaves_the_formula_alone() {
         let mut rng = Rng::new(3);
         let phi = f("G true");
-        assert_eq!(mutate(&phi, &[], &mut rng), phi);
+        assert_eq!(mutate(&phi, &[], 0.25, &mut rng), phi);
     }
 
     #[test]

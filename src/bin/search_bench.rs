@@ -11,6 +11,7 @@
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
 //!     [--initial ignore|flag|filter] [--search ga|random]
 //!     [--semantic accepted|rejected]
+//!     [--crossover-rate R] [--monotone-share R]
 //! ```
 //!
 //! - `nuxmv`: `--model` is an SMV file, `--atoms` its DEFINEs and `--ltl`
@@ -40,7 +41,9 @@
 //! random-mutation baseline ([`random_search`]) in place of the genetic
 //! search, the default `ga`. `--semantic rejected` counts the
 //! model-counting similarity over the negations ([`Side::Rejected`]), in
-//! place of the default `accepted`. The JSON line holds the instance class, the repairs with
+//! place of the default `accepted`. `--crossover-rate` and
+//! `--monotone-share`, each in [0, 1], set [`Params::crossover_rate`] and
+//! [`Params::p_monotone`] for the rate sweep (defaults 0.1 and 0.25). The JSON line holds the instance class, the repairs with
 //! their simplified forms and similarities, the search that ran, the candidates it bred and
 //! scored, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
@@ -65,7 +68,7 @@ use gawain::oracle::{implications_each, Backend, Oracle, Words};
 use gawain::rers::Model;
 use gawain::search::{gate, invariant, random_search, search, Params, Rng, Status};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random] [--semantic accepted|rejected]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random] [--semantic accepted|rejected] [--crossover-rate R] [--monotone-share R]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -100,6 +103,8 @@ struct Args {
     initial: Initial,
     random: bool,
     side: Side,
+    crossover_rate: f64,
+    p_monotone: f64,
 }
 
 /// What `--initial` asks of the initial-state predicate.
@@ -118,11 +123,17 @@ fn parse_args() -> Result<Args, String> {
     let mut args = Args {
         timeout: 120,
         memory_mb: 4096,
+        crossover_rate: Params::new(0, 0).crossover_rate,
+        p_monotone: Params::new(0, 0).p_monotone,
         ..Args::default()
     };
     let mut given = std::env::args().skip(1);
     while let Some(flag) = given.next() {
         let value = given.next().ok_or(format!("{flag} needs a value"))?;
+        let rate = || match value.parse::<f64>() {
+            Ok(r) if (0.0..=1.0).contains(&r) => Ok(r),
+            _ => Err(format!("{flag} {value}: a number in [0, 1]")),
+        };
         let number = || {
             value
                 .parse::<u64>()
@@ -183,6 +194,8 @@ fn parse_args() -> Result<Args, String> {
                     _ => return Err(format!("--search {value}: ga or random")),
                 }
             }
+            "--crossover-rate" => args.crossover_rate = rate()?,
+            "--monotone-share" => args.p_monotone = rate()?,
             "--semantic" => {
                 args.side = match value.as_str() {
                     "accepted" => Side::Accepted,
@@ -342,9 +355,10 @@ fn search_on<B: Backend>(
     let mut gate_wall = 0.0;
     if class.starts_with("proper") || (args.search_degenerate && class == "degenerate") {
         let params = Params {
-            generations: args.generations,
-            population: args.population,
             status: args.status.unwrap_or_default(),
+            crossover_rate: args.crossover_rate,
+            p_monotone: args.p_monotone,
+            ..Params::new(args.generations, args.population)
         };
         let mut rng = Rng::new(args.seed);
         let mut counter =

@@ -28,8 +28,9 @@ degenerate instances too, for the CEGIW case studies), and `initflag`,
 `initfilter` and their `forced-` twins for the initial-state check
 (bench/initial_stats.py), `default` and `forced-default` for the
 evaluation (docs/dev/evaluation.md), and `mutation` and `forced-mutation`
-for its random-mutation baseline, and `rejected` for the similarity counted
-over the negations; see ARMS. The `random` and
+for its random-mutation baseline, `rejected` for the similarity counted
+over the negations, and `crossover-0`, `crossover-0.5`, `monotone-0` and
+`monotone-0.5` for the operator-rate sweep; see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -81,6 +82,12 @@ ARMS = {
     # The default with the model-counting similarity counted over the
     # negations ("Rejected side" in docs/dev/search.md).
     'rejected': ['--status', 'binary', '--semantic', 'rejected'],
+    # The default with one operator rate moved off PEREDUR's default
+    # (crossover 0.1, monotone share 0.25), for the rate sweep.
+    'crossover-0': ['--status', 'binary', '--crossover-rate', '0'],
+    'crossover-0.5': ['--status', 'binary', '--crossover-rate', '0.5'],
+    'monotone-0': ['--status', 'binary', '--monotone-share', '0'],
+    'monotone-0.5': ['--status', 'binary', '--monotone-share', '0.5'],
 }
 
 

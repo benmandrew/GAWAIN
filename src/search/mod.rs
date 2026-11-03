@@ -31,9 +31,6 @@ use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
 use crate::oracle::process::Limits;
 use crate::oracle::{implications_each, simplifications, Backend, Oracle, Semantics, Verdict};
 
-/// The chance that an offspring is crossed with a parent, PEREDUR's
-/// `crossover_rate` default.
-const CROSSOVER_RATE: f64 = 0.1;
 /// The chance that an offspring is mutated, PEREDUR's `mutation_rate`.
 const MUTATION_RATE: f64 = 1.0;
 /// The largest offspring kept, as a multiple of the input's size, PEREDUR's
@@ -58,6 +55,26 @@ pub struct Params {
     pub population: usize,
     /// How a candidate that does not hold is scored.
     pub status: Status,
+    /// The chance that an offspring is crossed with a parent, in [0, 1].
+    /// PEREDUR's `crossover_rate` default is 0.1.
+    pub crossover_rate: f64,
+    /// The chance that a mutation is a [`monotone_rewrite`], in [0, 1].
+    /// PEREDUR's `p_monotone` default is 0.25.
+    pub p_monotone: f64,
+}
+
+impl Params {
+    /// A run of `generations` rounds of `population`, with the default
+    /// status and PEREDUR's default rates.
+    pub fn new(generations: usize, population: usize) -> Self {
+        Params {
+            generations,
+            population,
+            status: Status::default(),
+            crossover_rate: 0.1,
+            p_monotone: 0.25,
+        }
+    }
 }
 
 /// A candidate with its objective vector, indexed by [`STATUS`],
@@ -155,7 +172,7 @@ pub fn search<B: Backend>(
     population = select(population, params.population, params.status);
     for _ in 0..params.generations {
         let parents: Vec<&Scored> = population.iter().collect();
-        let offspring = filter(breed(&parents, &population, &atoms, rng), phi);
+        let offspring = filter(breed(&parents, &population, &atoms, &params, rng), phi);
         budget.bred += parents.len();
         budget.scored += offspring.len();
         let scored = score(offspring, phi, oracle, counter);
@@ -196,7 +213,7 @@ pub fn random_search<B: Backend>(
     for _ in 0..params.generations {
         let drawn = draw_parents(archive.len(), params.population, rng);
         let parents: Vec<&Scored> = drawn.into_iter().map(|i| &archive[i]).collect();
-        let offspring = filter(breed(&parents, &archive, &atoms, rng), phi);
+        let offspring = filter(breed(&parents, &archive, &atoms, &params, rng), phi);
         budget.bred += parents.len();
         budget.scored += offspring.len();
         let scored = score(offspring, phi, oracle, counter);
@@ -220,23 +237,25 @@ fn draw_parents(len: usize, n: usize, rng: &mut Rng) -> Vec<usize> {
 
 /// One offspring per slot of `parents`. Each starts as its slot's parent,
 /// is crossed with a partner drawn uniformly from `partners` at
-/// [`CROSSOVER_RATE`], mutated at [`MUTATION_RATE`], then simplified.
+/// `params.crossover_rate`, mutated at [`MUTATION_RATE`] with monotone
+/// share `params.p_monotone`, then simplified.
 /// Crossover and mutation interleave per slot, so this stays one pass.
 fn breed(
     parents: &[&Scored],
     partners: &[Scored],
     atoms: &[Arc<str>],
+    params: &Params,
     rng: &mut Rng,
 ) -> Vec<Formula> {
     let mut offspring = Vec::with_capacity(parents.len());
     for parent in parents {
         let mut child = parent.formula.clone();
-        if rng.chance(CROSSOVER_RATE) {
+        if rng.chance(params.crossover_rate) {
             let partner = rng.below(partners.len());
             child = crossover(&child, &partners[partner].formula, rng);
         }
         if rng.chance(MUTATION_RATE) {
-            child = mutate(&child, atoms, rng);
+            child = mutate(&child, atoms, params.p_monotone, rng);
         }
         offspring.push(child.simplify());
     }
@@ -806,9 +825,36 @@ mod tests {
         for population in [1, 4, 9] {
             let drawn = draw_parents(archive.len(), population, &mut rng);
             let parents: Vec<&Scored> = drawn.iter().map(|&i| &archive[i]).collect();
-            let offspring = breed(&parents, &archive, &atoms, &mut rng);
+            let offspring = breed(&parents, &archive, &atoms, &Params::new(1, 1), &mut rng);
             assert_eq!(offspring.len(), population);
             assert!(filter(offspring, &archive[0].formula).len() <= population);
+        }
+    }
+
+    #[test]
+    fn crossover_rate_zero_never_crosses() {
+        // At rate 0 the crossover draw always fails and takes no partner
+        // or graft draws, so breeding is the parent's mutation alone: the
+        // same stream as mutating each parent in turn after one chance draw.
+        let atoms: Vec<Arc<str>> = ["a", "b"].into_iter().map(Arc::from).collect();
+        let archive = vec![scored("G (a -> X b)", 0.0, 1.0), scored("F b", 1.0, 0.2)];
+        let parents: Vec<&Scored> = vec![&archive[0], &archive[1], &archive[0]];
+        let params = Params {
+            crossover_rate: 0.0,
+            ..Params::new(1, 3)
+        };
+        for seed in 0..50 {
+            let bred = breed(&parents, &archive, &atoms, &params, &mut Rng::new(seed));
+            let mut rng = Rng::new(seed);
+            let mutated: Vec<Formula> = parents
+                .iter()
+                .map(|p| {
+                    assert!(!rng.chance(0.0));
+                    assert!(rng.chance(MUTATION_RATE));
+                    mutate(&p.formula, &atoms, params.p_monotone, &mut rng).simplify()
+                })
+                .collect();
+            assert_eq!(bred, mutated);
         }
     }
 
