@@ -24,16 +24,24 @@ const P_TEMPORAL: f64 = 0.2;
 /// formula is returned unchanged, as PEREDUR does for an empty pool.
 ///
 /// A share `p_monotone` of mutations (PEREDUR's default is a quarter) are a
-/// [`monotone_rewrite`] in a direction drawn on a fair coin. Of the rest, a fifth may add, drop or swap temporal operators
+/// [`monotone_rewrite`] in a direction drawn on a fair coin, or always
+/// [`Direction::Weaken`] under `weaken_only`. Of the rest, a fifth may add, drop or swap temporal operators
 /// and the others rewrite only the propositional subtrees.
-pub fn mutate(formula: &Formula, atoms: &[Arc<str>], p_monotone: f64, rng: &mut Rng) -> Formula {
+pub fn mutate(
+    formula: &Formula,
+    atoms: &[Arc<str>],
+    p_monotone: f64,
+    weaken_only: bool,
+    rng: &mut Rng,
+) -> Formula {
     if atoms.is_empty() {
         return formula.clone();
     }
     if rng.chance(p_monotone) {
         // Both directions, as PEREDUR: a search that only weakens cannot
         // recover from an ancestor that weakened past the best repair.
-        let weaken = rng.coin();
+        // The coin is drawn either way, so `weaken_only` keeps the stream.
+        let weaken = rng.coin() || weaken_only;
         let direction = if weaken {
             Direction::Weaken
         } else {
@@ -732,7 +740,7 @@ mod tests {
             random_formulas(100, 11)
                 .iter()
                 .map(|x| {
-                    let m = mutate(x, &atoms, 0.25, &mut rng);
+                    let m = mutate(x, &atoms, 0.25, false, &mut rng);
                     crossover(&m, x, &mut rng)
                 })
                 .collect::<Vec<_>>()
@@ -748,7 +756,7 @@ mod tests {
         let phi = f("G (a -> X b)");
         let mut changed = 0;
         for _ in 0..500 {
-            let child = mutate(&phi, &atoms, 0.25, &mut rng);
+            let child = mutate(&phi, &atoms, 0.25, false, &mut rng);
             assert!(child.atoms().iter().all(|a| atoms.contains(a)), "{child}");
             changed += usize::from(child != phi);
         }
@@ -759,7 +767,26 @@ mod tests {
     fn an_empty_pool_leaves_the_formula_alone() {
         let mut rng = Rng::new(3);
         let phi = f("G true");
-        assert_eq!(mutate(&phi, &[], 0.25, &mut rng), phi);
+        assert_eq!(mutate(&phi, &[], 0.25, false, &mut rng), phi);
+    }
+
+    #[test]
+    fn weaken_only_always_weakens() {
+        // At share 1 every mutation is a monotone rewrite, and under
+        // `weaken_only` it is the weakening one after the same coin draw.
+        let atoms = pool(&["a", "b", "c"]);
+        for (seed, x) in random_formulas(200, 4).iter().enumerate() {
+            let mut rng = Rng::new(seed as u64);
+            let m = mutate(x, &atoms, 1.0, true, &mut rng);
+            let mut rng = Rng::new(seed as u64);
+            assert!(rng.chance(1.0));
+            rng.coin();
+            assert_eq!(
+                m,
+                monotone_rewrite(x, Direction::Weaken, &atoms, &mut rng),
+                "{x}"
+            );
+        }
     }
 
     #[test]

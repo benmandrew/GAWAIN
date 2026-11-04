@@ -61,6 +61,8 @@ pub struct Params {
     /// The chance that a mutation is a [`monotone_rewrite`], in [0, 1].
     /// PEREDUR's `p_monotone` default is 0.25.
     pub p_monotone: f64,
+    /// Whether every monotone rewrite weakens, in place of a fair coin.
+    pub weaken_only: bool,
     /// Whether a candidate that holds but that φ is not proved to imply
     /// scores status 0, as one that fails ([`drop_valid`]).
     pub weakening: bool,
@@ -76,6 +78,7 @@ impl Params {
             status: Status::default(),
             crossover_rate: 0.1,
             p_monotone: 0.25,
+            weaken_only: false,
             weakening: true,
         }
     }
@@ -266,7 +269,7 @@ fn breed(
             child = crossover(&child, &partners[partner].formula, rng);
         }
         if rng.chance(MUTATION_RATE) {
-            child = mutate(&child, atoms, params.p_monotone, rng);
+            child = mutate(&child, atoms, params.p_monotone, params.weaken_only, rng);
         }
         offspring.push(child.simplify());
     }
@@ -882,7 +885,7 @@ mod tests {
                 .map(|p| {
                     assert!(!rng.chance(0.0));
                     assert!(rng.chance(MUTATION_RATE));
-                    mutate(&p.formula, &atoms, params.p_monotone, &mut rng).simplify()
+                    mutate(&p.formula, &atoms, params.p_monotone, false, &mut rng).simplify()
                 })
                 .collect();
             assert_eq!(bred, mutated);

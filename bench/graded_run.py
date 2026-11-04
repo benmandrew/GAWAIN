@@ -31,8 +31,10 @@ evaluation (docs/dev/evaluation.md), and `mutation` and `forced-mutation`
 for its random-mutation baseline, `rejected` for the similarity counted
 over the negations, `crossover-0`, `crossover-0.5`, `crossover-0.9`, `monotone-0`,
 `monotone-0.5`, `monotone-0.75` and `rates-0.5` (both rates 0.5) for the
-operator-rate sweep, and `weakening` for the
-weakening filter, which is search_bench's default; see ARMS. The `random` and
+operator-rate sweep, `weakening` for the
+weakening filter, which is search_bench's default, and `mutation-weakening`,
+`tuned`, `mutation-tuned`, `monotone-1` and `weaken-walk` for the headline
+rerun with the filter on; see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -99,6 +101,19 @@ ARMS = {
     'monotone-0.75': ['--status', 'binary', '--monotone-share', '0.75', '--weakening', 'ignore'],
     'rates-0.5': ['--status', 'binary', '--crossover-rate', '0.5', '--monotone-share', '0.5',
                   '--weakening', 'ignore'],
+    # The headline rerun with the weakening filter on: random mutation at
+    # PEREDUR's rates, both searches at the sweep's best monotone share,
+    # the GA with every mutation monotone, and `weaken-walk`, a random
+    # search with no crossover whose every mutation weakens, so every
+    # candidate is a weakening of φ.
+    'mutation-weakening': ['--status', 'binary', '--search', 'random', '--weakening', 'demote'],
+    'tuned': ['--status', 'binary', '--monotone-share', '0.75', '--weakening', 'demote'],
+    'mutation-tuned': ['--status', 'binary', '--search', 'random', '--monotone-share', '0.75',
+                       '--weakening', 'demote'],
+    'monotone-1': ['--status', 'binary', '--monotone-share', '1', '--weakening', 'demote'],
+    'weaken-walk': ['--status', 'binary', '--search', 'random', '--crossover-rate', '0',
+                    '--monotone-share', '1', '--monotone-direction', 'weaken',
+                    '--weakening', 'demote'],
 }
 
 
