@@ -24,7 +24,9 @@ An individual is one formula, and the seed population is P copies of φ. Each of
 
 **Select.** Parents and offspring are pooled, and NSGA-II ranking cuts the pool back to P.
 
-The search does not enforce φ ⇒ φ', so candidates can pass through formulas that are incomparable with φ on their way to a weakening. The output gate enforces it once, at the end, with one cached implication check per output.
+The output gate enforces φ ⇒ φ' once, at the end, with one cached implication check per output. The search never discards a candidate for failing it, so candidates can pass through formulas that are incomparable with φ on their way to a weakening.
+
+Since the evaluation, the search also demotes a candidate that holds on M but that φ is not proved to imply, scoring it as if it had failed. This *weakening filter* (`--weakening demote`) acts on scoring only, and it is now the default. On the model set it left the found rate level and cut the median back-end calls by 9.75 per run, and on the trace sets it found a repair on 1,154 of 1,260 runs against 1,124. The evaluation numbers in this report predate it.
 
 ### Objectives
 
@@ -199,6 +201,6 @@ On BEEM the semantic score cannot separate the repairs from ⊤. 100 of 111 BEEM
 
 ## Further work
 
-The plainest gap is BEEM, where the search needs an objective that sees the difference between `X X F p` and ⊤ without the found-rate cost of the rejected side. Mutation also draws only φ's atoms, so a repair cannot mention any other variable of the model, and widening the pool to the model's atoms is the obvious next operator. None of PEREDUR's rates has been measured on this problem. For new sources, the Lockheed Martin Cyber-Physical Challenges carry 74 discrete-time requirements, about 23 of them violated, but the models need MATLAB, so at most a few small ones could be translated to nuXmv by hand. On the RERS unknowns, pan's bitstate hashing could confirm a violation of ¬φ and so show an instance proper, though it cannot prove the converse.
+The plainest gap is BEEM, where the search needs an objective that sees the difference between `X X F p` and ⊤ without the found-rate cost of the rejected side. Mutation also draws only φ's atoms, so a repair cannot mention any other variable of the model, and widening the pool to the model's atoms is the obvious next operator. I measured the crossover rate and the monotone share on the model instances. Raising the monotone share from 0.25 to 0.75 found a repair more often (higher on 40 of 99 instances and lower on 10, p < 0.0001), gave stronger repairs (net subsumption 52/15/20, p = 0.0001) and needed 19 fewer back-end calls per run on the median, and a crossover rate of 0.9 or both rates at 0.5 also helped. The evaluation above uses PEREDUR's rates, and random mutation shares the breeding operators, so both arms change and the comparison with random mutation should be rerun at the better rates before they become the default. For new sources, the Lockheed Martin Cyber-Physical Challenges carry 74 discrete-time requirements, about 23 of them violated, but the models need MATLAB, so at most a few small ones could be translated to nuXmv by hand. On the RERS unknowns, pan's bitstate hashing could confirm a violation of ¬φ and so show an instance proper, though it cannot prove the converse.
 
 The search beats random mutation on every family except the BEEM instances under the headline's cap, it is ahead on the large BEEM instances given 4 h, and the gap widens with budget, which is the result I set out to test. What I did not expect was how much of the work went into deciding what a trivial repair is, and the BEEM prefixes show that the count still accepts a few repairs that a reader would call empty.

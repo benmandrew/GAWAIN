@@ -44,6 +44,30 @@ One rule differs from PEREDUR. Its `GloballyToInfinitelyOften` builds `G` of the
 
 Crossover is one side of `tlsf_crossover`. On a fair coin, a subformula of the first parent is replaced by one of the second, or joined with one under `&`, `|`, `U` or `W`. The graft sites are the distinct temporal subformulae, or the whole formula when there are none, and only the first occurrence of the chosen site gives way.
 
+### The rate sweep
+
+Seven arms of `bench/graded_run.py` each change one or both rates against `default` (crossover rate 0.1, monotone share 0.25). The `crossover-0`, `crossover-0.5` and `crossover-0.9` arms set the crossover rate. The `monotone-0`, `monotone-0.5` and `monotone-0.75` arms set the monotone share, and `rates-0.5` sets both to 0.5. All ran the search of commit `691da76` on the 100 evaluation model instances of `evaluation.md`, at 30 × 40 with seeds 1 to 10, on av2 and av3. Every arm passes `--weakening ignore`, so the sweep measures the search before the weakening filter became the default ("Keeping the search on weakenings"). How the rates interact with the filter is not measured.
+
+The first sweep ran `crossover-0`, `crossover-0.5`, `monotone-0` and `monotone-0.5`, and all 5,000 runs gave a result. Eight Sieve runs hit the 3,600 s cap and were rerun at 4 h, with 4 jobs on each host. The follow-up ran `crossover-0.9`, `monotone-0.75` and `rates-0.5` on 99 instances, leaving out SieveSingleMsgMbox, whose runs take hours. It gave 2,968 of 2,970 runs. The end of the host booking cut the other two, anderson 7-2 seed 9 under `monotone-0.75` and under `rates-0.5`. Pairs use the seeds both arms ran. `bench/graded_stats.py --baseline default` gives the table below. Counts are the instances where the arm is higher, lower or tied against `default`, followed by the Wilcoxon p-value.
+
+| Arm | Instances | Found rate +/−/0, p | Found rate, mean change | Back-end calls, median change, p | Wall time, median change, p | Net subsumption +/−/0, p | Net subsumption, mean |
+|---|---|---|---|---|---|---|---|
+| `crossover-0` | 100 | 17 / 26 / 57, 0.54 | −0.007 | +0.5, 0.17 | +0.12 s, 0.37 | 25 / 22 / 36, 0.79 | −0.019 |
+| `crossover-0.5` | 100 | 37 / 9 / 54, < 0.0001 | +0.093 | −2.5, < 0.0001 | −0.05 s, 0.56 | 38 / 22 / 27, 0.005 | +0.141 |
+| `crossover-0.9` | 99 | 38 / 12 / 49, < 0.0001 | +0.102 | −6.5, < 0.0001 | +0.01 s, 0.44 | 42 / 23 / 19, 0.015 | +0.128 |
+| `monotone-0` | 100 | 16 / 32 / 52, 0.009 | −0.051 | +5.25, < 0.0001 | +0.92 s, < 0.0001 | 13 / 28 / 38, 0.050 | −0.087 |
+| `monotone-0.5` | 100 | 37 / 5 / 58, < 0.0001 | +0.082 | −8.0, < 0.0001 | −0.47 s, < 0.0001 | 38 / 25 / 26, 0.030 | +0.088 |
+| `monotone-0.75` | 99 | 40 / 10 / 49, < 0.0001 | +0.139 | −19.0, < 0.0001 | −1.03 s, < 0.0001 | 52 / 15 / 20, 0.0001 | +0.217 |
+| `rates-0.5` | 99 | 44 / 6 / 49, < 0.0001 | +0.151 | −9.5, < 0.0001 | −0.11 s, 0.21 | 47 / 10 / 28, < 0.0001 | +0.238 |
+
+Both rates help up to the largest values tried. A crossover rate of 0 changes nothing measurable. A monotone share of 0 hurts: it finds a repair less often, gives weaker repairs, and costs 5.25 more back-end calls and 0.92 s more wall time per run. A larger monotone share also makes runs cheaper. `monotone-0.75` made 19.0 fewer back-end calls per run on the median, and fewer on 95 of 99 instances.
+
+The gains sit on RERS and MCC. Under `monotone-0.75` the median MCC wall time fell from 71 s to 38 s (p = 0.0003), and net subsumption on MCC was 16 / 2 / 0 (p = 0.0016). On RERS its found rate was 36 / 4 / 26 with a mean change of +0.227, and net subsumption was 30 / 9 / 15 (p = 0.0007). Under `rates-0.5`, net subsumption on MCC was 13 / 5 / 0 (p = 0.016), and on RERS the found rate was 38 / 1 / 27 and net subsumption 33 / 4 / 18 (p < 0.0001). BEEM is level or worse. `monotone-0.75` is level there, with a found rate of 0 / 2 / 12 (p = 0.50) and net subsumption of 5 / 4 / 5 (p = 0.95), and `rates-0.5` is level too. `crossover-0.9` gave a BEEM found rate of 0 / 5 / 9 (p = 0.055), and under `monotone-0.5` the default's BEEM repairs were stronger, at 1 / 9 / 4 (p = 0.020).
+
+The best values are the largest tried, so the sweep has not bracketed the optimum. A monotone share of 1.0 is untried. At 1.0 every mutation is monotone, and temporal mutation never fires.
+
+The defaults stay at 0.1 and 0.25 for now, because the headline evaluation in `evaluation.md` ran at them. Changing them means rerunning the headline, which is left as an open decision. The rows are in `bench/results/rates-runs.csv` and `rates-instances.csv` for the first sweep, and in `rates2-runs.csv` and `rates2-instances.csv` for the follow-up.
+
 ## Objectives
 
 `score` takes one generation's survivors and returns three objectives for each, all higher-is-better.
@@ -579,4 +603,4 @@ The filter costs one implication pair per holder per generation, in an exec the 
 | The renamed cache keys of `cached_count_traces` and Ganak | The score is relative to the fixed φ, whose atoms name model variables. Ganak's label cache does renumber the label's own atoms, which a propositional count cannot tell apart. |
 | mt19937 and PEREDUR's draw stream | Each tool must reproduce its own runs, not the other's. |
 
-The rates kept (0.1 crossover, 1.0 mutation, 0.25 monotone, 0.2 temporal, a bloat ratio of 2) are PEREDUR's defaults and are not tuned here. None has been measured on this problem.
+The rates kept (0.1 crossover, 1.0 mutation, 0.25 monotone, 0.2 temporal, a bloat ratio of 2) are PEREDUR's defaults. The crossover rate and the monotone share have been measured on this problem ("The rate sweep"), and both defaults are still PEREDUR's. The mutation rate of 1.0, the temporal share of 0.2 and the bloat ratio of 2 remain unmeasured.
