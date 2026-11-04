@@ -283,7 +283,11 @@ def main(argv):
     runs = []
     for path in sorted(runs_dir.glob('*.json')):
         r = json.loads(path.read_text())
-        name, arm, seed = path.stem.rsplit('-', 2)
+        # Instance and arm names both hold hyphens (`crossover-0.5`), so
+        # the instance is the longest name in instances.tsv that prefixes.
+        rest, seed = path.stem.rsplit('-', 1)
+        name = max((n for n in family if rest.startswith(n + '-')), key=len)
+        arm = rest[len(name) + 1:]
         repairs = r['repairs']
         runs.append({'instance': name, 'family': family[name], 'arm': arm, 'seed': int(seed),
                      'found': int(bool(repairs)), 'repairs': len(repairs),

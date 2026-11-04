@@ -29,8 +29,9 @@ degenerate instances too, for the CEGIW case studies), and `initflag`,
 (bench/initial_stats.py), `default` and `forced-default` for the
 evaluation (docs/dev/evaluation.md), and `mutation` and `forced-mutation`
 for its random-mutation baseline, `rejected` for the similarity counted
-over the negations, `crossover-0`, `crossover-0.5`, `monotone-0` and
-`monotone-0.5` for the operator-rate sweep, and `weakening` for the
+over the negations, `crossover-0`, `crossover-0.5`, `crossover-0.9`, `monotone-0`,
+`monotone-0.5`, `monotone-0.75` and `rates-0.5` (both rates 0.5) for the
+operator-rate sweep, and `weakening` for the
 weakening filter, which is search_bench's default; see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
@@ -94,6 +95,10 @@ ARMS = {
     'crossover-0.5': ['--status', 'binary', '--crossover-rate', '0.5', '--weakening', 'ignore'],
     'monotone-0': ['--status', 'binary', '--monotone-share', '0', '--weakening', 'ignore'],
     'monotone-0.5': ['--status', 'binary', '--monotone-share', '0.5', '--weakening', 'ignore'],
+    'crossover-0.9': ['--status', 'binary', '--crossover-rate', '0.9', '--weakening', 'ignore'],
+    'monotone-0.75': ['--status', 'binary', '--monotone-share', '0.75', '--weakening', 'ignore'],
+    'rates-0.5': ['--status', 'binary', '--crossover-rate', '0.5', '--monotone-share', '0.5',
+                  '--weakening', 'ignore'],
 }
 
 
