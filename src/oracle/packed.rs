@@ -56,6 +56,14 @@ impl Packed {
         })
     }
 
+    /// A run of `len` positions, 1 to [`MAX_LEN`], already in words: bit
+    /// `i` of `atoms[k]` is atom `k` at position `i`. The cycle starts at
+    /// `start`, and `start == len` makes a finite word.
+    pub(crate) fn from_words(len: usize, start: usize, atoms: Vec<u64>) -> Self {
+        assert!((1..=MAX_LEN).contains(&len) && start <= len);
+        Packed { len, start, atoms }
+    }
+
     fn mask(&self) -> u64 {
         u64::MAX >> (64 - self.len)
     }

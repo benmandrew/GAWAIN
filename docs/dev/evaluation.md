@@ -10,7 +10,7 @@ Each question names its metric, its current status and where the existing eviden
 
 **RQ2, strength.** How strong are the repairs? Three comparisons answer this. The first is the *closed share* against ⊤ under the rejection strength ("⊤ under the rejection strength" in `bench/notes/baselines.md`). At the ablation configuration its median was 0.9912 [0.9833, 0.9957] over 87 instances. The second is a comparison with CEGIW on its 8 case studies plus abp4 (`bench/notes/baselines.md`). The third compares φ' with the source formula ψ on trace sets (`vs_psi` in `bench/traces_run.py`).
 
-**RQ3, cost of the genetic search.** Does the search earn its cost? The baseline is *random mutation* with the same operators, filters, scoring and number of candidate evaluations, and with no selection during the run. Its final P survivors are chosen by the same NSGA-II (Non-dominated Sorting Genetic Algorithm II) ranking and pass the same output gate ("Random-mutation baseline" in `docs/dev/search.md`). Both searches breed 1 + G × P candidates; the number scored differs slightly, because the validity filter drops a varying share, and each run reports both. The metrics are the found rate, the *net subsumption* between the two arms' pooled maximal repair sets, the closed share under rejection, back-end calls and wall time. Results are paired by instance and seed, with Wilcoxon signed-rank tests and bootstrap 95% intervals, as in "Graded status against binary" in `docs/dev/search.md`.
+**RQ3, cost of the genetic search.** Does the search earn its cost? The baseline is *random mutation* with the same operators, filters, scoring and number of candidate evaluations, and with no selection during the run. Its final P survivors are chosen by the same NSGA-II (Non-dominated Sorting Genetic Algorithm II) ranking and pass the same output gate ("Random-mutation baseline" in `docs/dev/search.md`). Both searches breed 1 + G × P candidates; the number scored differs slightly, because the validity filter drops a varying share, and each run reports both. The metrics are the found rate, the *net subsumption* between the two arms' pooled maximal repair sets, the *net containment share* between the same sets ("Diversity" below), the closed share under rejection, back-end calls and wall time. Results are paired by instance and seed, with Wilcoxon signed-rank tests and bootstrap 95% intervals, as in "Graded status against binary" in `docs/dev/search.md`.
 
 **RQ4, cost.** The metrics are wall time, back-end calls and cache hit rate per tier. On real genetic algorithm (GA) runs, the cheap tiers answer 91.6% of queries ("Hit rates on GA populations" in `docs/dev/oracle-measurements.md`).
 
@@ -153,6 +153,41 @@ The gap in found rate widens from 3.6 points at 15×20 to 24.2 points at 120×80
 ### Large BEEM instances
 
 The probe ran the 6 BEEM instances that the headline excludes (anderson 3-2, 3-4, 5-2, 5-4 and 7-4, and lamport 8-4) at 30×40, with 4 h and 10–16 GB per run. All 120 runs completed (6 instances, 2 arms, seeds 1–10). No run hit the cap, and the longest took 6,609 s. Default found a repair on 51 of 60 runs, and mutation on 37 of 60. Over the 60 paired runs, default alone found a repair on 14 and mutation alone on none (sign test p = 0.0001). The gap is on anderson 3-2 and 5-2, where default found a repair on all 10 seeds and mutation on 3. Both arms found one on every seed of anderson 3-4, 5-4 and 7-4, and on 1 of 10 seeds of lamport 8-4. The median run took 1,089 s for default and 1,192 s for mutation, with 21 and 22 back-end calls. These instances fail under the headline's 3,600 s cap, and not in general.
+
+## Diversity
+
+Diversity is how far apart the repairs of a set lie in behaviour, and GAWAIN reports it as PEREDUR's paper does (`evaluation.tex` and `experiments/2026-10-06-repair-diversity` in the PEREDUR artifact). `bench/diversity_stats.py` computes it from the same runs and maximal sets as `bench/graded_stats.py`, with A the arm and B the baseline.
+
+**Distance.** `src/bin/diversity.rs` samples 2^16 traces per instance over its atoms, each a lasso with a stem of 0 to 8 positions and a loop of 1 to 8, both uniform, and each atom true at each position by a fair coin. These are the settings of PEREDUR's `sample_words` in its separation run. The distance between two repairs is |a xor b| / |a or b| over their satisfying sets, and 0 when neither holds on any trace. The evaluator is the trace-set back end's packed one (`src/oracle/packed.rs`), so a formula is compiled once and nothing is allocated per trace. On the largest pool of the model set, 232 repairs of rers2016-104-p2, the binary takes 1.6 s for 15.2 million evaluations and the distance matrix on one core.
+
+**Containment.** Each repair's ball reaches to its third-nearest neighbour in its own maximal set (K = 3), and a side's region is the union of its balls. The containment of B in A is the share of B's repairs inside A's region, which is the *improved recall* of Kynkäänniemi et al. The net containment share is the containment of B in A less that of A in B, and it is positive when A's repairs spread wider.
+
+**Pooling and control.** These follow PEREDUR's `pooled_div2.py`. The seeds both arms ran are split at random into two halves S and S', 5 times. Each side's repairs over one half are pooled and reduced to a maximal set. Cross containment pairs A on S with B on S' and the reverse, so no cross pair shares a seed. The control of A is A on S against A on S', both ways, and likewise for B. All four sets are subsampled to the smallest of their sizes, capped at 200, twice per split, and every figure is the mean over splits and subsamples. A split counts only when that size exceeds K, and an instance enters when some split counts.
+
+**Tests.** Over the instances that enter, the script tests the net share and each direction against its own side's control: B in A against A's control, and A in B against B's. Each test gives the Hodges–Lehmann shift with its exact 95% interval, the exact Wilcoxon signed-rank p, the Holm-adjusted p over the three tests, the rank-biserial r and the signs. `bench/graded_stats.py` now prints the same columns for every measure beside its bootstrap intervals, with Holm over the measures of one block. It also reports net subsumption under PEREDUR's two readings of an undecided pair, and whether its verdict holds under both.
+
+**Deviations from PEREDUR.**
+
+- The trace stream is SplitMix64 (`search::Rng`), not mt19937_64, so the samples are reproducible but differ from PEREDUR's.
+- Under LTLf a sampled word is finite, with the stem and loop lengths drawn as above and summed, so the length runs from 1 to 16 positions. A lasso has the same number of distinct positions.
+- The atoms are the instance's `atoms` column together with every atom of its repairs. An atom no repair mentions cannot change a distance, so the choice of interface does not matter.
+- The 10 seeds split 5 and 5, and an odd count splits floor and ceiling. PEREDUR split 30 seeds 15 and 15.
+- The split order is seeded by instance and arm through Python's `random`, so the draws differ from PEREDUR's numpy stream.
+- PEREDUR's `hodges_lehmann` helper takes its bounds one Walsh average too far in. On 1, …, 10 it gives [3.5, 7.5] against the textbook [3.0, 8.0], and on (1, …, 8, −9, 10) it excludes zero at p = 0.064, which trips its own assertion. GAWAIN uses the textbook bound, which excludes zero exactly when the exact p is below 0.05 without ties. With 5 or fewer non-zero differences the interval is unbounded.
+- Where ties break that duality, PEREDUR's helper raises an error. GAWAIN counts the mismatches and prints the count instead.
+- PEREDUR decides a pair in one comparison, so under its `non` reading a pair with either direction undecided is incomparable. GAWAIN's current reading keeps a decided direction, so `net_share_non` can differ from `net_share` as well as from `net_share_imp`.
+- The Hodges–Lehmann shift drops zero differences, as PEREDUR's does. Where most instances tie at zero it lies far from the median difference, so the found rate on the model set has a median difference of 0.000 and a shift of 0.200.
+
+**Commands.** A release build of `diversity` goes to the host with the run directory. Copying the stats directory's `implications.json` into OUT first means Spot is asked only about pairs `bench/graded_stats.py` has not seen. Spot 2.15.1 must be first on `PATH`, and LTLf instances also need `ltlf2dfa`.
+
+```
+cargo build --release --bin diversity
+cp bench/data/eval/stats-eval/implications.json OUT/
+python3 -I bench/diversity_stats.py bench/data/eval OUT --runs runs-eval --baseline mutation --jobs 16
+python3 -I bench/diversity_stats.py --self-check
+```
+
+**Validation.** On the 19 MCC instances of `runs-eval`, 8 enter. The net containment share has median 0.010, mean +0.104 and shift 0.077 [−0.060, 0.349] (p = 0.47, 4/3/1). B in A against A's control gives a shift of 0.020 (p = 0.38), and A in B against B's control −0.068 (p = 0.44). The mean containments are 0.963 for B in A and 0.859 for A in B, against controls of 0.942 and 0.934. The run took 5.7 s on 2 threads with the implication cache warm, and 0.1 to 1.0 s per instance. The other 11 stay out because on every split some half's maximal set holds 3 repairs or fewer. At 10 seeds the MCC set is too small to show a difference in diversity.
 
 ## Order of work
 

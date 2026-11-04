@@ -2,11 +2,13 @@
 //! formulas. `ltl` holds the formulas, `oracle` decides whether a model
 //! satisfies one, `instance` drops instances not worth weakening, `search`
 //! breeds weakenings and gates them, `rers` with `kripke` builds explicit
-//! models, and `mcc` reads Model Checking Contest nets and properties.
+//! models, `mcc` reads Model Checking Contest nets and properties, and
+//! `diversity` measures how far apart repairs lie in behaviour.
 
 #![deny(missing_docs)]
 
 pub mod count;
+pub mod diversity;
 pub mod instance;
 pub mod kripke;
 pub mod ltl;
