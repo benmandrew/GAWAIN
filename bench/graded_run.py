@@ -110,6 +110,12 @@ ARMS = {
     'tuned': ['--status', 'binary', '--monotone-share', '0.75', '--weakening', 'demote'],
     'mutation-tuned': ['--status', 'binary', '--search', 'random', '--monotone-share', '0.75',
                        '--weakening', 'demote'],
+    # The two headline arms searching degenerate instances too, for the
+    # CEGIW case studies and the precedes set.
+    'forced-tuned': ['--status', 'binary', '--degenerate', 'search', '--monotone-share', '0.75',
+                     '--weakening', 'demote'],
+    'forced-mutation-tuned': ['--status', 'binary', '--degenerate', 'search', '--search', 'random',
+                              '--monotone-share', '0.75', '--weakening', 'demote'],
     'monotone-1': ['--status', 'binary', '--monotone-share', '1', '--weakening', 'demote'],
     'weaken-walk': ['--status', 'binary', '--search', 'random', '--crossover-rate', '0',
                     '--monotone-share', '1', '--monotone-direction', 'weaken',
