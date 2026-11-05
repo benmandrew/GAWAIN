@@ -8,7 +8,9 @@ seed --max-seed, so every row covers the same runs. Prints, per budget and
 arm, the share of runs that found a repair and the median wall time and
 back-end calls ("Budget" in docs/dev/evaluation.md).
 
-usage: budget_curve.py DIR BUDGET=RUNS... [--max-seed 2]
+`--arms` names another pair, such as the headline rerun's `tuned,mutation-tuned`.
+
+usage: budget_curve.py DIR BUDGET=RUNS... [--max-seed 2] [--arms default,mutation]
 """
 import argparse
 import json
@@ -16,7 +18,6 @@ import re
 import statistics
 from pathlib import Path
 
-ARMS = ('default', 'mutation')
 
 
 def main():
@@ -24,23 +25,26 @@ def main():
     p.add_argument('dir', type=Path)
     p.add_argument('budgets', nargs='+')
     p.add_argument('--max-seed', type=int, default=2)
+    p.add_argument('--arms', default='default,mutation')
     a = p.parse_args()
     budgets = dict(b.split('=') for b in a.budgets)
+    arms = a.arms.split(',')
+    pattern = '|'.join(re.escape(x) for x in arms)
     data = {}
     for b, runs in budgets.items():
         for f in (a.dir / runs).glob('*.json'):
-            m = re.fullmatch(r'(.+)-(default|mutation)-(\d+)\.json', f.name)
+            m = re.fullmatch(rf'(.+?)-({pattern})-(\d+)\.json', f.name)
             if not m or int(m[3]) > a.max_seed:
                 continue
             r = json.loads(f.read_text().strip().splitlines()[-1])
             data[(b, m[2], m[1], int(m[3]))] = (bool(r['repairs']), r['wall'], r['backend_calls'])
     keys = {k[2:] for k in data}
-    common = [k for k in keys if all((b, arm) + k in data for b in budgets for arm in ARMS)]
+    common = [k for k in keys if all((b, arm) + k in data for b in budgets for arm in arms)]
     print(f'{len(common)} instance and seed pairs with a result at every budget and arm')
     print('| Budget | Arm | Found rate | Median wall (s) | Median back-end calls |')
     print('|---|---|---|---|---|')
     for b in budgets:
-        for arm in ARMS:
+        for arm in arms:
             v = [data[(b, arm) + k] for k in common]
             print(f'| {b} | {arm} | {sum(x[0] for x in v) / len(v):.3f} '
                   f'| {statistics.median(x[1] for x in v):.1f} '
