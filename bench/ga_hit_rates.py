@@ -41,6 +41,10 @@ def main():
     rows = []
     for path in sorted(Path(a.runs).glob(f'*-{a.arm}-*.json')):
         m = re.fullmatch(rf'(.+)-{re.escape(a.arm)}-(\d+)\.json', path.name)
+        # The glob for one arm also takes another whose name ends in it,
+        # as `tuned` takes `mutation-tuned`; that prefix is no instance.
+        if m[1] not in family:
+            continue
         run = json.loads(path.read_text().strip().splitlines()[-1])
         if sum(run[t] for t in TIERS) != run['queries']:
             raise SystemExit(f'{path}: the tiers do not sum to the queries')
