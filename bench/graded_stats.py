@@ -53,6 +53,7 @@ import json
 import math
 import random
 import statistics
+import shutil
 import subprocess
 import sys
 import threading
@@ -114,6 +115,7 @@ def implications_uncached(pairs, finite=False):
     or fails is None, read as not implied and listed in UNDECIDED, as in
     bench/traces_run.py: some LTLf pairs never finish, and some exceed
     Spot's 32 acceptance sets."""
+    require_spot()
     try:
         return implications_batch(pairs, finite, BATCH_LIMIT)
     except (subprocess.TimeoutExpired, RuntimeError):
@@ -127,6 +129,23 @@ def implications_uncached(pairs, finite=False):
 
 
 BATCH_LIMIT, PAIR_LIMIT = 30, 2
+SPOT = '2.15.1'
+SPOT_CHECKED = []
+
+
+def require_spot():
+    """Exit unless ltlfilt on PATH is Spot 2.15.1. An older Spot lacks
+    `--satisfiable`, fails every batch and so leaves every pair undecided,
+    which reads as a clean result with no implications."""
+    if SPOT_CHECKED:
+        return
+    if not shutil.which('ltlfilt'):
+        raise SystemExit('ltlfilt is not on PATH')
+    version = subprocess.run(['ltlfilt', '--version'], capture_output=True, text=True).stdout
+    first = version.splitlines()[0] if version else ''
+    if f'(spot) {SPOT}' not in first:
+        raise SystemExit(f'ltlfilt on PATH is {first!r}, not Spot {SPOT}')
+    SPOT_CHECKED.append(True)
 
 
 def implications_batch(pairs, finite, limit):
