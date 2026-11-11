@@ -1,6 +1,6 @@
 # GAWAIN
 
-GAWAIN (Genetic Algorithm for Weakening Against Implementations under NSGA-II) weakens a specification against a model by genetic search, in Rust. The goal, benchmarks, decisions and task list are in `PLAN.md`. The oracle design is in `docs/dev/oracle-performance.md`, the search loop and output gate in `docs/dev/search.md`, and the evaluation plan in `docs/dev/evaluation.md`.
+GAWAIN (Genetic Algorithm for Weakening Against Implementations under NSGA-II) weakens a specification against a model by genetic search, in Rust. The goal, benchmarks, decisions and task list are in `PLAN.md`. The oracle design is in `docs/dev/oracle-performance.md`, the search loop and output gate in `docs/dev/search.md`, the evaluation plan in `docs/dev/evaluation.md`, and the Lean proofs of the operator orders and rule soundness in `proofs/README.md`.
 
 ## Rust code standards
 

@@ -108,7 +108,7 @@ Part B checks closed-form rules over all intervals [a, b] with a ≤ 4 and b ≤
 | G_I G_J p ≡ G_{I+J} p, both ways | 72 | 0 |
 | F_I G_J p ⇒ G_K F_L p iff I − K ⊆ L − J | 1,296 | 0 |
 
-Here I + J is the interval sum [a + c, b + d], and I − K is [a_I − b_K, b_I − a_K]. The nesting rules were checked on bounded intervals with b ≤ 2 only. The "iff" is checked for bounds up to 4, and the "if" half of each rule has a short proof by choosing the witness position, so the grid serves mainly to confirm the "only if" half and the expansions.
+Here I + J is the interval sum [a + c, b + d], and I − K is [a_I − b_K, b_I − a_K]. The grid covers bounds up to 4, and the nesting rules only bounded intervals with b ≤ 2. Both halves of every rule are now proved in Lean for every interval, unbounded ones included, except the last row, which is proved for every bounded interval ("Proofs" below). The grid therefore serves mainly to confirm the expansions.
 
 The rows give the structure of the order. On one atom, the `F` and `G` families are each ordered by interval inclusion, and they meet only at the singletons, where `F[k,k]`, `G[k,k]` and `X^k` coincide. Every cross implication G_I ⇒ F_J passes through some X^k with k ∈ I ∩ J. So the covers of the combined order are the single-bound steps of one interval, and GAWAIN's `X → F` and `X → G` rules are the case I = [1, 1]. In the `F` family an unbounded interval has no cover from below, since every F[a, b] lies below F[a, ∞), so the move from a bounded to an unbounded interval is a jump. CEGIW's semantics gives `U` the weaker order of its own Lemmas 7 and 8, where the left bound cannot move. Under the usual semantics, `U` follows inclusion in both bounds, as `F` does. GAWAIN should therefore use the usual semantics. CEGIW's case studies use only `F` and `G`, where the two readings agree, so the comparison with CEGIW is not affected.
 
@@ -120,7 +120,7 @@ Fact 3 lets one output dominate any maximal set. The conjunction of all of a run
 
 ### The order on intervals
 
-The order needed is wider than CEGIW's. Take discrete pointwise time, intervals [a, b] with a ≤ b and b possibly ∞, and the usual reading of `U`, where φ holds on every position from the start up to the witness. Then the following hold at a positive occurrence, for I ⊆ J. Each row is checked against Spot in "MTL intervals" above.
+The order needed is wider than CEGIW's. Take discrete pointwise time, intervals [a, b] with a ≤ b and b possibly ∞, and the usual reading of `U`, where φ holds on every position from the start up to the witness. Then the following hold at a positive occurrence, for I ⊆ J. Each row is checked against Spot in "MTL intervals" above and proved for every interval in `proofs/Gawain/Interval.lean`.
 
 | Stronger | Weaker | Note |
 |---|---|---|
@@ -149,6 +149,14 @@ The syntactic similarity needs one change: two interval operators of the same ki
 ### Benchmarks
 
 Benchmarks are the weak point. The current evaluation sets have almost no intervals. CEGIW's case studies are 8 cases over 2 formulas and 4 small nuXmv models, plus abp4 `p2false`, whose `X` reads as `F[1,1]`. The MCC formulas contain `X` chains, such as `G(X X X X a0 U …)` in 16 of the 20 formulas sampled in `bench/notes/baselines.md`, but they are random formulas over Petri net firings, so a weakened interval says little. CEGIW's FRET survey counts 124 or 127 interval-weakenable requirements out of 419 (the paper gives both), with no models. LMCPS has 74 discrete-time requirements, about 23 violated, but its models need MATLAB ("Investigate LMCPS" in `PLAN.md`). An MTL evaluation therefore needs a new set first, either hand-translated LMCPS models or FRET requirements paired with models written for them.
+
+## Proofs
+
+The orders above are now proved in Lean, using core Lean with `omega` and no Mathlib (`proofs/`, detail in `proofs/README.md`). Every interval row of "MTL intervals" is an exact `↔`, with a countermodel where the condition fails, for every interval including unbounded ones. `F_I F_J` and `G_I G_J` sum their intervals for any well-formed pair, and the `F G`/`G F` row holds for every bounded interval. Chains of single-bound steps reach exactly the `F` and `G` interval orders, so the steps of "The order on intervals" are complete for interval weakening once unbounding the right bound is added to them. Every unary word over `X`, `F` and `G`, of any length, reduces to one of five *normal forms*, which decides the unary order beyond the three operators measured. Every rule of `rules_at` and every proposed rule moves the whole formula in its stated direction through any context of known polarity. Facts 1 to 4 of "What changes under model checking" are proved over a model taken as a set of traces.
+
+`bench/check_lean_orders.py` compares the Lean verdicts with Spot. All 5,080 MTL cases of `bench/results/operator-orders-mtl.csv` agree, 1,661 of them implications, and so do all 1,600 pairs of unary words of up to three operators, 810 of them implications. As controls, 996 MTL cases disagree when the Spot verdicts are read one row out of step, and 1,244 unary pairs disagree when each pair is swapped.
+
+The binary LTL order stays measured only. Its rules are proved sound, but the order between binary templates and the reach of the proposed rules (178 of 202 covers) come from `bench/operator_orders.py` alone. The Lean transcription of `rules_at` and `collect_polarities` is checked against the Rust by reading. The `F G`/`G F` rule is proved for bounded intervals only. The interval and gating theorems are about semantics, since GAWAIN has no MTL parser or oracle yet and the gating proofs do not cover the lasso cache code.
 
 ## Proposed order of work
 

@@ -1,0 +1,5 @@
+name = "gawain"
+defaultTargets = ["Gawain"]
+
+[[lean_lib]]
+name = "Gawain"

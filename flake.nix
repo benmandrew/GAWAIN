@@ -94,5 +94,13 @@
             python3
           ]);
         };
+
+        # `nix develop '.#proofs'`, for the Lean proofs in proofs/. A shell
+        # of its own, as in PEREDUR, because lean4 is a large download that
+        # no build, test or benchmark needs. Spot is the pinned build, for
+        # bench/check_lean_orders.py.
+        devShells.proofs = pkgs.mkShell {
+          packages = [ pkgs.lean4 spot pkgs.python3 ];
+        };
       });
 }
