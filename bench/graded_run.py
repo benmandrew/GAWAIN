@@ -34,7 +34,9 @@ over the negations, `crossover-0`, `crossover-0.5`, `crossover-0.9`, `monotone-0
 operator-rate sweep, `weakening` for the
 weakening filter, which is search_bench's default, and `mutation-weakening`,
 `tuned`, `mutation-tuned`, `monotone-1` and `weaken-walk` for the headline
-rerun with the filter on; see ARMS. The `random` and
+rerun with the filter on, and `tuned-ordered`, `tuned-gated`,
+`tuned-demotion`, `tuned-climb` and `tuned-order` (all four) for the order
+arms of docs/dev/order-search.md; see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -58,6 +60,7 @@ SPOT = '2.15.1'
 # initial-state filter became the default keep `--initial ignore`, and
 # those measured before the weakening filter keep `--weakening
 # ignore`, so they reproduce their recorded results.
+TUNED = ['--status', 'binary', '--monotone-share', '0.75', '--weakening', 'demote']
 ARMS = {
     'binary': ['--status', 'binary', '--initial', 'ignore', '--weakening', 'ignore'],
     'graded': ['--status', 'graded', '--initial', 'ignore', '--weakening', 'ignore'],
@@ -107,7 +110,7 @@ ARMS = {
     # search with no crossover whose every mutation weakens, so every
     # candidate is a weakening of φ.
     'mutation-weakening': ['--status', 'binary', '--search', 'random', '--weakening', 'demote'],
-    'tuned': ['--status', 'binary', '--monotone-share', '0.75', '--weakening', 'demote'],
+    'tuned': TUNED,
     'mutation-tuned': ['--status', 'binary', '--search', 'random', '--monotone-share', '0.75',
                        '--weakening', 'demote'],
     # The two headline arms searching degenerate instances too, for the
@@ -120,6 +123,14 @@ ARMS = {
     'weaken-walk': ['--status', 'binary', '--search', 'random', '--crossover-rate', '0',
                     '--monotone-share', '1', '--monotone-direction', 'weaken',
                     '--weakening', 'demote'],
+    # `tuned` with one order feature on, and with all four
+    # ("PEREDUR's order features" in docs/dev/order-search.md).
+    'tuned-ordered': TUNED + ['--rules', 'ordered'],
+    'tuned-gated': TUNED + ['--monotone-direction', 'gated'],
+    'tuned-demotion': TUNED + ['--demotion', 'on'],
+    'tuned-climb': TUNED + ['--climb', 'on'],
+    'tuned-order': TUNED + ['--rules', 'ordered', '--monotone-direction', 'gated',
+                            '--demotion', 'on', '--climb', 'on'],
 }
 
 
