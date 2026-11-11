@@ -15,7 +15,7 @@ use gawain::count::{similarity_from_logs, Counter, Side, BOUND};
 use gawain::ltl::{Formula, UnaryOp};
 use gawain::oracle::process::Limits;
 use gawain::oracle::{implications, Semantics};
-use gawain::search::{monotone_rewrite, Direction, Rng};
+use gawain::search::{monotone_rewrite, Direction, Rng, RuleSet};
 
 const LIMITS: Limits = Limits {
     timeout: Duration::from_secs(60),
@@ -222,10 +222,22 @@ fn implied_pairs(semantics: Semantics) -> Vec<(Formula, Formula)> {
     for i in 0..1200 {
         let subject = common::formula(&mut gen, 4, &names);
         if i % 2 == 0 {
-            let child = monotone_rewrite(&subject, Direction::Weaken, &atoms, &mut rng);
+            let child = monotone_rewrite(
+                &subject,
+                Direction::Weaken,
+                &atoms,
+                RuleSet::Peredur,
+                &mut rng,
+            );
             pairs.push((subject, child));
         } else {
-            let child = monotone_rewrite(&subject, Direction::Strengthen, &atoms, &mut rng);
+            let child = monotone_rewrite(
+                &subject,
+                Direction::Strengthen,
+                &atoms,
+                RuleSet::Peredur,
+                &mut rng,
+            );
             pairs.push((child, subject));
         }
     }

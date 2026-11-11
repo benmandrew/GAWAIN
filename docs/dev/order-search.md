@@ -1,6 +1,6 @@
 # Order-guided search and MTL
 
-This note looks at two possible extensions. The first ports PEREDUR's order-guided operators, which use the implication order to choose between weakening and strengthening a candidate. The second widens the input from LTL to *metric temporal logic* (MTL), whose operators carry time intervals, using CEGIW's interval order. It records what each source repository provides, which parts carry over to model checking and which do not, and a proposed order of work. Nothing here is implemented yet.
+This note looks at two possible extensions. The first ports PEREDUR's order-guided operators, which use the implication order to choose between weakening and strengthening a candidate. The second widens the input from LTL to *metric temporal logic* (MTL), whose operators carry time intervals, using CEGIW's interval order. It records what each source repository provides, which parts carry over to model checking and which do not, and a proposed order of work. Only the rules of "LTL templates" are implemented, as `RuleSet::Ordered`, and they are off by default.
 
 ## What PEREDUR provides
 
@@ -20,7 +20,7 @@ PEREDUR (`~/projects/peredur`) repairs specifications for *realisability* (a con
 
 **The results so far.** The ablation (`experiments/2026-11-05-fretish-order/PLAN.md`, rows in `experiments/results-fretish-order.csv`) ran 270 runs per arm. The count of runs whose repair implies the ideal one is 94 for the base GA, 113 for the full set, 112 with only the climb, and 101 with only the gate. Random selection scores 76 alone and 95 with the climb. The found rate stays near 0.89 in every arm, and no significance test has been run. A pooled strength and diversity pass (`experiments/2026-11-09-fretish-order-pooled/`) was voided by an audit on 2026-11-11, because the climb arms were pooled from the wrong file and 73% of the comparison rows crashed. Its figure for the gate, a median net subsumption of +0.187, is therefore unconfirmed until the rerun. The climb carries most of the measured gain.
 
-**What is LTL-generic.** Almost nothing in the orders themselves, which are tied to FRETISH's five fields. `monotone_rewrite` (`src/genetic/monotone.cpp`) is generic, and GAWAIN already has it (`src/search/operators.rs:90`, "Operators" in `search.md`). The slot-wise structure of `classify_move` would work over any per-conjunct implication check.
+**What is LTL-generic.** Almost nothing in the orders themselves, which are tied to FRETISH's five fields. `monotone_rewrite` (`src/genetic/monotone.cpp`) is generic, and GAWAIN already has it (`src/search/operators.rs:106`, "Operators" in `search.md`). The slot-wise structure of `classify_move` would work over any per-conjunct implication check.
 
 ## What CEGIW provides
 
@@ -39,7 +39,7 @@ Model checking gives exact facts that realisability lacks. Let R be the set of r
 3. If M ⊨ ψ₁ and M ⊨ ψ₂, then M ⊨ ψ₁ ∧ ψ₂. If both are repairs, so is ψ₁ ∧ ψ₂, and it implies each. Realisability is not closed under conjunction, so PEREDUR's join crossover is a heuristic there and an exact construction here.
 4. If M ⊨ ψ, then φ ∨ ψ is a repair. This projects any holder that φ does not imply into R.
 
-Facts 1 and 2 decide the direction of every monotone rewrite in advance. GAWAIN draws that direction on a fair coin (`src/search/operators.rs:41`). With crossover at 0.1 and the frozen monotone share of 0.75, 0.9 × 0.75 × 0.5 ≈ 0.34 of all offspring are monotone moves in the direction that facts 1 and 2 make useless. That share comes from the rates and has not been measured on a run. A strengthened failing parent fails, and the lasso tier refutes it, so it costs a slot but almost no oracle time. A weakened repair holds but is weaker than its parent, so the gate's maximality step can never report it in place of the parent.
+Facts 1 and 2 decide the direction of every monotone rewrite in advance. GAWAIN draws that direction on a fair coin (`src/search/operators.rs:46`). With crossover at 0.1 and the frozen monotone share of 0.75, 0.9 × 0.75 × 0.5 ≈ 0.34 of all offspring are monotone moves in the direction that facts 1 and 2 make useless. That share comes from the rates and has not been measured on a run. A strengthened failing parent fails, and the lasso tier refutes it, so it costs a slot but almost no oracle time. A weakened repair holds but is weaker than its parent, so the gate's maximality step can never report it in place of the parent.
 
 Phase 1 of the paper evaluation already shows the cost of one direction only. On the 100 model instances at 10 seeds (`bench/results/paper-p1-models-instances.csv`, means over instances against the `weakening` arm), `weaken-walk`, a random search whose every mutation weakens, has the highest found rate (0.803 against 0.766 for `tuned`) and the weakest repairs (net subsumption share −0.239 against +0.246). On the trace sets the share is −0.128 against +0.118. A pure weakening walk overshoots the boundary of R, and nothing in it comes back.
 
@@ -51,7 +51,7 @@ Each of these needs no new formula syntax and runs on the existing evaluation se
 
 **Join crossover.** When both parents are proved repairs, offer the child ψ₁ ∧ ψ₂, whose status is known without an oracle call by fact 3. It still needs the bloat cap of `filter` (twice φ's size), which limits joins to small parents. A first version keeps the existing graft for every other pair. PEREDUR's meet and path-relinking have no exact counterpart here, since a disjunction of two failing formulas may hold.
 
-**Counterexample-guided sites.** A failing parent with refuting lasso ℓ should only be weakened at a site s where ℓ satisfies the parent with s replaced by ⊤ (⊥ at a negative site). Every weakening at s implies that replacement, so if ℓ refutes the replacement, it refutes every weakening at s, and the move is wasted. The replacements are the duals of `vacuity_witnesses` (`src/search/operators.rs:123`), and the packed evaluator checks one in about 45 ns ("Graded status" in `trace-sets.md`). This is the LTL analogue of CEGIW's per-lasso step and of PEREDUR's blame. Unlike blame it is exact: it removes only moves that the lasso tier would refute.
+**Counterexample-guided sites.** A failing parent with refuting lasso ℓ should only be weakened at a site s where ℓ satisfies the parent with s replaced by ⊤ (⊥ at a negative site). Every weakening at s implies that replacement, so if ℓ refutes the replacement, it refutes every weakening at s, and the move is wasted. The replacements are the duals of `vacuity_witnesses` (`src/search/operators.rs:200`), and the packed evaluator checks one in about 45 ns ("Graded status" in `trace-sets.md`). This is the LTL analogue of CEGIW's per-lasso step and of PEREDUR's blame. Unlike blame it is exact: it removes only moves that the lasso tier would refute.
 
 **Output climb.** After the search, for each repair in the maximal set, try strengthening rewrites and keep one when the oracle proves it holds and Spot proves φ implies it. PEREDUR's climb gave the largest single gain there (112 against 94 of 270). It costs wall time: PEREDUR's random arm took a median of about 75 s and 102 s with the climb. At 120 × 80 GAWAIN's GA already spends its extra wall time on proving holders at tier 2 ("Budget" in `PLAN.md`), and a climb adds more of the same work.
 
@@ -63,16 +63,16 @@ Each of these needs no new formula syntax and runs on the existing evaluation se
 
 ### LTL templates
 
-The unary set is p under every word of up to three operators from {X, F, G}, 40 templates in 12 equivalence classes. The binary set applies each of `U`, `W`, `R`, `&` and `|` to p and q, each wrapped in nothing, X, F or G, plus each binary node under X, F or G and six small templates such as `Fq` and `Gp`. That makes 101 templates in 78 classes. `M` is left out, because GAWAIN's parser rejects it. The script takes the *covers* of the order (pairs A ⇒ B with no class strictly between them) and asks whether one rule of `rules_at`, without `Constant` and `AddOperand`, rewrites some member of A's class into a member of B's.
+The unary set is p under every word of up to three operators from {X, F, G}, 40 templates in 12 equivalence classes. The binary set applies each of `U`, `W`, `R`, `&` and `|` to p and q, each wrapped in nothing, X, F or G, plus each binary node under X, F or G and six small templates such as `Fq` and `Gp`. That makes 101 templates in 78 classes. `M` is left out, because GAWAIN's parser rejects it. The script takes the *covers* of the order (pairs A ⇒ B with no class strictly between them) and asks whether one rule of `rules_at`, without `Constant` and `AddOperand`, rewrites some member of A's class into a member of B's. It reads the rewrites from the Rust code through the `rule_table` binary, which prints every outcome of `monotone_outcomes`, so the counts describe the code and not a Python copy of the rules. Build it first with `nix develop -c cargo build --release --bin rule_table`.
 
-| Set | Classes | Covers | Realised by GAWAIN's rules | With the proposed rules | Unsound steps |
+| Set | Classes | Covers | Under `RuleSet::Peredur` | Under `RuleSet::Ordered` | Unsound steps |
 |---|---|---|---|---|---|
 | Unary | 12 | 15 | 9 | 15 | 0 |
-| Binary | 78 | 202 | 90 | 178 | 0 |
+| Binary | 78 | 202 | 90 | 191 | 0 |
 
 Every current rule is sound, but many of them skip levels. 17 of the unary steps and 123 of the binary steps join two classes with another class between them. `G φ → F φ` is the clearest case, since G φ ⇒ φ ⇒ F φ and the middle step has no rule. The same holds for `X φ → F φ`, which skips `F X φ`.
 
-The proposed rules add six weakenings and their strengthening duals, all applied at any site of known polarity:
+`RuleSet::Ordered` (`src/search/operators.rs:85`) adds rules to PEREDUR's, all applied at any site of known polarity. `Params::rules` and `search_bench --rules peredur|ordered` select the rule set, and the default is `RuleSet::Peredur`, PEREDUR's rules alone. The frozen `tuned` configuration and the trace benchmark generator `trace_bench` stay on `Peredur`. A 20,000-mutation stream at monotone share 1.0 is byte-identical to the build before the change, so the frozen results reproduce. The first six rule pairs are weakenings and their strengthening duals:
 
 | Weaken | Strengthen |
 |---|---|
@@ -83,9 +83,20 @@ The proposed rules add six weakenings and their strengthening duals, all applied
 | F G φ → G F φ | G F φ → F G φ |
 | | φ R ψ → φ ∧ ψ |
 
-With them, every unary cover and 178 of 202 binary covers are one rule away. Of the 24 covers still missing, most are distribution and lifting laws: F(φ ∧ ψ) ⇒ Fφ ∧ Fψ, φ U Gψ ⇒ G(φ U ψ), φ W Gψ ⇒ G(φ W ψ), and Gφ ∧ Fψ ⇒ φ U ψ. Others come from φ ∧ Xψ ⇒ φ U ψ and from the finite template set, which lacks p alone as a binary template and so turns p ∧ Fq ⇒ p ∨ Gq into a cover.
+With those six alone, every unary cover and 178 of 202 binary covers are one rule away. Nine more rule pairs come from the 24 covers that remain. Each weakens at the left shape of its law and strengthens at the right shape:
 
-The two introductions, F-introduction and its dual G-introduction, can fire at every node, so they would dominate a uniform draw of rules at a site. The rule draw needs weights before they go in, or the search will mostly wrap nodes in `F` and `G`. The bloat cap and `simplify` remove `F F` and `G G`, but each such wrap still costs a slot.
+| Law | Rules |
+|---|---|
+| φ R ψ ⇒ φ ∨ Xψ | `ReleaseToNext` / `NextToRelease` |
+| φ ∧ Xψ ⇒ φ U ψ | `NextToUntil` / `UntilToNext` |
+| F(φ ∧ ψ) ⇒ Fφ ∧ Fψ | `SplitEventually` / `JoinEventually` |
+| Gφ ∧ Fψ ⇒ F(φ ∧ ψ), Fφ ∧ Gψ ⇒ F(φ ∧ ψ) | `MeetEventually` / `SplitMeet` |
+| F(φ R ψ) ⇒ φ R Fψ, F(φ W ψ) ⇒ Fφ W Fψ | `EventuallyInward` / `EventuallyOutward` |
+| φ U Gψ ⇒ G(φ U ψ), φ W Gψ ⇒ G(φ W ψ) | `GloballyOutward` / `GloballyInward` |
+
+With all fifteen pairs, every unary cover and 191 of 202 binary covers are one rule away, and the CSV column that was `proposed_step` is now `ordered_step`. The 11 covers still missing are `F(p & q) => Fp U q`, `Fp R q => Fp | Gq`, `G(p U q) => Gp R Fq`, `G(p W q) => Fp W Gq`, `Gp R q => G(p W q)`, `p & Fq => p | Gq`, `Fp U Gq => F(p R q)`, `Fp U Gq => Gp R Fq`, `Gp & Fq => Gp U q`, `Xp & Fq => Xp | Gq` and `Xp W Fq => F(p W q)`. These are not general laws. Several hold only because of the operand shape. For example, Fp R q ⇒ Fp ∨ Gq holds because ¬Fp means p never holds, while φ R ψ ⇒ φ ∨ Gψ is false in general. `p & Fq => p | Gq` is a cover only because the template set lacks p on its own. The full LTL implication order over fixed atoms has no general covers between distinct shapes in the sense used here. "Reaches every cover" is therefore relative to the template set, and is not a completeness theorem.
+
+No rule carries a weight, and each applicable rule is drawn uniformly, as before. The two introductions, F-introduction and its dual G-introduction, can fire at every node, so they take a share of every draw. The bloat cap and `simplify` remove `F F` and `G G`, but each such wrap still costs a slot.
 
 ### MTL intervals
 
@@ -134,7 +145,7 @@ The order needed is wider than CEGIW's. Take discrete pointwise time, intervals 
 | `φ U_I ψ` | `F_I ψ` | |
 | `G_I ψ` | `φ R_I ψ` | |
 
-`X^k φ`, `F[k,k] φ` and `G[k,k] φ` are equivalent. The single steps on an interval are a − 1 and b + 1 to weaken an `F` or `U`, and a + 1 and b − 1 (while a < b) to strengthen it, with the duals for `G` and `R`. These extend `rules_at` (`src/search/operators.rs:510`) as new rules on the same polarity machinery, since all four operators are monotone in their operands.
+`X^k φ`, `F[k,k] φ` and `G[k,k] φ` are equivalent. The single steps on an interval are a − 1 and b + 1 to weaken an `F` or `U`, and a + 1 and b − 1 (while a < b) to strengthen it, with the duals for `G` and `R`. These extend `rules_at` (`src/search/operators.rs:627`) as new rules on the same polarity machinery, since all four operators are monotone in their operands.
 
 The FRETISH timings `within n`, `for n`, `next`, `always` and `eventually` read as `F[0,n]`, `G[0,n]`, `X`, `G` and `F`, and PEREDUR's `global_timing_implies` (`src/requirement.cpp:427`) orders them with a Lean proof. Its edges among these five give a ready-made test table for the rows above.
 
@@ -152,15 +163,17 @@ Benchmarks are the weak point. The current evaluation sets have almost no interv
 
 ## Proofs
 
-The orders above are now proved in Lean, using core Lean with `omega` and no Mathlib (`proofs/`, detail in `proofs/README.md`). Every interval row of "MTL intervals" is an exact `↔`, with a countermodel where the condition fails, for every interval including unbounded ones. `F_I F_J` and `G_I G_J` sum their intervals for any well-formed pair, and the `F G`/`G F` row holds for every bounded interval. Chains of single-bound steps reach exactly the `F` and `G` interval orders, so the steps of "The order on intervals" are complete for interval weakening once unbounding the right bound is added to them. Every unary word over `X`, `F` and `G`, of any length, reduces to one of five *normal forms*, which decides the unary order beyond the three operators measured. Every rule of `rules_at` and every proposed rule moves the whole formula in its stated direction through any context of known polarity. Facts 1 to 4 of "What changes under model checking" are proved over a model taken as a set of traces.
+The orders above are now proved in Lean, using core Lean with `omega` and no Mathlib (`proofs/`, detail in `proofs/README.md`). Every interval row of "MTL intervals" is an exact `↔`, with a countermodel where the condition fails, for every interval including unbounded ones. `F_I F_J` and `G_I G_J` sum their intervals for any well-formed pair, and the `F G`/`G F` row holds for every bounded interval. Chains of single-bound steps reach exactly the `F` and `G` interval orders, so the steps of "The order on intervals" are complete for interval weakening once unbounding the right bound is added to them. Every unary word over `X`, `F` and `G`, of any length, reduces to one of five *normal forms*, which decides the unary order beyond the three operators measured. Every rule of both rule sets moves the whole formula in its stated direction through any context of known polarity, and so does every outcome that `monotone_outcomes` lists. Facts 1 to 4 of "What changes under model checking" are proved over a model taken as a set of traces.
 
 `bench/check_lean_orders.py` compares the Lean verdicts with Spot. All 5,080 MTL cases of `bench/results/operator-orders-mtl.csv` agree, 1,661 of them implications, and so do all 1,600 pairs of unary words of up to three operators, 810 of them implications. As controls, 996 MTL cases disagree when the Spot verdicts are read one row out of step, and 1,244 unary pairs disagree when each pair is swapped.
 
-The binary LTL order stays measured only. Its rules are proved sound, but the order between binary templates and the reach of the proposed rules (178 of 202 covers) come from `bench/operator_orders.py` alone. The Lean transcription of `rules_at` and `collect_polarities` is checked against the Rust by reading. The `F G`/`G F` rule is proved for bounded intervals only. The interval and gating theorems are about semantics, since GAWAIN has no MTL parser or oracle yet and the gating proofs do not cover the lasso cache code.
+The same script compares the Lean outcome list `outs` with the Rust `rule_table` on every formula of depth at most 2 over the atoms a and b plus the constants. That grid holds 10,264 distinct formulas, and two directions and two rule sets make 41,056 rows with 652,052 outcomes. None differ, and every row lists its outcomes in the same order. As a control, all 41,056 rows differ from the other rule set's list. On the Spot side, `every_ordered_outcome_moves_the_way_it_says` in `tests/search.rs` checks 7,297 outcomes on 207 subjects, and all move in their stated direction.
+
+The binary LTL order stays measured only. Its rules are proved sound, but the order between binary templates and the reach of `RuleSet::Ordered` (191 of 202 covers) come from `bench/operator_orders.py` alone. The Lean transcription of the rules and of `collect_polarities` is tied to the Rust by running both on the grid above, which is a finite grid and not a proof about the Rust source. The `F G`/`G F` rule is proved for bounded intervals only. The interval and gating theorems are about semantics, since GAWAIN has no MTL parser or oracle yet and the gating proofs do not cover the lasso cache code.
 
 ## Proposed order of work
 
-1. The proposed rules of "LTL templates", with weights on the two introductions, added to `rules_at` with a direction test for each in `tests/search.rs`. This is a change to the operator set, so it is measured as its own arm before the gate.
+1. The rules of "LTL templates" are implemented as `RuleSet::Ordered`, unweighted, behind `search_bench --rules ordered`, and `tests/search.rs` checks their direction. What remains is the arm run against `tuned` under the paper protocol. This is a change to the operator set, so it is measured as its own arm before the gate.
 2. Status-gated direction, as `search_bench --monotone-direction gated`, against `tuned` under the paper protocol (30 seeds, net subsumption, found rate and diversity). One arm at 30 seeds is 6,780 runs; Phase 2 ran 13,560 runs in 3 h 40 min across av2 and av3.
 3. Counterexample-guided sites, then the join crossover, each as its own arm against the winner of step 2. The join arm reports repair size as well.
 4. The output climb, measured against its wall-time cost.

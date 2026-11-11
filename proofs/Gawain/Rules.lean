@@ -195,20 +195,105 @@ def rulesAt (weaken : Bool) (ℓ a : Fm) : List Fm :=
   | false, .X x => [.G x]
   | _, _ => []
 
-/-- The rules proposed in `docs/dev/order-search.md`. -/
-def proposedAt (weaken : Bool) (a : Fm) : List Fm :=
-  (if weaken then [.F a] else [.G a]) ++
-  match weaken, a with
+/-! The order-guided rules of `RuleSet::Ordered`, one function per `Rule`
+variant of `src/search/operators.rs`, each listing its outcomes where it
+applies and nothing elsewhere. -/
+
+def introduce (w : Bool) (a : Fm) : List Fm := [if w then .F a else .G a]
+
+def strip : Bool → Fm → List Fm
   | true, .G x => [x]
   | false, .F x => [x]
-  | true, .U _ y => [.F y]
-  | false, .U _ y => [y]
-  | true, .W x y => [.or x y]
-  | false, .W x y => [y, .G x]
-  | false, .R x y => [.and x y]
+  | _, _ => []
+
+def exchangeFG : Bool → Fm → List Fm
   | true, .F (.G x) => [.G (.F x)]
   | false, .G (.F x) => [.F (.G x)]
   | _, _ => []
+
+def splitEventually : Bool → Fm → List Fm
+  | true, .F (.and x y) => [.and (.F x) (.F y)]
+  | _, _ => []
+
+def splitMeet : Bool → Fm → List Fm
+  | false, .F (.and x y) => [.and (.G x) (.F y), .and (.F x) (.G y)]
+  | _, _ => []
+
+def eventuallyInward : Bool → Fm → List Fm
+  | true, .F (.R x y) => [.R x (.F y)]
+  | true, .F (.W x y) => [.W (.F x) (.F y)]
+  | _, _ => []
+
+def globallyInward : Bool → Fm → List Fm
+  | false, .G (.U x y) => [.U x (.G y)]
+  | false, .G (.W x y) => [.W x (.G y)]
+  | _, _ => []
+
+def untilToEventually : Bool → Fm → List Fm
+  | true, .U _ y => [.F y]
+  | _, _ => []
+
+def weakUntilToDisjunction : Bool → Fm → List Fm
+  | true, .W x y => [.or x y]
+  | _, _ => []
+
+def globallyOutward : Bool → Fm → List Fm
+  | true, .U x (.G y) => [.G (.U x y)]
+  | true, .W x (.G y) => [.G (.W x y)]
+  | _, _ => []
+
+def untilToConsequent : Bool → Fm → List Fm
+  | false, .U _ y => [y]
+  | false, .W _ y => [y]
+  | _, _ => []
+
+def untilToNext : Bool → Fm → List Fm
+  | false, .U x y => [.and x (.X y)]
+  | _, _ => []
+
+def weakUntilToGlobally : Bool → Fm → List Fm
+  | false, .W x _ => [.G x]
+  | _, _ => []
+
+def releaseToConjunction : Bool → Fm → List Fm
+  | false, .R x y => [.and x y]
+  | _, _ => []
+
+def eventuallyOutward : Bool → Fm → List Fm
+  | false, .W (.F x) (.F y) => [.F (.W x y)]
+  | false, .R x (.F y) => [.F (.R x y)]
+  | _, _ => []
+
+def releaseToNext : Bool → Fm → List Fm
+  | true, .R x y => [.or x (.X y)]
+  | _, _ => []
+
+def nextToUntil : Bool → Fm → List Fm
+  | true, .and x (.X y) => [.U x y]
+  | _, _ => []
+
+def meetEventually : Bool → Fm → List Fm
+  | true, .and (.G x) (.F y) => [.F (.and x y)]
+  | true, .and (.F x) (.G y) => [.F (.and x y)]
+  | _, _ => []
+
+def joinEventually : Bool → Fm → List Fm
+  | false, .and (.F x) (.F y) => [.F (.and x y)]
+  | _, _ => []
+
+def nextToRelease : Bool → Fm → List Fm
+  | false, .or x (.X y) => [.R x y]
+  | _, _ => []
+
+/-- The order-guided rules at `a`, in the order `ordered_rules` pushes them.
+At any one node and direction, the rules that apply come in that order. -/
+def proposedAt (w : Bool) (a : Fm) : List Fm :=
+  introduce w a ++ strip w a ++ exchangeFG w a ++ splitEventually w a ++ splitMeet w a ++
+    eventuallyInward w a ++ globallyInward w a ++ untilToEventually w a ++
+    weakUntilToDisjunction w a ++ globallyOutward w a ++ untilToConsequent w a ++
+    untilToNext w a ++ weakUntilToGlobally w a ++ releaseToConjunction w a ++
+    eventuallyOutward w a ++ releaseToNext w a ++ nextToUntil w a ++ meetEventually w a ++
+    joinEventually w a ++ nextToRelease w a
 
 /-- `b` is a weakening of `a` when `weaken` holds, a strengthening otherwise. -/
 def Toward (weaken : Bool) (a b : Fm) : Prop := if weaken then a.Le b else b.Le a
@@ -253,6 +338,62 @@ theorem and_le_R : (Fm.and x y).Le (.R x y) := fun _ _ ⟨hx, hy⟩ j =>
   | 0 => .inl hy
   | _ + 1 => .inr ⟨0, Nat.succ_pos _, hx⟩
 
+theorem R_le_orX : (Fm.R x y).Le (.or x (.X y)) := by
+  intro ρ t h
+  simp only [eval, Gawain.R, Gawain.X] at h ⊢
+  rcases h 1 with hy | ⟨i, hi, hx⟩
+  · exact .inr hy
+  · have : i = 0 := by omega
+    subst this; exact .inl hx
+theorem andX_le_U : (Fm.and x (.X y)).Le (.U x y) := by
+  intro ρ t ⟨hx, hy⟩
+  refine ⟨1, hy, fun i hi => ?_⟩
+  have : i = 0 := by omega
+  subst this; exact hx
+theorem F_and_le : (Fm.F (.and x y)).Le (.and (.F x) (.F y)) :=
+  fun _ _ ⟨j, hx, hy⟩ => ⟨⟨j, hx⟩, ⟨j, hy⟩⟩
+theorem GF_le : (Fm.and (.G x) (.F y)).Le (.F (.and x y)) :=
+  fun _ _ ⟨hg, ⟨j, hy⟩⟩ => ⟨j, hg j, hy⟩
+theorem FG_le : (Fm.and (.F x) (.G y)).Le (.F (.and x y)) :=
+  fun _ _ ⟨⟨j, hx⟩, hg⟩ => ⟨j, hx, hg j⟩
+theorem F_R_le : (Fm.F (.R x y)).Le (.R x (.F y)) := by
+  intro ρ t h
+  simp only [eval, Gawain.R, Gawain.F] at h ⊢
+  obtain ⟨j, h⟩ := h
+  intro k
+  by_cases hk : k ≤ j
+  · rcases h 0 with hy | ⟨i, hi, _⟩
+    · exact .inl ⟨j - k, by rwa [show t + k + (j - k) = t + j + 0 by omega]⟩
+    · omega
+  · rcases h (k - j) with hy | ⟨i, hi, hx⟩
+    · exact .inl ⟨0, by rwa [show t + k + 0 = t + j + (k - j) by omega]⟩
+    · exact .inr ⟨j + i, by omega, by rwa [show t + (j + i) = t + j + i by omega]⟩
+theorem F_W_le : (Fm.F (.W x y)).Le (.W (.F x) (.F y)) := by
+  intro ρ t h
+  simp only [eval, Gawain.W, Gawain.U, Gawain.G, Gawain.F] at h ⊢
+  obtain ⟨j, ⟨m, hy, _⟩ | hg⟩ := h
+  · exact .inl ⟨0, ⟨j + m, by rwa [show t + 0 + (j + m) = t + j + m by omega]⟩,
+      fun i hi => absurd hi (Nat.not_lt_zero _)⟩
+  · exact .inr fun k => ⟨j, by have := hg k; rwa [show t + k + j = t + j + k by omega]⟩
+theorem U_G_le : (Fm.U x (.G y)).Le (.G (.U x y)) := by
+  intro ρ t h
+  simp only [eval, Gawain.U, Gawain.G] at h ⊢
+  obtain ⟨j, hg, hx⟩ := h
+  intro k
+  by_cases hk : j ≤ k
+  · exact ⟨0, by have := hg (k - j); rwa [show t + j + (k - j) = t + k + 0 by omega] at this,
+      fun i hi => absurd hi (Nat.not_lt_zero _)⟩
+  · refine ⟨j - k, by have := hg 0; rwa [show t + j + 0 = t + k + (j - k) by omega] at this,
+      fun i hi => ?_⟩
+    have := hx (k + i) (by omega)
+    rwa [show t + (k + i) = t + k + i by omega] at this
+theorem W_G_le : (Fm.W x (.G y)).Le (.G (.W x y)) := by
+  intro ρ t h
+  rcases h with hu | hg
+  · exact fun k => .inl (U_G_le (x := x) (y := y) ρ t hu k)
+  · simp only [eval, Gawain.W, Gawain.G] at hg ⊢
+    exact fun k => .inr fun m => by have := hg (k + m); rwa [show t + (k + m) = t + k + m by omega] at this
+
 end Fm
 
 macro "rule_cases" : tactic => `(tactic| (
@@ -264,14 +405,72 @@ macro "rule_cases" : tactic => `(tactic| (
     | exact Fm.X_le_F | exact Fm.and_le_iff | exact Fm.nand_le_iff | exact Fm.G_le_R
     | exact Fm.G_le_X | exact Fm.le_F | exact Fm.G_le | exact Fm.U_le_F
     | exact Fm.W_le_or | exact Fm.FG_le_GF | exact Fm.le_U | exact Fm.le_W
-    | exact Fm.G_le_W | exact Fm.and_le_R))
+    | exact Fm.G_le_W | exact Fm.and_le_R | exact Fm.R_le_orX | exact Fm.andX_le_U
+    | exact Fm.F_and_le | exact Fm.GF_le | exact Fm.FG_le | exact Fm.F_R_le
+    | exact Fm.F_W_le | exact Fm.U_G_le | exact Fm.W_G_le))
 
 theorem rulesAt_sound (w : Bool) (ℓ a : Fm) : ∀ b ∈ rulesAt w ℓ a, Toward w a b := by
   cases w <;> cases a <;> simp [rulesAt, Toward] <;> rule_cases
 
+/-- A rule given as a function sends every node to a list of outcomes that
+move the asked way. -/
+def RuleSound (r : Bool → Fm → List Fm) : Prop := ∀ w a, ∀ b ∈ r w a, Toward w a b
+
+set_option hygiene false in
+macro "rule_sound" r:ident : tactic => `(tactic| (
+  intro w a b h
+  revert h
+  unfold $r
+  split <;> intro h <;> simp only [List.mem_cons, List.not_mem_nil, or_false] at h
+  all_goals rcases h with rfl | rfl
+  all_goals simp only [Toward, ite_true, ite_false, Bool.false_eq_true]
+  all_goals rule_cases))
+
+theorem introduce_sound : RuleSound introduce := by
+  intro w a b h
+  cases w <;> simp [introduce, Toward] at h ⊢ <;> subst h
+  · exact Fm.G_le
+  · exact Fm.le_F
+
 theorem proposedAt_sound (w : Bool) (a : Fm) : ∀ b ∈ proposedAt w a, Toward w a b := by
-  cases w <;> cases a <;> (try (rename_i x; cases x)) <;> simp [proposedAt, Toward] <;>
-    rule_cases
+  have hs : ∀ r ∈ [strip, exchangeFG, splitEventually, splitMeet, eventuallyInward,
+      globallyInward, untilToEventually, weakUntilToDisjunction, globallyOutward,
+      untilToConsequent, untilToNext, weakUntilToGlobally, releaseToConjunction,
+      eventuallyOutward, releaseToNext, nextToUntil, meetEventually, joinEventually,
+      nextToRelease], RuleSound r := by
+    simp only [List.mem_cons, List.not_mem_nil, or_false]
+    rintro r (rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl |
+      rfl | rfl | rfl | rfl | rfl | rfl)
+    · rule_sound strip
+    · rule_sound exchangeFG
+    · rule_sound splitEventually
+    · rule_sound splitMeet
+    · rule_sound eventuallyInward
+    · rule_sound globallyInward
+    · rule_sound untilToEventually
+    · rule_sound weakUntilToDisjunction
+    · rule_sound globallyOutward
+    · rule_sound untilToConsequent
+    · rule_sound untilToNext
+    · rule_sound weakUntilToGlobally
+    · rule_sound releaseToConjunction
+    · rule_sound eventuallyOutward
+    · rule_sound releaseToNext
+    · rule_sound nextToUntil
+    · rule_sound meetEventually
+    · rule_sound joinEventually
+    · rule_sound nextToRelease
+  intro b h
+  simp only [proposedAt, List.mem_append] at h
+  have one := fun r (hr : r ∈ _) (hb : b ∈ r w a) => hs r hr w a b hb
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at one
+  rcases h with ((((((((((((((((((h | h) | h) | h) | h) | h) | h) | h) | h) | h) | h) | h) |
+    h) | h) | h) | h) | h) | h) | h) | h
+  · exact introduce_sound w a b h
+  all_goals first
+    | exact one _ (.inl rfl) h
+    | exact one _ (.inr (.inl rfl)) h
+    | exact one _ (by simp) h
 
 /-- A rewrite at a site moves the whole formula the asked way when the local
 rewrite moves the asked way at a positive site and the dual way at a negative
@@ -287,5 +486,136 @@ theorem monotone_rewrite_sound (c : Ctx) (w : Bool) (ℓ a b : Fm)
     (h : b ∈ rulesAt (if c.pos then w else !w) ℓ a ∨ b ∈ proposedAt (if c.pos then w else !w) a) :
     Toward w (c.fill a) (c.fill b) :=
   rewrite_sound c (h.elim (rulesAt_sound _ ℓ a b) (proposedAt_sound _ a b))
+
+/-! ## Every outcome of `monotone_outcomes`
+
+`outs` transcribes `monotone_outcomes` and `outcomes_below` in
+`src/search/operators.rs`: the polarity is `some true` (positive), `some
+false` (negative) or `none` (under `<->`), and each site contributes the
+local outcomes in pre-order. `bench/check_lean_orders.py` compares its lists
+with the Rust ones, so this transcription is checked by running both.
+`outs_sound` shows that every outcome moves the whole formula the asked way.
+-/
+
+/-- The local outcomes at one site: `rules_at` with `RuleSet::Peredur`, then the
+order-guided rules under `RuleSet::Ordered`. -/
+def localOuts (ordered w : Bool) (ℓ a : Fm) : List Fm :=
+  rulesAt w ℓ a ++ (if ordered then proposedAt w a else [])
+
+def flipPol : Option Bool → Option Bool
+  | some p => some (!p)
+  | none => none
+
+def outs (ordered want : Bool) (ℓ : Fm) : Fm → Option Bool → List Fm
+  | a, pol =>
+    (match pol with
+      | some p => localOuts ordered (p == want) ℓ a
+      | none => []) ++
+    match a with
+    | .tt | .ff | .atom _ => []
+    | .not x => (outs ordered want ℓ x (flipPol pol)).map .not
+    | .X x => (outs ordered want ℓ x pol).map .X
+    | .F x => (outs ordered want ℓ x pol).map .F
+    | .G x => (outs ordered want ℓ x pol).map .G
+    | .and x y => (outs ordered want ℓ x pol).map (.and · y) ++ (outs ordered want ℓ y pol).map (.and x ·)
+    | .or x y => (outs ordered want ℓ x pol).map (.or · y) ++ (outs ordered want ℓ y pol).map (.or x ·)
+    | .imp x y =>
+      (outs ordered want ℓ x (flipPol pol)).map (.imp · y) ++ (outs ordered want ℓ y pol).map (.imp x ·)
+    | .iff x y =>
+      (outs ordered want ℓ x none).map (.iff · y) ++ (outs ordered want ℓ y none).map (.iff x ·)
+    | .U x y => (outs ordered want ℓ x pol).map (.U · y) ++ (outs ordered want ℓ y pol).map (.U x ·)
+    | .W x y => (outs ordered want ℓ x pol).map (.W · y) ++ (outs ordered want ℓ y pol).map (.W x ·)
+    | .R x y => (outs ordered want ℓ x pol).map (.R · y) ++ (outs ordered want ℓ y pol).map (.R x ·)
+
+theorem outs_none (o w : Bool) (ℓ a : Fm) : outs o w ℓ a none = [] := by
+  induction a <;> simp_all [outs, flipPol]
+
+theorem localOuts_sound {o w : Bool} {ℓ a b : Fm} (h : b ∈ localOuts o w ℓ a) : Toward w a b := by
+  simp only [localOuts, List.mem_append] at h
+  rcases h with h | h
+  · exact rulesAt_sound w ℓ a b h
+  · cases o
+    · simp at h
+    · exact proposedAt_sound w a b (by simpa using h)
+
+theorem Toward.mono {w : Bool} {x x' : Fm} {C : Fm → Fm}
+    (hC : ∀ a b : Fm, a.Le b → (C a).Le (C b)) (h : Toward w x x') : Toward w (C x) (C x') := by
+  cases w <;> simp only [Toward, ite_true, ite_false, Bool.false_eq_true] at h ⊢ <;> exact hC _ _ h
+
+theorem Toward.anti {w : Bool} {x x' : Fm} {C : Fm → Fm}
+    (hC : ∀ a b : Fm, a.Le b → (C b).Le (C a)) (h : Toward w x x') : Toward (!w) (C x) (C x') := by
+  cases w <;> simp only [Toward, ite_true, ite_false, Bool.false_eq_true, Bool.not_true,
+    Bool.not_false] at h ⊢ <;> exact hC _ _ h
+
+theorem outs_sound (o want : Bool) (ℓ : Fm) :
+    ∀ (a : Fm) (p : Bool) (b : Fm), b ∈ outs o want ℓ a (some p) → Toward (p == want) a b := by
+  intro a
+  induction a with
+  | tt | ff | atom _ =>
+    intro p b h
+    rcases List.mem_append.1 h with h | h
+    · exact localOuts_sound h
+    · simp at h
+  | not x ih =>
+    intro p b h
+    rcases List.mem_append.1 h with h | h
+    · exact localOuts_sound h
+    · obtain ⟨b', hb', rfl⟩ := List.mem_map.1 h
+      have := Toward.anti (C := Fm.not) (fun a b hab ρ t hn ha => hn (hab ρ t ha)) (ih _ _ hb')
+      cases p <;> cases want <;> exact this
+  | X x ih | F x ih | G x ih =>
+    intro p b h
+    rcases List.mem_append.1 h with h | h
+    · exact localOuts_sound h
+    · obtain ⟨b', hb', rfl⟩ := List.mem_map.1 h
+      refine Toward.mono ?_ (ih _ _ hb')
+      first
+        | exact fun a b hab ρ => X_mono (hab ρ)
+        | exact fun a b hab ρ => F_mono (hab ρ)
+        | exact fun a b hab ρ => G_mono (hab ρ)
+  | iff x y _ _ =>
+    intro p b h
+    rcases List.mem_append.1 h with h | h
+    · exact localOuts_sound h
+    · simp [outs_none] at h
+  | imp x y ihx ihy =>
+    intro p b h
+    rcases List.mem_append.1 h with h | h
+    · exact localOuts_sound h
+    rcases List.mem_append.1 h with h | h
+    · obtain ⟨b', hb', rfl⟩ := List.mem_map.1 h
+      have := Toward.anti (C := (Fm.imp · y)) (fun a b hab ρ t hi ha => hi (hab ρ t ha))
+        (ihx _ _ hb')
+      cases p <;> cases want <;> exact this
+    · obtain ⟨b', hb', rfl⟩ := List.mem_map.1 h
+      exact Toward.mono (C := Fm.imp x) (fun a b hab ρ t hi hx => hab ρ t (hi hx)) (ihy _ _ hb')
+  | and x y ihx ihy | or x y ihx ihy | U x y ihx ihy | W x y ihx ihy | R x y ihx ihy =>
+    intro p b h
+    rcases List.mem_append.1 h with h | h
+    · exact localOuts_sound h
+    rcases List.mem_append.1 h with h | h
+    · obtain ⟨b', hb', rfl⟩ := List.mem_map.1 h
+      have ih := ihx _ _ hb'
+      first
+        | exact Toward.mono (C := (Fm.and · y)) (fun a b hab ρ t ⟨u, v⟩ => ⟨hab ρ t u, v⟩) ih
+        | exact Toward.mono (C := (Fm.or · y)) (fun a b hab ρ t h => Or.imp (hab ρ t) id h) ih
+        | exact Toward.mono (C := (Fm.U · y)) (fun a b hab ρ => U_mono (hab ρ) (fun _ h => h)) ih
+        | exact Toward.mono (C := (Fm.W · y)) (fun a b hab ρ => W_mono (hab ρ) (fun _ h => h)) ih
+        | exact Toward.mono (C := (Fm.R · y)) (fun a b hab ρ => R_mono (hab ρ) (fun _ h => h)) ih
+    · obtain ⟨b', hb', rfl⟩ := List.mem_map.1 h
+      have ih := ihy _ _ hb'
+      first
+        | exact Toward.mono (C := Fm.and x) (fun a b hab ρ t ⟨u, v⟩ => ⟨u, hab ρ t v⟩) ih
+        | exact Toward.mono (C := Fm.or x) (fun a b hab ρ t h => Or.imp id (hab ρ t) h) ih
+        | exact Toward.mono (C := Fm.U x) (fun a b hab ρ => U_mono (fun _ h => h) (hab ρ)) ih
+        | exact Toward.mono (C := Fm.W x) (fun a b hab ρ => W_mono (fun _ h => h) (hab ρ)) ih
+        | exact Toward.mono (C := Fm.R x) (fun a b hab ρ => R_mono (fun _ h => h) (hab ρ)) ih
+
+/-- Every formula that `monotone_outcomes` lists, under either rule set,
+moves the whole formula the asked way. -/
+theorem monotone_outcomes_sound (o want : Bool) (ℓ a b : Fm)
+    (h : b ∈ outs o want ℓ a (some true)) : Toward want a b := by
+  have := outs_sound o want ℓ a true b h
+  cases want <;> exact this
 
 end Gawain

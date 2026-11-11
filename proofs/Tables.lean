@@ -6,7 +6,9 @@ compare with Spot. Run with `lake env lean --run Tables.lean`.
 
 Each `mtl` row is a rule and case from `bench/results/operator-orders-mtl.csv`
 with the Lean verdict. Each `unary` row is a pair of words over `X`, `F` and
-`G` of length at most three, with the verdict of `word_exact`.
+`G` of length at most three, with the verdict of `word_exact`. Each `rules`
+row is a formula of the grid below, a direction and a rule set, with every
+outcome `outs` lists, as `rule_table` prints them.
 -/
 
 open Gawain Gawain.Itv
@@ -73,5 +75,41 @@ def unaryRows : List String :=
   words.flatMap fun u => words.map fun v =>
     s!"unary\t{showW u}\t{showW v}\t{b01 (nfLe (norm u) (norm v))}"
 
+def Gawain.Fm.sexp : Fm → String
+  | .tt => "tt"
+  | .ff => "ff"
+  | .atom n => match n with | 0 => "a" | 1 => "b" | 2 => "c" | n => s!"x{n}"
+  | .not a => s!"(not {a.sexp})"
+  | .X a => s!"(X {a.sexp})"
+  | .F a => s!"(F {a.sexp})"
+  | .G a => s!"(G {a.sexp})"
+  | .and a b => s!"(and {a.sexp} {b.sexp})"
+  | .or a b => s!"(or {a.sexp} {b.sexp})"
+  | .imp a b => s!"(imp {a.sexp} {b.sexp})"
+  | .iff a b => s!"(iff {a.sexp} {b.sexp})"
+  | .U a b => s!"(U {a.sexp} {b.sexp})"
+  | .W a b => s!"(W {a.sexp} {b.sexp})"
+  | .R a b => s!"(R {a.sexp} {b.sexp})"
+
+def unaries : List (Fm → Fm) := [.not, .X, .F, .G]
+def binaries : List (Fm → Fm → Fm) := [.and, .or, .imp, .iff, .U, .W, .R]
+
+def apply1 (xs : List Fm) : List Fm :=
+  unaries.flatMap (fun u => xs.map u) ++
+    binaries.flatMap (fun b => xs.flatMap fun x => xs.map (b x))
+
+/-- The constants, then every formula of depth one or two over `a` and `b`. -/
+def grid : List Fm :=
+  let leaves := [Fm.atom 0, .atom 1]
+  let d1 := leaves ++ apply1 leaves
+  [.tt, .ff] ++ d1 ++ apply1 d1
+
+def ruleRows : List String :=
+  grid.flatMap fun a =>
+    [(true, "w"), (false, "s")].flatMap fun (want, d) =>
+      [(false, "peredur"), (true, "ordered")].map fun (o, name) =>
+        let os := (outs o want (.atom 2) a (some true)).map Fm.sexp
+        s!"rules\t{a.sexp}\t{d}\t{name}\t{" ; ".intercalate os}"
+
 def main : IO Unit := do
-  for r in mtlRows ++ unaryRows do IO.println r
+  for r in mtlRows ++ unaryRows ++ ruleRows do IO.println r

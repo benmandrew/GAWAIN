@@ -25,13 +25,15 @@ const P_TEMPORAL: f64 = 0.2;
 ///
 /// A share `p_monotone` of mutations (PEREDUR's default is a quarter) are a
 /// [`monotone_rewrite`] in a direction drawn on a fair coin, or always
-/// [`Direction::Weaken`] under `weaken_only`. Of the rest, a fifth may add, drop or swap temporal operators
-/// and the others rewrite only the propositional subtrees.
+/// [`Direction::Weaken`] under `weaken_only`, drawing from `rules`. Of the
+/// rest, a fifth may add, drop or swap temporal operators and the others
+/// rewrite only the propositional subtrees.
 pub fn mutate(
     formula: &Formula,
     atoms: &[Arc<str>],
     p_monotone: f64,
     weaken_only: bool,
+    rules: RuleSet,
     rng: &mut Rng,
 ) -> Formula {
     if atoms.is_empty() {
@@ -47,7 +49,7 @@ pub fn mutate(
         } else {
             Direction::Strengthen
         };
-        return monotone_rewrite(formula, direction, atoms, rng);
+        return monotone_rewrite(formula, direction, atoms, rules, rng);
     }
     if rng.chance(P_TEMPORAL) {
         mutate_temporal(formula, atoms, rng)
@@ -78,6 +80,20 @@ pub enum Direction {
     Strengthen,
 }
 
+/// Which monotone rules a [`monotone_rewrite`] draws from.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum RuleSet {
+    /// PEREDUR's rules, as ported. The frozen configuration and the trace
+    /// benchmark generator use these.
+    #[default]
+    Peredur,
+    /// PEREDUR's rules and the order-guided rules of
+    /// `docs/dev/order-search.md`, which reach more covering edges of the
+    /// implication order in one step. `proofs/Gawain/Rules.lean` proves
+    /// every one sound.
+    Ordered,
+}
+
 /// Rewrites one node of `formula` so that the result is comparable to it:
 /// [`Direction::Weaken`] returns a formula that `formula` implies,
 /// [`Direction::Strengthen`] one that implies `formula`.
@@ -91,6 +107,7 @@ pub fn monotone_rewrite(
     formula: &Formula,
     direction: Direction,
     atoms: &[Arc<str>],
+    rules: RuleSet,
     rng: &mut Rng,
 ) -> Formula {
     assert!(!atoms.is_empty(), "a monotone rewrite needs an atom pool");
@@ -108,8 +125,68 @@ pub fn monotone_rewrite(
         target: site,
         want_weaker: direction == Direction::Weaken,
         atoms,
+        rules,
     };
     site.rewrite(formula, Polarity::Positive, &mut next, rng)
+}
+
+/// Every formula that [`monotone_rewrite`] can return for `formula`, with
+/// `literal` as the drawn literal, over every site, rule and coin outcome,
+/// in pre-order of the sites. `bench/check_lean_orders.py` compares this
+/// list with the Lean transcription in `proofs/Gawain/Rules.lean`.
+pub fn monotone_outcomes(
+    formula: &Formula,
+    direction: Direction,
+    rules: RuleSet,
+    literal: &Formula,
+) -> Vec<Formula> {
+    let want_weaker = direction == Direction::Weaken;
+    let mut out = Vec::new();
+    outcomes_below(
+        formula,
+        Polarity::Positive,
+        want_weaker,
+        rules,
+        literal,
+        &mut |f| f,
+        &mut out,
+    );
+    out
+}
+
+fn outcomes_below(
+    formula: &Formula,
+    polarity: Polarity,
+    want_weaker: bool,
+    rules: RuleSet,
+    literal: &Formula,
+    wrap: &mut dyn FnMut(Formula) -> Formula,
+    out: &mut Vec<Formula>,
+) {
+    if polarity != Polarity::Indeterminate {
+        let weaken_here = (polarity == Polarity::Positive) == want_weaker;
+        for rule in rules_at(formula, weaken_here, rules) {
+            for outcome in outcomes(formula, rule, weaken_here, literal) {
+                out.push(wrap(outcome));
+            }
+        }
+    }
+    let (first, second) = child_polarities(formula, polarity);
+    match formula.node() {
+        Node::True | Node::False | Node::Atom(_) => {}
+        Node::Unary(op, child) => {
+            let op = *op;
+            let mut inner = |c| wrap(Formula::unary(op, c));
+            outcomes_below(child, first, want_weaker, rules, literal, &mut inner, out);
+        }
+        Node::Binary(op, lhs, rhs) => {
+            let op = *op;
+            let mut left = |l| wrap(Formula::binary(op, l, rhs.clone()));
+            outcomes_below(lhs, first, want_weaker, rules, literal, &mut left, out);
+            let mut right = |r| wrap(Formula::binary(op, lhs.clone(), r));
+            outcomes_below(rhs, second, want_weaker, rules, literal, &mut right, out);
+        }
+    }
 }
 
 /// The vacuity witnesses of `formula`: for each subformula occurrence ψ of
@@ -503,11 +580,51 @@ enum Rule {
     NextToEventually,
     /// X φ to G φ.
     NextToGlobally,
+    /// φ to F φ (weaken) or G φ (strengthen).
+    Introduce,
+    /// G φ to φ (weaken), F φ to φ (strengthen).
+    Strip,
+    /// F G φ to G F φ (weaken), G F φ to F G φ (strengthen).
+    ExchangeFG,
+    /// φ U ψ to F ψ.
+    UntilToEventually,
+    /// φ U ψ or φ W ψ to ψ.
+    UntilToConsequent,
+    /// φ W ψ to φ ∨ ψ.
+    WeakUntilToDisjunction,
+    /// φ W ψ to G φ.
+    WeakUntilToGlobally,
+    /// φ R ψ to φ ∧ ψ.
+    ReleaseToConjunction,
+    /// φ R ψ to φ ∨ X ψ.
+    ReleaseToNext,
+    /// φ ∨ X ψ to φ R ψ.
+    NextToRelease,
+    /// φ ∧ X ψ to φ U ψ.
+    NextToUntil,
+    /// φ U ψ to φ ∧ X ψ.
+    UntilToNext,
+    /// F (φ ∧ ψ) to F φ ∧ F ψ.
+    SplitEventually,
+    /// F φ ∧ F ψ to F (φ ∧ ψ).
+    JoinEventually,
+    /// G φ ∧ F ψ, or F φ ∧ G ψ, to F (φ ∧ ψ).
+    MeetEventually,
+    /// F (φ ∧ ψ) to G φ ∧ F ψ or F φ ∧ G ψ.
+    SplitMeet,
+    /// F (φ R ψ) to φ R F ψ, F (φ W ψ) to F φ W F ψ.
+    EventuallyInward,
+    /// φ R F ψ to F (φ R ψ), F φ W F ψ to F (φ W ψ).
+    EventuallyOutward,
+    /// φ U G ψ to G (φ U ψ), φ W G ψ to G (φ W ψ).
+    GloballyOutward,
+    /// G (φ U ψ) to φ U G ψ, G (φ W ψ) to φ W G ψ.
+    GloballyInward,
 }
 
-/// The rules that move `formula` the asked way. `Constant` and `AddOperand`
-/// are sound at every node, so the list is never empty.
-fn rules_at(formula: &Formula, weaken: bool) -> Vec<Rule> {
+/// The rules of `set` that move `formula` the asked way. `Constant` and
+/// `AddOperand` are sound at every node, so the list is never empty.
+fn rules_at(formula: &Formula, weaken: bool, set: RuleSet) -> Vec<Rule> {
     let mut rules = vec![Rule::Constant, Rule::AddOperand];
     let extra: &[Rule] = match (formula.node(), weaken) {
         (Node::Binary(BinaryOp::And, ..), true) | (Node::Binary(BinaryOp::Or, ..), false) => {
@@ -528,7 +645,106 @@ fn rules_at(formula: &Formula, weaken: bool) -> Vec<Rule> {
         _ => &[],
     };
     rules.extend_from_slice(extra);
+    if set == RuleSet::Ordered {
+        ordered_rules(formula, weaken, &mut rules);
+    }
     rules
+}
+
+fn is_unary(formula: &Formula, op: UnaryOp) -> bool {
+    matches!(formula.node(), Node::Unary(o, _) if *o == op)
+}
+
+fn is_binary(formula: &Formula, op: BinaryOp) -> bool {
+    matches!(formula.node(), Node::Binary(o, ..) if *o == op)
+}
+
+/// The order-guided rules at `formula`, mirrored in `proposedAt` of
+/// `proofs/Gawain/Rules.lean`.
+fn ordered_rules(formula: &Formula, weaken: bool, rules: &mut Vec<Rule>) {
+    use BinaryOp::{And, Or, Release, Until, WeakUntil};
+    use UnaryOp::{Eventually, Globally, Next};
+    rules.push(Rule::Introduce);
+    match formula.node() {
+        Node::Unary(op, child) => {
+            if (*op == Globally) == weaken && matches!(op, Globally | Eventually) {
+                rules.push(Rule::Strip);
+            }
+            let (outer, inner) = if weaken {
+                (Eventually, Globally)
+            } else {
+                (Globally, Eventually)
+            };
+            if *op == outer && is_unary(child, inner) {
+                rules.push(Rule::ExchangeFG);
+            }
+            if *op == Eventually && is_binary(child, And) {
+                rules.push(if weaken {
+                    Rule::SplitEventually
+                } else {
+                    Rule::SplitMeet
+                });
+            }
+            if weaken
+                && *op == Eventually
+                && (is_binary(child, Release) || is_binary(child, WeakUntil))
+            {
+                rules.push(Rule::EventuallyInward);
+            }
+            if !weaken
+                && *op == Globally
+                && (is_binary(child, Until) || is_binary(child, WeakUntil))
+            {
+                rules.push(Rule::GloballyInward);
+            }
+        }
+        Node::Binary(op, lhs, rhs) => match (op, weaken) {
+            (Until, true) => {
+                rules.push(Rule::UntilToEventually);
+                if is_unary(rhs, Globally) {
+                    rules.push(Rule::GloballyOutward);
+                }
+            }
+            (Until, false) => rules.extend([Rule::UntilToConsequent, Rule::UntilToNext]),
+            (WeakUntil, true) => {
+                rules.push(Rule::WeakUntilToDisjunction);
+                if is_unary(rhs, Globally) {
+                    rules.push(Rule::GloballyOutward);
+                }
+            }
+            (WeakUntil, false) => {
+                rules.extend([Rule::UntilToConsequent, Rule::WeakUntilToGlobally]);
+                if is_unary(lhs, Eventually) && is_unary(rhs, Eventually) {
+                    rules.push(Rule::EventuallyOutward);
+                }
+            }
+            (Release, true) => rules.push(Rule::ReleaseToNext),
+            (Release, false) => {
+                rules.push(Rule::ReleaseToConjunction);
+                if is_unary(rhs, Eventually) {
+                    rules.push(Rule::EventuallyOutward);
+                }
+            }
+            (And, true) => {
+                if is_unary(rhs, Next) {
+                    rules.push(Rule::NextToUntil);
+                }
+                if (is_unary(lhs, Globally) && is_unary(rhs, Eventually))
+                    || (is_unary(lhs, Eventually) && is_unary(rhs, Globally))
+                {
+                    rules.push(Rule::MeetEventually);
+                }
+            }
+            (And, false) => {
+                if is_unary(lhs, Eventually) && is_unary(rhs, Eventually) {
+                    rules.push(Rule::JoinEventually);
+                }
+            }
+            (Or, false) if is_unary(rhs, Next) => rules.push(Rule::NextToRelease),
+            _ => {}
+        },
+        Node::True | Node::False | Node::Atom(_) => {}
+    }
 }
 
 fn unary_operand(formula: &Formula) -> &Formula {
@@ -552,62 +768,163 @@ fn apply_rule(
     atoms: &[Arc<str>],
     rng: &mut Rng,
 ) -> Formula {
-    use BinaryOp::{And, Implies, Or, Until, WeakUntil};
-    use UnaryOp::{Eventually, Globally};
+    // The literal and then one coin, only where a rule needs them, as
+    // PEREDUR draws.
+    let literal = match rule {
+        Rule::AddOperand => draw_literal(atoms, rng),
+        _ => Formula::tt(),
+    };
+    let mut choices = outcomes(formula, rule, weaken, &literal);
+    let first = choices.len() == 1 || rng.coin();
+    choices.swap_remove(if first { 0 } else { 1 })
+}
+
+/// What `rule` builds from `formula`, one formula per coin outcome, the
+/// outcome of a true coin first. `literal` is the drawn literal of
+/// `AddOperand`.
+fn outcomes(formula: &Formula, rule: Rule, weaken: bool, literal: &Formula) -> Vec<Formula> {
+    use BinaryOp::{And, Implies, Or, Release, Until, WeakUntil};
+    use UnaryOp::{Eventually, Globally, Next};
+    let un = |op, x: &Formula| Formula::unary(op, x.clone());
+    let bin = |op, x: &Formula, y: &Formula| Formula::binary(op, x.clone(), y.clone());
     match rule {
-        Rule::Constant if weaken => Formula::tt(),
-        Rule::Constant => Formula::ff(),
+        Rule::Constant if weaken => vec![Formula::tt()],
+        Rule::Constant => vec![Formula::ff()],
         Rule::DropOperand => {
             let (lhs, rhs) = binary_operands(formula);
-            let left = rng.coin();
-            if left { lhs } else { rhs }.clone()
+            vec![lhs.clone(), rhs.clone()]
         }
         Rule::AddOperand => {
-            let literal = draw_literal(atoms, rng);
             let op = if weaken { Or } else { And };
-            Formula::binary(op, formula.clone(), literal)
+            vec![bin(op, formula, literal)]
         }
         Rule::GloballyToEventually | Rule::NextToEventually => {
-            Formula::unary(Eventually, unary_operand(formula).clone())
+            vec![un(Eventually, unary_operand(formula))]
         }
         // PEREDUR builds `G` of the whole node here, `G G φ`, which is
         // equivalent to its input. The rule's documented `G F φ` is built
         // instead.
-        Rule::GloballyToInfinitelyOften => Formula::unary(
-            Globally,
-            Formula::unary(Eventually, unary_operand(formula).clone()),
-        ),
+        Rule::GloballyToInfinitelyOften => {
+            vec![un(Globally, &un(Eventually, unary_operand(formula)))]
+        }
         Rule::EventuallyToGlobally | Rule::NextToGlobally => {
-            Formula::unary(Globally, unary_operand(formula).clone())
+            vec![un(Globally, unary_operand(formula))]
         }
         Rule::UntilToWeakUntil => {
             let (lhs, rhs) = binary_operands(formula);
-            Formula::binary(WeakUntil, lhs.clone(), rhs.clone())
+            vec![bin(WeakUntil, lhs, rhs)]
         }
         Rule::WeakUntilToUntil => {
             let (lhs, rhs) = binary_operands(formula);
-            Formula::binary(Until, lhs.clone(), rhs.clone())
+            vec![bin(Until, lhs, rhs)]
         }
         Rule::IffToImplies => {
             let (lhs, rhs) = binary_operands(formula);
-            let forward = rng.coin();
-            if forward {
-                Formula::binary(Implies, lhs.clone(), rhs.clone())
-            } else {
-                Formula::binary(Implies, rhs.clone(), lhs.clone())
-            }
+            vec![bin(Implies, lhs, rhs), bin(Implies, rhs, lhs)]
         }
         Rule::IffToConjunction => {
             let (lhs, rhs) = binary_operands(formula);
-            let both = rng.coin();
-            if both {
-                Formula::binary(And, lhs.clone(), rhs.clone())
+            vec![
+                bin(And, lhs, rhs),
+                bin(And, &not(lhs.clone()), &not(rhs.clone())),
+            ]
+        }
+        Rule::ReleaseToConsequent | Rule::UntilToConsequent => {
+            vec![binary_operands(formula).1.clone()]
+        }
+        Rule::ReleaseToGlobally => vec![un(Globally, binary_operands(formula).1)],
+        Rule::Introduce => vec![un(if weaken { Eventually } else { Globally }, formula)],
+        Rule::Strip => vec![unary_operand(formula).clone()],
+        Rule::ExchangeFG => {
+            let (outer, inner) = if weaken {
+                (Globally, Eventually)
             } else {
-                Formula::binary(And, not(lhs.clone()), not(rhs.clone()))
+                (Eventually, Globally)
+            };
+            let x = unary_operand(unary_operand(formula));
+            vec![un(outer, &un(inner, x))]
+        }
+        Rule::UntilToEventually => vec![un(Eventually, binary_operands(formula).1)],
+        Rule::WeakUntilToDisjunction => {
+            let (lhs, rhs) = binary_operands(formula);
+            vec![bin(Or, lhs, rhs)]
+        }
+        Rule::WeakUntilToGlobally => vec![un(Globally, binary_operands(formula).0)],
+        Rule::ReleaseToConjunction => {
+            let (lhs, rhs) = binary_operands(formula);
+            vec![bin(And, lhs, rhs)]
+        }
+        Rule::ReleaseToNext => {
+            let (lhs, rhs) = binary_operands(formula);
+            vec![bin(Or, lhs, &un(Next, rhs))]
+        }
+        Rule::NextToRelease => {
+            let (lhs, rhs) = binary_operands(formula);
+            vec![bin(Release, lhs, unary_operand(rhs))]
+        }
+        Rule::NextToUntil => {
+            let (lhs, rhs) = binary_operands(formula);
+            vec![bin(Until, lhs, unary_operand(rhs))]
+        }
+        Rule::UntilToNext => {
+            let (lhs, rhs) = binary_operands(formula);
+            vec![bin(And, lhs, &un(Next, rhs))]
+        }
+        Rule::SplitEventually => {
+            let (x, y) = binary_operands(unary_operand(formula));
+            vec![bin(And, &un(Eventually, x), &un(Eventually, y))]
+        }
+        Rule::JoinEventually | Rule::MeetEventually => {
+            let (lhs, rhs) = binary_operands(formula);
+            vec![un(
+                Eventually,
+                &bin(And, unary_operand(lhs), unary_operand(rhs)),
+            )]
+        }
+        Rule::SplitMeet => {
+            let (x, y) = binary_operands(unary_operand(formula));
+            vec![
+                bin(And, &un(Globally, x), &un(Eventually, y)),
+                bin(And, &un(Eventually, x), &un(Globally, y)),
+            ]
+        }
+        Rule::EventuallyInward => {
+            let inner = unary_operand(formula);
+            let (x, y) = binary_operands(inner);
+            if is_binary(inner, Release) {
+                vec![bin(Release, x, &un(Eventually, y))]
+            } else {
+                vec![bin(WeakUntil, &un(Eventually, x), &un(Eventually, y))]
             }
         }
-        Rule::ReleaseToConsequent => binary_operands(formula).1.clone(),
-        Rule::ReleaseToGlobally => Formula::unary(Globally, binary_operands(formula).1.clone()),
+        Rule::EventuallyOutward => {
+            let (lhs, rhs) = binary_operands(formula);
+            if is_binary(formula, Release) {
+                vec![un(Eventually, &bin(Release, lhs, unary_operand(rhs)))]
+            } else {
+                let w = bin(WeakUntil, unary_operand(lhs), unary_operand(rhs));
+                vec![un(Eventually, &w)]
+            }
+        }
+        Rule::GloballyOutward => {
+            let (lhs, rhs) = binary_operands(formula);
+            let op = if is_binary(formula, Until) {
+                Until
+            } else {
+                WeakUntil
+            };
+            vec![un(Globally, &bin(op, lhs, unary_operand(rhs)))]
+        }
+        Rule::GloballyInward => {
+            let inner = unary_operand(formula);
+            let (x, y) = binary_operands(inner);
+            let op = if is_binary(inner, Until) {
+                Until
+            } else {
+                WeakUntil
+            };
+            vec![bin(op, x, &un(Globally, y))]
+        }
     }
 }
 
@@ -616,6 +933,7 @@ struct Site<'a> {
     target: usize,
     want_weaker: bool,
     atoms: &'a [Arc<str>],
+    rules: RuleSet,
 }
 
 impl Site<'_> {
@@ -633,7 +951,7 @@ impl Site<'_> {
         *next += 1;
         if index == self.target {
             let weaken_here = (polarity == Polarity::Positive) == self.want_weaker;
-            let rules = rules_at(formula, weaken_here);
+            let rules = rules_at(formula, weaken_here, self.rules);
             let rule = rules[rng.below(rules.len())];
             return apply_rule(formula, rule, weaken_here, self.atoms, rng);
         }
@@ -740,7 +1058,7 @@ mod tests {
             random_formulas(100, 11)
                 .iter()
                 .map(|x| {
-                    let m = mutate(x, &atoms, 0.25, false, &mut rng);
+                    let m = mutate(x, &atoms, 0.25, false, RuleSet::Peredur, &mut rng);
                     crossover(&m, x, &mut rng)
                 })
                 .collect::<Vec<_>>()
@@ -756,7 +1074,7 @@ mod tests {
         let phi = f("G (a -> X b)");
         let mut changed = 0;
         for _ in 0..500 {
-            let child = mutate(&phi, &atoms, 0.25, false, &mut rng);
+            let child = mutate(&phi, &atoms, 0.25, false, RuleSet::Peredur, &mut rng);
             assert!(child.atoms().iter().all(|a| atoms.contains(a)), "{child}");
             changed += usize::from(child != phi);
         }
@@ -767,7 +1085,10 @@ mod tests {
     fn an_empty_pool_leaves_the_formula_alone() {
         let mut rng = Rng::new(3);
         let phi = f("G true");
-        assert_eq!(mutate(&phi, &[], 0.25, false, &mut rng), phi);
+        assert_eq!(
+            mutate(&phi, &[], 0.25, false, RuleSet::Peredur, &mut rng),
+            phi
+        );
     }
 
     #[test]
@@ -777,13 +1098,13 @@ mod tests {
         let atoms = pool(&["a", "b", "c"]);
         for (seed, x) in random_formulas(200, 4).iter().enumerate() {
             let mut rng = Rng::new(seed as u64);
-            let m = mutate(x, &atoms, 1.0, true, &mut rng);
+            let m = mutate(x, &atoms, 1.0, true, RuleSet::Peredur, &mut rng);
             let mut rng = Rng::new(seed as u64);
             assert!(rng.chance(1.0));
             rng.coin();
             assert_eq!(
                 m,
-                monotone_rewrite(x, Direction::Weaken, &atoms, &mut rng),
+                monotone_rewrite(x, Direction::Weaken, &atoms, RuleSet::Peredur, &mut rng),
                 "{x}"
             );
         }
@@ -844,7 +1165,7 @@ mod tests {
     #[test]
     fn rules_follow_the_node_and_the_direction() {
         let names = |formula: &str, weaken| -> Vec<String> {
-            rules_at(&f(formula), weaken)
+            rules_at(&f(formula), weaken, RuleSet::Peredur)
                 .iter()
                 .map(|r| format!("{r:?}"))
                 .collect()
@@ -866,6 +1187,60 @@ mod tests {
     }
 
     #[test]
+    fn the_ordered_set_adds_rules_and_keeps_peredur_first() {
+        let names = |formula: &str, weaken| -> Vec<String> {
+            rules_at(&f(formula), weaken, RuleSet::Ordered)
+                .iter()
+                .map(|r| format!("{r:?}"))
+                .collect()
+        };
+        assert_eq!(
+            names("G a", true),
+            [
+                "Constant",
+                "AddOperand",
+                "GloballyToEventually",
+                "GloballyToInfinitelyOften",
+                "Introduce",
+                "Strip"
+            ]
+        );
+        assert_eq!(
+            names("F (a & b)", false)[3..],
+            ["Introduce", "Strip", "SplitMeet"]
+        );
+        assert_eq!(
+            names("G a & F b", true)[3..],
+            ["Introduce", "MeetEventually"]
+        );
+        assert_eq!(names("a | X b", false)[3..], ["Introduce", "NextToRelease"]);
+        assert_eq!(names("a", true), ["Constant", "AddOperand", "Introduce"]);
+    }
+
+    #[test]
+    fn outcomes_list_every_coin_and_site() {
+        let literal = f("c");
+        let weaker = monotone_outcomes(&f("a & b"), Direction::Weaken, RuleSet::Peredur, &literal);
+        assert_eq!(
+            weaker,
+            [
+                f("true"),
+                f("(a & b) | c"),
+                f("a"),
+                f("b"),
+                f("true & b"),
+                f("(a | c) & b"),
+                f("a & true"),
+                f("a & (b | c)"),
+            ]
+        );
+        // The same draws as apply_rule: DropOperand on a true coin keeps the
+        // left operand.
+        let both = outcomes(&f("F (a & b)"), Rule::SplitMeet, false, &literal);
+        assert_eq!(both, [f("G a & F b"), f("F a & G b")]);
+    }
+
+    #[test]
     fn globally_to_infinitely_often_builds_g_f() {
         let mut rng = Rng::new(0);
         let rewritten = apply_rule(
@@ -884,7 +1259,8 @@ mod tests {
         let mut rng = Rng::new(2);
         let phi = f("a <-> b");
         for _ in 0..100 {
-            let child = monotone_rewrite(&phi, Direction::Weaken, &atoms, &mut rng);
+            let child =
+                monotone_rewrite(&phi, Direction::Weaken, &atoms, RuleSet::Peredur, &mut rng);
             let at_root = [
                 f("true"),
                 f("(a <-> b) | a"),

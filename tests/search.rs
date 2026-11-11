@@ -23,8 +23,8 @@ use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::{implications, Backend, Oracle, Semantics, Verdict, Words};
 use gawain::search::{
-    drop_valid, gate, invariant, monotone_rewrite, vacuity, Direction, Rng, Scored, Vacuity,
-    VacuityCounts, STATUS,
+    drop_valid, gate, invariant, monotone_outcomes, monotone_rewrite, vacuity, Direction, Rng,
+    RuleSet, Scored, Vacuity, VacuityCounts, STATUS,
 };
 
 const LIMITS: Limits = Limits {
@@ -50,10 +50,22 @@ fn monotone_rewrites_move_the_way_they_say() {
     for i in 0..1200 {
         let subject = formula(&mut gen, 4, &names);
         if i % 2 == 0 {
-            let child = monotone_rewrite(&subject, Direction::Weaken, &atoms, &mut rng);
+            let child = monotone_rewrite(
+                &subject,
+                Direction::Weaken,
+                &atoms,
+                RuleSet::Peredur,
+                &mut rng,
+            );
             weak.push((subject, child));
         } else {
-            let child = monotone_rewrite(&subject, Direction::Strengthen, &atoms, &mut rng);
+            let child = monotone_rewrite(
+                &subject,
+                Direction::Strengthen,
+                &atoms,
+                RuleSet::Peredur,
+                &mut rng,
+            );
             strong.push((child, subject));
         }
     }
@@ -66,6 +78,65 @@ fn monotone_rewrites_move_the_way_they_say() {
     say(&format!(
         "monotone: {} rewrites, all in their direction",
         pairs.len()
+    ));
+}
+
+#[test]
+fn every_ordered_outcome_moves_the_way_it_says() {
+    if !have(&["ltlfilt"], "every_ordered_outcome_moves_the_way_it_says") {
+        return;
+    }
+    // Each shape an order-guided rule matches, at the root, under `!` and
+    // in an antecedent, then random formulas.
+    let shapes = [
+        "F (a & b)",
+        "G a & F b",
+        "F a & G b",
+        "F a & F b",
+        "a & X b",
+        "a | X b",
+        "a R b",
+        "a R F b",
+        "a U b",
+        "a W b",
+        "a U G b",
+        "a W G b",
+        "G (a U b)",
+        "G (a W b)",
+        "F (a R b)",
+        "F (a W b)",
+        "F a W F b",
+        "F G a",
+        "G F a",
+    ];
+    let mut subjects: Vec<Formula> = Vec::new();
+    for shape in shapes {
+        subjects.push(parse(shape));
+        subjects.push(parse(&format!("!({shape})")));
+        subjects.push(parse(&format!("({shape}) -> c")));
+    }
+    let names = ["a", "b", "c"];
+    let mut gen = common::Rng(0x0DDE_0F0D_E2ED);
+    subjects.extend((0..150).map(|_| formula(&mut gen, 3, &names)));
+    let literal = parse("!c");
+    let mut pairs = Vec::new();
+    for subject in &subjects {
+        for child in monotone_outcomes(subject, Direction::Weaken, RuleSet::Ordered, &literal) {
+            pairs.push((subject.clone(), child));
+        }
+        for child in monotone_outcomes(subject, Direction::Strengthen, RuleSet::Ordered, &literal) {
+            pairs.push((child, subject.clone()));
+        }
+    }
+    let refs: Vec<_> = pairs.iter().map(|(p, q)| (p, q)).collect();
+    let proved = implications(&refs, Semantics::Infinite, LIMITS).expect("the batch answers");
+    for ((stronger, weaker), proved) in pairs.iter().zip(&proved) {
+        assert!(proved, "{stronger} does not imply {weaker}");
+    }
+    say(&format!(
+        "ordered: {} outcomes of {} subjects, all in their direction",
+        pairs.len(),
+        subjects.len()
     ));
 }
 

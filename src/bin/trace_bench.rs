@@ -40,7 +40,7 @@ use gawain::ltl::Formula;
 use gawain::oracle::process::Limits;
 use gawain::oracle::traces::TraceSet;
 use gawain::oracle::{implications, Backend, Semantics, Verdict};
-use gawain::search::{monotone_rewrite, Direction, Rng};
+use gawain::search::{monotone_rewrite, Direction, Rng, RuleSet};
 
 const USAGE: &str =
     "usage: trace_bench check DIR... | trace_bench instances --seed N DIR... | trace_bench counts PAIRS.tsv";
@@ -212,9 +212,9 @@ fn instance(
     let atoms: Vec<Arc<str>> = psi.atoms().into_iter().collect();
     let mut phis: Vec<(Formula, usize)> = Vec::new();
     for _ in 0..DRAFTS {
-        let mut phi = monotone_rewrite(psi, Direction::Strengthen, &atoms, rng);
+        let mut phi = monotone_rewrite(psi, Direction::Strengthen, &atoms, RuleSet::Peredur, rng);
         if rng.coin() {
-            phi = monotone_rewrite(&phi, Direction::Strengthen, &atoms, rng);
+            phi = monotone_rewrite(&phi, Direction::Strengthen, &atoms, RuleSet::Peredur, rng);
         }
         let phi = phi.simplify();
         let failing = set.failing(&phi);

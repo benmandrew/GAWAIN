@@ -23,7 +23,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 pub use grade::{GradeCounts, Grader, Status};
-pub use operators::{crossover, monotone_rewrite, mutate, Direction};
+pub use operators::{crossover, monotone_outcomes, monotone_rewrite, mutate, Direction, RuleSet};
 pub use rng::Rng;
 
 use crate::count::Counter;
@@ -63,6 +63,8 @@ pub struct Params {
     pub p_monotone: f64,
     /// Whether every monotone rewrite weakens, in place of a fair coin.
     pub weaken_only: bool,
+    /// The monotone rules mutation draws from.
+    pub rules: RuleSet,
     /// Whether a candidate that holds but that φ is not proved to imply
     /// scores status 0, as one that fails ([`drop_valid`]).
     pub weakening: bool,
@@ -79,6 +81,7 @@ impl Params {
             crossover_rate: 0.1,
             p_monotone: 0.25,
             weaken_only: false,
+            rules: RuleSet::Peredur,
             weakening: true,
         }
     }
@@ -269,7 +272,14 @@ fn breed(
             child = crossover(&child, &partners[partner].formula, rng);
         }
         if rng.chance(MUTATION_RATE) {
-            child = mutate(&child, atoms, params.p_monotone, params.weaken_only, rng);
+            child = mutate(
+                &child,
+                atoms,
+                params.p_monotone,
+                params.weaken_only,
+                params.rules,
+                rng,
+            );
         }
         offspring.push(child.simplify());
     }
@@ -885,7 +895,15 @@ mod tests {
                 .map(|p| {
                     assert!(!rng.chance(0.0));
                     assert!(rng.chance(MUTATION_RATE));
-                    mutate(&p.formula, &atoms, params.p_monotone, false, &mut rng).simplify()
+                    mutate(
+                        &p.formula,
+                        &atoms,
+                        params.p_monotone,
+                        false,
+                        params.rules,
+                        &mut rng,
+                    )
+                    .simplify()
                 })
                 .collect();
             assert_eq!(bred, mutated);

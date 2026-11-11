@@ -9,11 +9,13 @@ operands exactly when it holds on the atoms. Each pair A, B is decided as the
 unsatisfiability of A & !B in one `ltlfilt --satisfiable` batch.
 
 Part A: LTL templates of small depth. Prints the covering edges of the order
-between equivalence classes, and which covers one of GAWAIN's monotone rules
-(src/search/operators.rs, `rules_at`, less Constant and AddOperand) realises
-in one step, applied to any member of the class. The proposed rules add
-F-introduction, G-elimination, U to F of its right operand, W to |, FG to GF
-and their strengthening duals. M is left out, since GAWAIN's parser rejects it.
+between equivalence classes, and which covers one monotone rewrite realises
+in one step, applied to any member of the class, under each rule set of
+src/search/operators.rs (`RuleSet::Peredur` and `RuleSet::Ordered`). The
+rewrites come from the code itself through target/release/rule_table, built
+with `nix develop -c cargo build --release --bin rule_table`. Constant and
+AddOperand never land on a template, so they drop out. M is left out, since
+GAWAIN's parser rejects it.
 
 Part B: MTL over discrete pointwise time, intervals [a, b] with a <= N and b
 <= N or b = inf, expanded to LTL here. `Ui` is the usual until (the left
@@ -110,44 +112,52 @@ def size(f):
 
 # GAWAIN's monotone rules at a node, both directions, without Constant and
 # AddOperand. Every template here is negation-free, so every site is positive.
-def rules(f, weaken, proposed=False):
-    k = f[0]
-    out = []
-    if proposed:
-        if weaken:
-            out += [('F', f)]
-            if k == 'G': out += [f[1], ('F', f)]
-            if k == 'U': out += [('F', f[2])]
-            if k == 'W': out += [('|', f[1], f[2])]
-            if k == 'F' and f[1][0] == 'G': out += [('G', ('F', f[1][1]))]
-        else:
-            out += [('G', f)]
-            if k == 'F': out += [f[1]]
-            if k in ('U', 'W'): out += [f[2]]
-            if k == 'W': out += [('G', f[1])]
-            if k == 'R': out += [('&', f[1], f[2])]
-            if k == 'G' and f[1][0] == 'F': out += [('F', ('G', f[1][1]))]
-    if weaken:
-        if k == '&': out += [f[1], f[2]]
-        if k == 'G': out += [('F', f[1]), ('G', ('F', f[1]))]
-        if k == 'U': out += [('W', f[1], f[2])]
-        if k == 'R': out += [f[2]]
-        if k == 'X': out += [('F', f[1])]
-    else:
-        if k == '|': out += [f[1], f[2]]
-        if k == 'F': out += [('G', f[1])]
-        if k == 'W': out += [('U', f[1], f[2])]
-        if k == 'R': out += [('G', f[2])]
-        if k == 'X': out += [('G', f[1])]
-    return out
+RULE_TABLE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                          'target', 'release', 'rule_table')
+FROM_SEXP = {'and': '&', 'or': '|', 'U': 'U', 'W': 'W', 'R': 'R', 'X': 'X', 'F': 'F', 'G': 'G'}
 
 
-def rewrites(f, weaken, proposed=False):
-    yield from rules(f, weaken, proposed)
-    for i, c in enumerate(f[1:], 1):
-        if isinstance(c, tuple):
-            for c2 in rewrites(c, weaken, proposed):
-                yield f[:i] + (c2,) + f[i + 1:]
+def from_sexp(text):
+    """A rule_table S-expression as a template tuple, or None when it holds an
+    operator or constant that no template has."""
+    tokens = text.replace('(', ' ( ').replace(')', ' ) ').split()
+    pos = 0
+
+    def item():
+        nonlocal pos
+        tok = tokens[pos]
+        pos += 1
+        if tok != '(':
+            return ap(tok) if tok in ('p', 'q') else None
+        op = tokens[pos]
+        pos += 1
+        args = []
+        while tokens[pos] != ')':
+            args.append(item())
+        pos += 1
+        if op not in FROM_SEXP or None in args: return None
+        return (FROM_SEXP[op], *args)
+    return item()
+
+
+def rewrites_of(templates):
+    """For each template, the outcomes of `monotone_outcomes` as
+    {(weaken, set): [template]}, read from target/release/rule_table."""
+    if not os.path.exists(RULE_TABLE):
+        sys.exit(f'{RULE_TABLE} is missing: run '
+                 'nix develop -c cargo build --release --bin rule_table')
+    text = ''.join(spot(t) + '\n' for t in templates)
+    out = subprocess.run([RULE_TABLE], input=text, capture_output=True, text=True, check=True)
+    lines = out.stdout.splitlines()
+    result = []
+    for i in range(len(templates)):
+        rows = {}
+        for line in lines[4 * i:4 * i + 4]:
+            _, d, rs, outs = (line.split('\t') + [''])[:4]
+            got = [from_sexp(o) for o in outs.split(' ; ') if o]
+            rows[(d == 'w', rs)] = [g for g in got if g is not None]
+        result.append(rows)
+    return result
 
 
 def ltl_templates():
@@ -195,15 +205,16 @@ def part_a(out_dir):
         covers = [(a, b) for a in reps for b in reps if strict(a, b)
                   and not any(strict(a, c) and strict(c, b) for c in reps)]
         index = {t: i for i, t in enumerate(ts)}
-        def step_set(proposed):
+        outcomes = rewrites_of(ts)
+        def step_set(rule_set):
             steps = set()
             for i, t in enumerate(ts):
-                for w in rewrites(t, True, proposed):
+                for w in outcomes[i][(True, rule_set)]:
                     if w in index and cls[index[w]] != cls[i]: steps.add((cls[i], cls[index[w]]))
-                for s_ in rewrites(t, False, proposed):
+                for s_ in outcomes[i][(False, rule_set)]:
                     if s_ in index and cls[index[s_]] != cls[i]: steps.add((cls[index[s_]], cls[i]))
             return steps
-        steps, extra = step_set(False), step_set(True)
+        steps, extra = step_set('peredur'), step_set('ordered')
         unsound = [(a, b) for a, b in steps | extra if not le(a, b)]
         realised = sum((a, b) in steps for a, b in covers)
         realised_p = sum((a, b) in extra for a, b in covers)
@@ -211,15 +222,15 @@ def part_a(out_dir):
         stats[name] = (len(ts), len(reps), len(covers), realised, realised_p, skips, len(unsound))
         print(f'== Part A, {name}: {len(ts)} templates, {len(reps)} classes, '
               f'{len(covers)} covers, {realised} realised by one GAWAIN step, '
-              f'{realised_p} with the proposed rules, '
+              f'{realised_p} with the ordered rules, '
               f'{skips} GAWAIN steps skip a level, {len(unsound)} unsound')
         members = {r: sorted((show(ts[i]) for i in cls if cls[i] == r and i != r), key=len) for r in reps}
         for a, b in sorted(covers, key=lambda e: (size(ts[e[0]]), show(ts[e[0]]), show(ts[e[1]]))):
-            mark = 'gawain' if (a, b) in steps else 'proposed' if (a, b) in extra else 'missing'
+            mark = 'gawain' if (a, b) in steps else 'ordered' if (a, b) in extra else 'missing'
             print(f'  {show(ts[a]):18} => {show(ts[b]):18} {mark}')
             rows.append({'part': name, 'stronger': show(ts[a]), 'weaker': show(ts[b]),
                          'gawain_step': int((a, b) in steps),
-                         'proposed_step': int((a, b) in extra),
+                         'ordered_step': int((a, b) in extra),
                          'stronger_class': ' = '.join(members[a][:4]),
                          'weaker_class': ' = '.join(members[b][:4])})
     with open(os.path.join(out_dir, 'operator-orders-ltl.csv'), 'w', newline='') as fh:
