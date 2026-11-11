@@ -12,7 +12,15 @@
 //! [`random_search`] is the baseline without selection: the same breeding,
 //! filters and scores, with each parent drawn uniformly from every
 //! candidate kept so far, and one NSGA-II cut at the end.
+//!
+//! Three of PEREDUR's order-directed features are opt-in arms here, each off
+//! by default: [`Steering::Gated`] picks the monotone direction from the
+//! parent's status, [`Params::demotion`] moves a strictly implied holder
+//! one front down ([`demotion`]), and [`gate_climbed`] climbs each repair
+//! through proved strengthenings before the gate's last maximality step.
+//! See "PEREDUR's order features" in `docs/dev/order-search.md`.
 
+pub mod demotion;
 pub mod grade;
 pub mod nsga2;
 mod operators;
@@ -22,6 +30,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Instant;
 
+pub use demotion::{Demoter, DemotionCounts};
 pub use grade::{GradeCounts, Grader, Status};
 pub use operators::{crossover, monotone_outcomes, monotone_rewrite, mutate, Direction, RuleSet};
 pub use rng::Rng;
@@ -61,10 +70,14 @@ pub struct Params {
     /// The chance that a mutation is a [`monotone_rewrite`], in [0, 1].
     /// PEREDUR's `p_monotone` default is 0.25.
     pub p_monotone: f64,
-    /// Whether every monotone rewrite weakens, in place of a fair coin.
-    pub weaken_only: bool,
+    /// How a monotone rewrite picks its direction.
+    pub steering: Steering,
     /// The monotone rules mutation draws from.
     pub rules: RuleSet,
+    /// Whether a holder that another holder of the pool strictly implies
+    /// moves one front down at selection ([`demotion`]). [`random_search`]
+    /// has no selection during the run, so it ignores this.
+    pub demotion: bool,
     /// Whether a candidate that holds but that φ is not proved to imply
     /// scores status 0, as one that fails ([`drop_valid`]).
     pub weakening: bool,
@@ -80,11 +93,31 @@ impl Params {
             status: Status::default(),
             crossover_rate: 0.1,
             p_monotone: 0.25,
-            weaken_only: false,
+            steering: Steering::Coin,
             rules: RuleSet::Peredur,
+            demotion: false,
             weakening: true,
         }
     }
+}
+
+/// How a monotone rewrite picks its direction. The coin is drawn under
+/// every variant, so the rest of the random stream does not depend on it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Steering {
+    /// A fair coin, as PEREDUR's default.
+    #[default]
+    Coin,
+    /// Always [`Direction::Weaken`], the `weaken-walk` arm.
+    Weaken,
+    /// From the parent's status, as PEREDUR's `direction_gated`: a parent
+    /// that holds strengthens and any other weakens. A parent that holds
+    /// but that φ is not proved to imply scores status 0 under
+    /// [`Params::weakening`], so it weakens too, which keeps it true and
+    /// can make it a repair. An unknown verdict scores 0 as well, so its
+    /// parent weakens. A child that was crossed keeps the coin, since its
+    /// first parent's status says little about it.
+    Gated,
 }
 
 /// A candidate with its objective vector, indexed by [`STATUS`],
@@ -152,6 +185,8 @@ pub struct Budget {
     pub bred: usize,
     /// Of those, the candidates that passed [`filter`] and were scored.
     pub scored: usize,
+    /// What [`Params::demotion`] did, all zero when it is off.
+    pub demotion: DemotionCounts,
 }
 
 /// Runs the search from `phi` and returns the final population, best first,
@@ -176,10 +211,21 @@ pub fn search<B: Backend>(
             grader.rescore(pool, oracle.lassos());
         }
     };
+    let mut demoter =
+        (params.demotion).then(|| Demoter::new(&atoms, oracle.semantics(), spot_limits));
     let mut population = score(vec![phi.clone()], phi, oracle, counter);
-    let mut budget = Budget { bred: 1, scored: 1 };
+    let mut budget = Budget {
+        bred: 1,
+        scored: 1,
+        ..Budget::default()
+    };
     regrade(&mut population, oracle);
-    population = select(population, params.population, params.status);
+    population = select_with(
+        population,
+        params.population,
+        params.status,
+        demoter.as_mut(),
+    );
     for _ in 0..params.generations {
         let parents: Vec<&Scored> = population.iter().collect();
         let offspring = filter(breed(&parents, &population, &atoms, &params, rng), phi);
@@ -194,7 +240,15 @@ pub fn search<B: Backend>(
             spot_limits,
         ));
         regrade(&mut population, oracle);
-        population = select(population, params.population, params.status);
+        population = select_with(
+            population,
+            params.population,
+            params.status,
+            demoter.as_mut(),
+        );
+    }
+    if let Some(demoter) = demoter {
+        budget.demotion = demoter.counts();
     }
     (population, grader.counts(), budget)
 }
@@ -220,7 +274,11 @@ pub fn random_search<B: Backend>(
     let mut grader = Grader::new(phi);
     let mut archive = score(vec![phi.clone()], phi, oracle, counter);
     let mut seen: HashSet<Formula> = archive.iter().map(|s| s.formula.canonical()).collect();
-    let mut budget = Budget { bred: 1, scored: 1 };
+    let mut budget = Budget {
+        bred: 1,
+        scored: 1,
+        ..Budget::default()
+    };
     for _ in 0..params.generations {
         let drawn = draw_parents(archive.len(), params.population, rng);
         let parents: Vec<&Scored> = drawn.into_iter().map(|i| &archive[i]).collect();
@@ -255,7 +313,8 @@ fn draw_parents(len: usize, n: usize, rng: &mut Rng) -> Vec<usize> {
 /// One offspring per slot of `parents`. Each starts as its slot's parent,
 /// is crossed with a partner drawn uniformly from `partners` at
 /// `params.crossover_rate`, mutated at [`MUTATION_RATE`] with monotone
-/// share `params.p_monotone`, then simplified.
+/// share `params.p_monotone` in the direction `params.steering` gives, then
+/// simplified.
 /// Crossover and mutation interleave per slot, so this stays one pass.
 fn breed(
     parents: &[&Scored],
@@ -267,19 +326,20 @@ fn breed(
     let mut offspring = Vec::with_capacity(parents.len());
     for parent in parents {
         let mut child = parent.formula.clone();
-        if rng.chance(params.crossover_rate) {
+        let crossed = rng.chance(params.crossover_rate);
+        if crossed {
             let partner = rng.below(partners.len());
             child = crossover(&child, &partners[partner].formula, rng);
         }
+        let forced = match params.steering {
+            Steering::Coin => None,
+            Steering::Weaken => Some(Direction::Weaken),
+            Steering::Gated if crossed => None,
+            Steering::Gated if parent.holds() => Some(Direction::Strengthen),
+            Steering::Gated => Some(Direction::Weaken),
+        };
         if rng.chance(MUTATION_RATE) {
-            child = mutate(
-                &child,
-                atoms,
-                params.p_monotone,
-                params.weaken_only,
-                params.rules,
-                rng,
-            );
+            child = mutate(&child, atoms, params.p_monotone, forced, params.rules, rng);
         }
         offspring.push(child.simplify());
     }
@@ -396,6 +456,19 @@ pub fn invariant(groups: &[Vec<Arc<str>>]) -> Formula {
 /// holders fill the rest; a pool short of either kind leaves its slots to
 /// the other.
 pub fn select(pool: Vec<Scored>, size: usize, status: Status) -> Vec<Scored> {
+    select_with(pool, size, status, None)
+}
+
+/// [`select`], with each distinct holder that `demoter` finds strictly
+/// implied by another moved one front down. Under a feasible-first status
+/// a demoted holder can share a front number with candidates that fail, and
+/// the holders and the rest are still cut apart by [`Scored::holds`].
+fn select_with(
+    pool: Vec<Scored>,
+    size: usize,
+    status: Status,
+    demoter: Option<&mut Demoter>,
+) -> Vec<Scored> {
     let mut seen = HashSet::new();
     let distinct: Vec<Scored> = pool
         .into_iter()
@@ -405,7 +478,8 @@ pub fn select(pool: Vec<Scored>, size: usize, status: Status) -> Vec<Scored> {
     let feasible: Vec<bool> = (distinct.iter())
         .map(|s| !status.feasible_first() || s.holds())
         .collect();
-    let (order, ranks) = nsga2::crowded_order(&objectives, &feasible);
+    let demoted = demoter.map_or_else(Vec::new, |d| d.demoted(&distinct));
+    let (order, ranks) = nsga2::crowded_order(&objectives, &feasible, &demoted);
     if order.len() >= size {
         // Fronts never mix the two kinds, so each kind's part of `order`
         // is its own crowded order.
@@ -537,6 +611,156 @@ pub fn gate<B: Backend>(
 ) -> Gate {
     let mut gate = Gate::default();
     let semantics = oracle.semantics();
+    gate.repairs = maximal(
+        phi,
+        population,
+        invariant,
+        semantics,
+        limits,
+        pruning,
+        &mut gate.errors,
+    );
+    finish(&mut gate, oracle, limits);
+    gate
+}
+
+/// What the output climb did.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct ClimbCounts {
+    /// Strengthenings taken, over every repair.
+    pub steps: u64,
+    /// Distinct strengthenings sent to the oracle.
+    pub checked: u64,
+    /// Implication pairs sent to Spot.
+    pub pairs: u64,
+}
+
+/// The most strengthenings one repair's climb takes. Each step is strict,
+/// so this only bounds a climb through a long chain of equivalents that
+/// Spot could not decide.
+const MAX_CLIMB_STEPS: usize = 32;
+
+/// [`gate`] with PEREDUR's output climb (`climb_output`) between the two
+/// maximality steps. Each maximal repair r climbs: every strengthening
+/// [`monotone_outcomes`] lists under `rules`, with each literal over φ's
+/// atoms as the added operand, that passes [`filter`] and has not been
+/// seen is checked by `oracle`, and of those that hold, the ones Spot
+/// proves φ implies and does not prove r implies are the strict proved
+/// repairs one step up. The one most similar to φ (then the smaller in
+/// formula order) becomes r, until no step passes. A strengthening of a
+/// repair is valid modulo `invariant` only if the repair is, so no
+/// validity check is needed. The tops are scored by `counter` and join the
+/// repairs, and the gate's maximality step runs again over both, before
+/// the vacuity flags and the simplified forms.
+#[allow(clippy::too_many_arguments)]
+pub fn gate_climbed<B: Backend>(
+    phi: &Formula,
+    population: &[Scored],
+    invariant: &Formula,
+    oracle: &mut Oracle<B>,
+    counter: &mut Counter,
+    rules: RuleSet,
+    limits: Limits,
+    pruning: Limits,
+) -> (Gate, ClimbCounts) {
+    let mut gate = Gate::default();
+    let semantics = oracle.semantics();
+    let repairs = maximal(
+        phi,
+        population,
+        invariant,
+        semantics,
+        limits,
+        pruning,
+        &mut gate.errors,
+    );
+    let literals: Vec<Formula> = phi
+        .atoms()
+        .into_iter()
+        .flat_map(|a| {
+            let atom = Formula::atom(&a);
+            [atom.clone(), Formula::unary(UnaryOp::Not, atom)]
+        })
+        .collect();
+    let mut seen: HashSet<Formula> = population.iter().map(|s| s.formula.canonical()).collect();
+    let mut counts = ClimbCounts::default();
+    let mut tops: Vec<Formula> = Vec::new();
+    for repair in &repairs {
+        let mut current = repair.formula.clone();
+        for _ in 0..MAX_CLIMB_STEPS {
+            let outcomes: Vec<Formula> = literals
+                .iter()
+                .flat_map(|l| monotone_outcomes(&current, Direction::Strengthen, rules, l))
+                .map(|c| c.simplify())
+                .collect();
+            let fresh: Vec<Formula> = filter(outcomes, phi)
+                .into_iter()
+                .filter(|c| seen.insert(c.canonical()))
+                .collect();
+            counts.checked += fresh.len() as u64;
+            let holding: Vec<Formula> = fresh
+                .into_iter()
+                .filter(|c| matches!(oracle.check(c), Verdict::Holds))
+                .collect();
+            let pairs: Vec<(&Formula, &Formula)> = holding
+                .iter()
+                .flat_map(|c| [(phi, c), (&current, c)])
+                .collect();
+            counts.pairs += pairs.len() as u64;
+            let (proved, error) = implications_each(&pairs, semantics, limits);
+            gate.errors.extend(error);
+            let best = holding
+                .iter()
+                .zip(proved.chunks(2))
+                .filter(|(_, proved)| proved[0] && !proved[1])
+                .map(|(c, _)| (c.syntactic_similarity(phi), c))
+                .max_by(|(sa, a), (sb, b)| sa.total_cmp(sb).then_with(|| b.cmp(a)));
+            match best {
+                Some((_, c)) => {
+                    current = c.clone();
+                    counts.steps += 1;
+                }
+                None => break,
+            }
+        }
+        if current != repair.formula && !tops.contains(&current) {
+            tops.push(current);
+        }
+    }
+    let mut pool: Vec<Scored> = repairs
+        .iter()
+        .map(|r| Scored {
+            formula: r.formula.clone(),
+            objectives: vec![1.0, r.similarity, r.semantic],
+        })
+        .collect();
+    pool.extend(score(tops, phi, oracle, counter));
+    gate.repairs = maximal(
+        phi,
+        &pool,
+        invariant,
+        semantics,
+        limits,
+        pruning,
+        &mut gate.errors,
+    );
+    finish(&mut gate, oracle, limits);
+    (gate, counts)
+}
+
+/// The gate's two Spot steps: the distinct holders of `population` that
+/// `phi` implies and that are not valid modulo `invariant`, then the
+/// maximal ones among them, most similar to φ first. Batch errors go to
+/// `errors`.
+fn maximal(
+    phi: &Formula,
+    population: &[Scored],
+    invariant: &Formula,
+    semantics: Semantics,
+    limits: Limits,
+    pruning: Limits,
+    errors: &mut Vec<String>,
+) -> Vec<Repair> {
     let mut seen = HashSet::new();
     let holding: Vec<&Scored> = population
         .iter()
@@ -550,7 +774,7 @@ pub fn gate<B: Backend>(
         .flat_map(|s| [(phi, &s.formula), (invariant, &s.formula)])
         .collect();
     let (proved, error) = implications_each(&pairs, semantics, limits);
-    gate.errors.extend(error);
+    errors.extend(error);
     let mut candidates: Vec<Repair> = holding
         .iter()
         .zip(proved.chunks(2))
@@ -578,7 +802,7 @@ pub fn gate<B: Backend>(
         .map(|&(i, j)| (&candidates[i].formula, &candidates[j].formula))
         .collect();
     let (proved, error) = implications_each(&pairs, semantics, pruning);
-    gate.errors.extend(error);
+    errors.extend(error);
     let mut implies = vec![vec![false; n]; n];
     for (&(i, j), proved) in index.iter().zip(proved) {
         implies[i][j] = proved;
@@ -588,12 +812,19 @@ pub fn gate<B: Backend>(
     let dropped: Vec<bool> = (0..n)
         .map(|j| (0..n).any(|i| implies[i][j] && (i < j || !implies[j][i])))
         .collect();
-    gate.repairs = candidates
+    candidates
         .into_iter()
         .zip(dropped)
         .filter(|(_, dropped)| !dropped)
         .map(|(repair, _)| repair)
-        .collect();
+        .collect()
+}
+
+/// The gate's last steps on its `gate.repairs`: the [`vacuity`] flags
+/// through `oracle`, then the [`simplified`] forms in one batch under
+/// `limits`.
+fn finish<B: Backend>(gate: &mut Gate, oracle: &mut Oracle<B>, limits: Limits) {
+    let semantics = oracle.semantics();
     for repair in &mut gate.repairs {
         repair.vacuity = vacuity(&repair.formula, oracle, &mut gate.vacuity);
     }
@@ -610,7 +841,6 @@ pub fn gate<B: Backend>(
     for (i, repair) in gate.repairs.iter_mut().enumerate() {
         repair.simplified = simplified(&repair.formula, texts.get(i).map(String::as_str));
     }
-    gate
 }
 
 /// How a repair reads once simplified, from `spot`, Spot's text for it.
@@ -899,7 +1129,7 @@ mod tests {
                         &p.formula,
                         &atoms,
                         params.p_monotone,
-                        false,
+                        None,
                         params.rules,
                         &mut rng,
                     )
@@ -914,5 +1144,46 @@ mod tests {
     fn holds_reads_the_status_objective() {
         assert!(scored("a", 1.0, 0.0).holds());
         assert!(!scored("a", 0.0, 1.0).holds());
+    }
+
+    #[test]
+    fn the_gate_strengthens_holders_and_weakens_the_rest() {
+        // At share 1 and no crossover, each child is its parent's monotone
+        // rewrite after the same draws, in the direction the gate gives.
+        let atoms: Vec<Arc<str>> = ["a", "b"].into_iter().map(Arc::from).collect();
+        let archive = vec![scored("G (a -> X b)", 0.0, 1.0), scored("F b", 1.0, 0.2)];
+        let parents: Vec<&Scored> = vec![&archive[0], &archive[1]];
+        let params = Params {
+            crossover_rate: 0.0,
+            p_monotone: 1.0,
+            steering: Steering::Gated,
+            ..Params::new(1, 2)
+        };
+        for seed in 0..50 {
+            let bred = breed(&parents, &archive, &atoms, &params, &mut Rng::new(seed));
+            let mut rng = Rng::new(seed);
+            let expected: Vec<Formula> = parents
+                .iter()
+                .map(|p| {
+                    assert!(!rng.chance(0.0));
+                    assert!(rng.chance(MUTATION_RATE));
+                    let direction = if p.holds() {
+                        Direction::Strengthen
+                    } else {
+                        Direction::Weaken
+                    };
+                    mutate(
+                        &p.formula,
+                        &atoms,
+                        1.0,
+                        Some(direction),
+                        params.rules,
+                        &mut rng,
+                    )
+                    .simplify()
+                })
+                .collect();
+            assert_eq!(bred, expected);
+        }
     }
 }

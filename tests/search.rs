@@ -5,7 +5,9 @@
 //! `search_bench --search random`, the random-mutation baseline, finds
 //! such repairs too, reproducibly, on the same budget as the genetic search.
 //! The weakening filter demotes a candidate that holds but that φ does not
-//! imply.
+//! imply. Maximality demotion demotes a strictly implied holder, the output
+//! climb reaches strict proved strengthenings of a repair, and
+//! `search_bench` runs with the three order arms on.
 //!
 //! Each test skips, with a reason on stderr, when a tool or the benchmark
 //! data is missing.
@@ -18,13 +20,14 @@ use std::process::{Command, Output};
 use std::time::{Duration, Instant};
 
 use common::{formula, have, parse};
+use gawain::count::Counter;
 use gawain::ltl::Formula;
 use gawain::oracle::nuxmv::{exclusive_groups, Nuxmv};
 use gawain::oracle::process::Limits;
 use gawain::oracle::{implications, Backend, Oracle, Semantics, Verdict, Words};
 use gawain::search::{
-    drop_valid, gate, invariant, monotone_outcomes, monotone_rewrite, vacuity, Direction, Rng,
-    RuleSet, Scored, Vacuity, VacuityCounts, STATUS,
+    drop_valid, gate, gate_climbed, invariant, monotone_outcomes, monotone_rewrite, vacuity,
+    Demoter, Direction, Rng, RuleSet, Scored, Vacuity, VacuityCounts, STATUS,
 };
 
 const LIMITS: Limits = Limits {
@@ -670,4 +673,141 @@ fn search_bench_random_mutation_finds_repairs_that_hold() {
         assert_eq!(count(line, "bred"), 1 + 30 * 40, "{line}");
         assert!(count(line, "scored") <= 1 + 30 * 40, "{line}");
     }
+}
+
+#[test]
+fn a_strictly_implied_holder_is_demoted() {
+    if !have(&["ltlfilt"], "a_strictly_implied_holder_is_demoted") {
+        return;
+    }
+    let atoms: Vec<std::sync::Arc<str>> = ["a", "b"].into_iter().map(Into::into).collect();
+    let mut demoter = Demoter::new(&atoms, Semantics::Infinite, LIMITS);
+    let phi = parse("G a");
+    let pool = vec![
+        scored("G a", true, &phi),
+        // G a implies it.
+        scored("F a", true, &phi),
+        // Equivalent to G a, so neither demotes the other.
+        scored("G G a", true, &phi),
+        // Incomparable with the rest.
+        scored("F b", true, &phi),
+        // G a implies it, but it fails, so it is never compared.
+        scored("a", false, &phi),
+    ];
+    assert_eq!(demoter.demoted(&pool), [false, true, false, false, false]);
+    let asked = demoter.counts().pairs;
+    assert!(asked >= 1);
+    // The verdicts are memoised, so the next generation asks nothing new.
+    demoter.demoted(&pool);
+    assert_eq!(demoter.counts().pairs, asked);
+    assert_eq!(demoter.counts().demoted, 2);
+}
+
+#[test]
+fn the_climb_reaches_strict_proved_strengthenings() {
+    let test = "the_climb_reaches_strict_proved_strengthenings";
+    if !have(&["nuXmv", "ltlfilt", "ltl2tgba"], test) {
+        return;
+    }
+    let atoms = ["s_get", "s_send", "s_wait"];
+    let mut oracle = oracle_on("cycle-climb.smv", CYCLE, &atoms);
+    let invariant = invariant(&exclusive_groups(CYCLE));
+    let phi = parse("G (s_get -> X (s_send & s_get))");
+    let start = parse("G (s_get -> X F s_send)");
+    let population = [scored("G (s_get -> X F s_send)", true, &phi)];
+    let plain = gate(&phi, &population, &invariant, &mut oracle, LIMITS, LIMITS);
+    let plain: Vec<Formula> = plain.repairs.iter().map(|r| r.formula.clone()).collect();
+    assert_eq!(plain, std::slice::from_ref(&start));
+    let mut counter = Counter::new(&phi, Semantics::Infinite, LIMITS);
+    for rules in [RuleSet::Peredur, RuleSet::Ordered] {
+        let (outcome, counts) = gate_climbed(
+            &phi,
+            &population,
+            &invariant,
+            &mut oracle,
+            &mut counter,
+            rules,
+            LIMITS,
+            LIMITS,
+        );
+        say(&format!("{rules:?}: {counts:?} {:?}", outcome.repairs));
+        assert!(outcome.errors.is_empty(), "{:?}", outcome.errors);
+        assert!(counts.steps >= 1, "{counts:?}");
+        let found: Vec<Formula> = outcome.repairs.iter().map(|r| r.formula.clone()).collect();
+        assert!(!found.contains(&start), "{found:?}");
+        let model = write_model("cycle-climb-check.smv", CYCLE);
+        confirm(&model, &atoms.join(","), &phi, &found);
+        let pairs: Vec<(&Formula, &Formula)> = found
+            .iter()
+            .flat_map(|r| [(r, &start), (&start, r)])
+            .collect();
+        let proved = implications(&pairs, Semantics::Infinite, LIMITS).expect("the batch answers");
+        for (r, proved) in found.iter().zip(proved.chunks(2)) {
+            assert_eq!(
+                proved,
+                [true, false],
+                "{r} is not strictly stronger than {start}"
+            );
+        }
+    }
+}
+
+#[test]
+fn search_bench_runs_the_order_arms() {
+    let test = "search_bench_runs_the_order_arms";
+    if !have(&["nuXmv", "ltlfilt", "ltl2tgba"], test) {
+        return;
+    }
+    let model = write_model("ack-order.smv", MODEL);
+    let run = |extra: &[&str]| {
+        let output = Command::new(env!("CARGO_BIN_EXE_search_bench"))
+            .args(["--backend", "nuxmv", "--model"])
+            .arg(&model)
+            .args(["--atoms", ATOMS, "--ltl", PHI, "--seed", "4"])
+            .args(["--generations", "20", "--population", "30"])
+            .args(["--status", "binary"])
+            .args(extra)
+            .output()
+            .expect("run search_bench");
+        assert!(output.status.success(), "{output:?}");
+        String::from_utf8(output.stdout).unwrap()
+    };
+    let plain = run(&[]);
+    for name in [
+        "demoted",
+        "demotion_pairs",
+        "climb_steps",
+        "climb_checked",
+        "climb_pairs",
+    ] {
+        assert_eq!(count(&plain, name), 0, "{name}: {plain}");
+    }
+    let arms = run(&[
+        "--monotone-direction",
+        "gated",
+        "--rules",
+        "ordered",
+        "--demotion",
+        "on",
+        "--climb",
+        "on",
+    ]);
+    say(&arms);
+    let found = bench_repairs(&arms);
+    assert!(!found.is_empty(), "no repair: {arms}");
+    confirm(&model, ATOMS, &parse(PHI), &found);
+    assert!(count(&arms, "climb_checked") > 0, "{arms}");
+    assert_eq!(
+        bench_repairs(&run(&[
+            "--monotone-direction",
+            "gated",
+            "--rules",
+            "ordered",
+            "--demotion",
+            "on",
+            "--climb",
+            "on",
+        ])),
+        found
+    );
 }

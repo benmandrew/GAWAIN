@@ -128,8 +128,20 @@ pub fn crowding_distances(objectives: &[Vec<f64>], ranks: &[usize]) -> Vec<f64> 
 /// ascending, then crowding distance descending. The sort is stable, so ties
 /// keep their input order and a seed reproduces. Also returns each
 /// individual's front, indexed like `objectives`.
-pub fn crowded_order(objectives: &[Vec<f64>], feasible: &[bool]) -> (Vec<usize>, Vec<usize>) {
-    let ranks = non_domination_ranks(objectives, feasible);
+///
+/// Each individual marked in `demoted` (indexed like `objectives`, or empty
+/// for none) moves one front down before the crowding is measured, as
+/// PEREDUR's `maximality_demotion` adds 1 to the front of a realisable
+/// candidate that another one strictly implies.
+pub fn crowded_order(
+    objectives: &[Vec<f64>],
+    feasible: &[bool],
+    demoted: &[bool],
+) -> (Vec<usize>, Vec<usize>) {
+    let mut ranks = non_domination_ranks(objectives, feasible);
+    for (rank, &down) in ranks.iter_mut().zip(demoted) {
+        *rank += usize::from(down);
+    }
     let distances = crowding_distances(objectives, &ranks);
     let mut order: Vec<usize> = (0..objectives.len()).collect();
     order.sort_by(|&a, &b| {
@@ -219,7 +231,7 @@ mod tests {
     #[test]
     fn crowded_order_is_rank_then_distance_then_input() {
         let o = objs(&[[0.0, 0.5], [1.0, 0.1], [0.0, 0.5], [0.0, 0.9]]);
-        let (order, ranks) = crowded_order(&o, &[true; 4]);
+        let (order, ranks) = crowded_order(&o, &[true; 4], &[]);
         assert_eq!(ranks, [1, 0, 1, 0]);
         // Front 0 is two extremes, both infinite, kept in input order; the
         // tied pair in front 1 keeps its input order too.
@@ -274,7 +286,7 @@ mod tests {
         assert_eq!(ranks, [0, 2, 1, 2, 3]);
         // Plain NSGA-II puts the infeasible rows 1 and 3 on the first front.
         assert_eq!(non_domination_ranks(&o, &[true; 5]), [0, 0, 1, 0, 1]);
-        let (order, ranks) = crowded_order(&o, &feasible);
+        let (order, ranks) = crowded_order(&o, &feasible, &[]);
         assert_eq!(order, [0, 2, 1, 3, 4]);
         // Front 2 holds only infeasible rows, so they spread on their own
         // objectives: both are extremes.
@@ -284,5 +296,15 @@ mod tests {
         // 0.55, 0.55, 0.41, so 1 whole slot and 3 by remainder.
         let sorted: Vec<usize> = order.iter().map(|&i| ranks[i]).collect();
         assert_eq!(apportion(&sorted, 9), [3, 2, 2, 1, 1]);
+    }
+
+    #[test]
+    fn a_demoted_individual_drops_one_front() {
+        // One front of three; demoting the middle one puts it last.
+        let o = objs(&[[0.0, 1.0], [0.5, 0.5], [1.0, 0.0]]);
+        let (order, ranks) = crowded_order(&o, &[true; 3], &[false, true, false]);
+        assert_eq!(ranks, [0, 1, 0]);
+        assert_eq!(order[2], 1);
+        assert_eq!(crowded_order(&o, &[true; 3], &[]).1, [0, 0, 0]);
     }
 }

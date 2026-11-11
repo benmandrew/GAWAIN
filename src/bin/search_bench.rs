@@ -11,7 +11,9 @@
 //!     [--timeout SECS] [--memory-mb MB] [--degenerate skip|search]
 //!     [--initial ignore|flag|filter] [--search ga|random]
 //!     [--semantic accepted|rejected] [--weakening ignore|demote]
-//!     [--crossover-rate R] [--monotone-share R] [--monotone-direction both|weaken]
+//!     [--crossover-rate R] [--monotone-share R]
+//!     [--monotone-direction both|weaken|gated] [--rules peredur|ordered]
+//!     [--demotion off|on] [--climb off|on]
 //! ```
 //!
 //! - `nuxmv`: `--model` is an SMV file, `--atoms` its DEFINEs and `--ltl`
@@ -48,9 +50,13 @@
 //! `--monotone-share`, each in [0, 1], set [`Params::crossover_rate`] and
 //! [`Params::p_monotone`] for the rate sweep (defaults 0.1 and 0.25).
 //! `--monotone-direction weaken` makes every monotone rewrite weaken
-//! ([`Params::weaken_only`]) in place of the default `both`. `--rules ordered`
+//! ([`Steering::Weaken`]) and `gated` picks the direction from the parent's
+//! status ([`Steering::Gated`]), in place of the default `both`. `--rules ordered`
 //! adds the order-guided monotone rules ([`RuleSet::Ordered`]) to the
-//! default `peredur` set. The JSON line holds the instance class, the repairs with
+//! default `peredur` set. `--demotion on` moves a strictly implied holder
+//! one front down at selection ([`Params::demotion`]), and `--climb on`
+//! climbs each repair through proved strengthenings before the gate's last
+//! maximality step ([`gate_climbed`]); both are off by default. The JSON line holds the instance class, the repairs with
 //! their simplified forms and similarities, the search that ran, the candidates it bred and
 //! scored, and the counters of the oracle, the counter and the
 //! grader. It is read by `bench/graded_stats.py`.
@@ -73,9 +79,12 @@ use gawain::oracle::tapaal::Tapaal;
 use gawain::oracle::traces::TraceSet;
 use gawain::oracle::{implications_each, Backend, Oracle, Words};
 use gawain::rers::Model;
-use gawain::search::{gate, invariant, random_search, search, Params, Rng, RuleSet, Status};
+use gawain::search::{
+    gate, gate_climbed, invariant, random_search, search, ClimbCounts, Params, Rng, RuleSet,
+    Status, Steering,
+};
 
-const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random] [--semantic accepted|rejected] [--weakening ignore|demote] [--crossover-rate R] [--monotone-share R] [--monotone-direction both|weaken] [--rules peredur|ordered]";
+const USAGE: &str = "usage: search_bench --backend nuxmv|explicit|spin|tapaal|traces --model PATH [--atoms a,b,...] [--ltl 'φ'] [--property ID] --seed N --generations G --population P --status binary|graded|graded-feasible|graded-reserve-D [--timeout SECS] [--memory-mb MB] [--degenerate skip|search] [--initial ignore|flag|filter] [--search ga|random] [--semantic accepted|rejected] [--weakening ignore|demote] [--crossover-rate R] [--monotone-share R] [--monotone-direction both|weaken|gated] [--rules peredur|ordered] [--demotion off|on] [--climb off|on]";
 
 /// Each `ltlfilt` and `ltl2tgba` batch, as in `weaken`.
 const SPOT_LIMITS: Limits = Limits {
@@ -112,8 +121,10 @@ struct Args {
     side: Side,
     crossover_rate: f64,
     p_monotone: f64,
-    weaken_only: bool,
+    steering: Steering,
     rules: RuleSet,
+    demotion: bool,
+    climb: bool,
     weakening: bool,
 }
 
@@ -208,10 +219,27 @@ fn parse_args() -> Result<Args, String> {
             "--crossover-rate" => args.crossover_rate = rate()?,
             "--monotone-share" => args.p_monotone = rate()?,
             "--monotone-direction" => {
-                args.weaken_only = match value.as_str() {
-                    "weaken" => true,
-                    "both" => false,
-                    _ => return Err(format!("--monotone-direction {value}: both or weaken")),
+                args.steering = match value.as_str() {
+                    "both" => Steering::Coin,
+                    "weaken" => Steering::Weaken,
+                    "gated" => Steering::Gated,
+                    _ => {
+                        return Err(format!(
+                            "--monotone-direction {value}: both, weaken or gated"
+                        ))
+                    }
+                }
+            }
+            "--demotion" | "--climb" => {
+                let on = match value.as_str() {
+                    "on" => true,
+                    "off" => false,
+                    _ => return Err(format!("{flag} {value}: off or on")),
+                };
+                if flag == "--demotion" {
+                    args.demotion = on;
+                } else {
+                    args.climb = on;
                 }
             }
             "--rules" => {
@@ -391,8 +419,9 @@ fn search_on<B: Backend>(
             weakening: args.weakening,
             crossover_rate: args.crossover_rate,
             p_monotone: args.p_monotone,
-            weaken_only: args.weaken_only,
+            steering: args.steering,
             rules: args.rules,
+            demotion: args.demotion,
             ..Params::new(args.generations, args.population)
         };
         let mut rng = Rng::new(args.seed);
@@ -413,6 +442,12 @@ fn search_on<B: Backend>(
         grading = counts;
         field(&mut out, "bred", &budget.bred.to_string());
         field(&mut out, "scored", &budget.scored.to_string());
+        field(&mut out, "demoted", &budget.demotion.demoted.to_string());
+        field(
+            &mut out,
+            "demotion_pairs",
+            &budget.demotion.pairs.to_string(),
+        );
         let k = counter.counts();
         field(
             &mut out,
@@ -434,15 +469,32 @@ fn search_on<B: Backend>(
         let holding = population.iter().filter(|s| s.holds()).count();
         field(&mut out, "holding", &holding.to_string());
         let gated = Instant::now();
-        let outcome = gate(
-            &phi,
-            &population,
-            &invariant,
-            &mut oracle,
-            GATE_LIMITS,
-            SEARCH_LIMITS,
-        );
+        let (outcome, climbed) = if args.climb {
+            gate_climbed(
+                &phi,
+                &population,
+                &invariant,
+                &mut oracle,
+                &mut counter,
+                args.rules,
+                GATE_LIMITS,
+                SEARCH_LIMITS,
+            )
+        } else {
+            let outcome = gate(
+                &phi,
+                &population,
+                &invariant,
+                &mut oracle,
+                GATE_LIMITS,
+                SEARCH_LIMITS,
+            );
+            (outcome, ClimbCounts::default())
+        };
         gate_wall = gated.elapsed().as_secs_f64();
+        field(&mut out, "climb_steps", &climbed.steps.to_string());
+        field(&mut out, "climb_checked", &climbed.checked.to_string());
+        field(&mut out, "climb_pairs", &climbed.pairs.to_string());
         // Whether I ∧ Init implies each repair, in one batch.
         let flags: Vec<Option<bool>> = match &trivial_at_start {
             Some(both) => {
