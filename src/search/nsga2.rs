@@ -102,7 +102,9 @@ pub fn crowding_distances(objectives: &[Vec<f64>], ranks: &[usize]) -> Vec<f64> 
     for (i, &rank) in ranks.iter().enumerate() {
         fronts[rank].push(i);
     }
-    for front in &mut fronts {
+    // Demotion can empty a front, since it moves members down without
+    // moving the fronts below them; an empty front has no distances.
+    for front in fronts.iter_mut().filter(|front| !front.is_empty()) {
         // An objective is a column index into every row, not an item.
         #[allow(clippy::needless_range_loop)]
         for objective in 0..width {
@@ -306,5 +308,13 @@ mod tests {
         assert_eq!(ranks, [0, 1, 0]);
         assert_eq!(order[2], 1);
         assert_eq!(crowded_order(&o, &[true; 3], &[]).1, [0, 0, 0]);
+    }
+
+    #[test]
+    fn demoting_a_whole_front_leaves_it_empty() {
+        // The first dominates the second, and demoting it empties front 0.
+        let o = objs(&[[1.0, 1.0], [0.0, 0.0]]);
+        let (_, ranks) = crowded_order(&o, &[true; 2], &[true, false]);
+        assert_eq!(ranks, [1, 1]);
     }
 }
