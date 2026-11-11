@@ -1,0 +1,218 @@
+part,stronger,weaker,gawain_step,proposed_step,stronger_class,weaker_class
+unary,p,Fp,0,1,,FFp = FFFp
+unary,Gp,GXp,1,1,GGp = GGGp,XGp = GGXp = GXGp = XGGp
+unary,Gp,p,0,1,GGp = GGGp,
+unary,Xp,FXp,0,1,,XFp = FFXp = FXFp = XFFp
+unary,FGp,GFp,1,1,FGXp = FXGp = XFGp = FFGp,GFXp = GXFp = GFFp = XGFp
+unary,FXp,Fp,1,1,XFp = FFXp = FXFp = XFFp,FFp = FFFp
+unary,GFp,FXXp,1,1,GFXp = GXFp = GFFp = XGFp,XFXp = XXFp
+unary,GXp,GXXp,1,1,XGp = GGXp = GXGp = XGGp,XGXp = XXGp
+unary,GXp,Xp,0,1,XGp = GGXp = GXGp = XGGp,
+unary,XXp,FXXp,0,1,,XFXp = XXFp
+unary,FXXp,FXp,1,1,XFXp = XXFp,XFp = FFXp = FXFp = XFFp
+unary,GXXp,FGp,1,1,XGXp = XXGp,FGXp = FXGp = XFGp = FFGp
+unary,GXXp,XXXp,1,1,XGXp = XXGp,
+unary,GXXp,XXp,0,1,XGXp = XXGp,
+unary,XXXp,FXXp,1,1,,XFXp = XXFp
+binary,q,Gp U q,0,1,,
+binary,Fp,Fp | Gq,1,1,,
+binary,Fq,p W Fq,1,1,p U Fq = Xp U Fq = Fp U Fq = Gp U Fq,Gp W Fq = Gp | Fq
+binary,Gp,Fp,1,1,,
+binary,Gp,Gp W Gq,1,1,,Gp | Gq
+binary,Gq,Gp R Xq,1,1,p R Gq = Xp R Gq = Fp R Gq = Gp R Gq,
+binary,Gq,Gp R q,1,1,p R Gq = Xp R Gq = Fp R Gq = Gp R Gq,
+binary,Gq,Gp U Gq,0,1,p R Gq = Xp R Gq = Fp R Gq = Gp R Gq,
+binary,Xq,Gp U Xq,0,1,,
+binary,p & q,F(p & q),0,1,,
+binary,p & q,Fp & q,0,1,,
+binary,p & q,p & Fq,0,1,,
+binary,p & q,p R q,0,1,,
+binary,p R q,F(p R q),0,1,,
+binary,p R q,Fp R q,0,1,,
+binary,p R q,p | Xq,0,0,,
+binary,p U q,Fp U q,0,1,,
+binary,p U q,p W q,1,1,,
+binary,p W q,Fp W q,0,1,,
+binary,p W q,p W Fq,0,1,,Gp W Fq = Gp | Fq
+binary,p W q,p | q,0,1,,
+binary,p | q,Fp | q,0,1,,
+binary,p | q,p | Fq,0,1,,
+binary,F(p & q),F(p R q),0,1,,
+binary,F(p & q),Fp & Fq,0,0,,
+binary,F(p & q),Fp U q,0,0,,
+binary,F(p R q),p R Fq,0,0,,
+binary,F(p W q),Fp W Fq,0,0,,
+binary,Fp & q,Fp & Fq,0,1,,
+binary,Fp & q,Fp R q,0,1,,
+binary,Fp R q,Fp R Fq,0,1,,
+binary,Fp R q,Fp | Gq,0,0,,
+binary,Fp R q,q,1,1,,
+binary,Fp U q,Fp W q,1,1,,
+binary,Fp U q,Fq,0,1,,p U Fq = Xp U Fq = Fp U Fq = Gp U Fq
+binary,Fp W q,Fp W Fq,0,1,,
+binary,Fp W q,Fp | q,0,1,,
+binary,Fp | q,F(p | q),0,1,,Fp | Fq
+binary,G(p & q),Gp & Xq,1,1,Gp & Gq,
+binary,G(p & q),Gp & q,0,1,Gp & Gq,
+binary,G(p & q),Xp & Gq,1,1,Gp & Gq,
+binary,G(p & q),p & Gq,0,1,Gp & Gq,
+binary,G(p U q),G(p W q),1,1,,G(p | q)
+binary,G(p U q),Gp R Fq,0,0,,
+binary,G(p U q),X(p U q),1,1,,Xp U Xq
+binary,G(p U q),p U q,0,1,,
+binary,G(p W q),Fp W Gq,0,0,G(p | q),
+binary,G(p W q),X(p W q),1,1,G(p | q),Xp W Xq
+binary,G(p W q),p W q,0,1,G(p | q),
+binary,Gp & q,Gp & Fq,0,1,,
+binary,Gp & q,Gp R q,0,1,,
+binary,Gp & q,Xp & q,1,1,,
+binary,Gp & q,p & q,0,1,,
+binary,Gp R q,G(p W q),0,0,,G(p | q)
+binary,Gp R q,Gp R Fq,0,1,,
+binary,Gp R q,Gp W Xq,0,0,,Gp | Xq
+binary,Gp R q,Xp R q,1,1,,
+binary,Gp R q,p R q,0,1,,
+binary,Gp U q,Gp W q,1,1,,Gp | q
+binary,Gp U q,Xp U q,1,1,,
+binary,Gp U q,p U q,0,1,,
+binary,Gp W q,Xp W q,1,1,Gp | q,
+binary,Gp W q,p W q,0,1,Gp | q,
+binary,X(p & q),F(p & q),1,1,Xp & Xq,
+binary,X(p & q),Fp & Xq,1,1,Xp & Xq,
+binary,X(p & q),X(p R q),0,1,Xp & Xq,Xp R Xq
+binary,X(p & q),Xp & Fq,1,1,Xp & Xq,
+binary,X(p & q),Xp U q,0,0,Xp & Xq,
+binary,X(p R q),F(p R q),1,1,Xp R Xq,
+binary,X(p R q),Fp R Xq,1,1,Xp R Xq,
+binary,X(p R q),Xp R Fq,1,1,Xp R Xq,
+binary,X(p U q),Fp U Xq,1,1,Xp U Xq,
+binary,X(p U q),X(p W q),1,1,Xp U Xq,Xp W Xq
+binary,X(p W q),Fp W Xq,1,1,Xp W Xq,
+binary,X(p W q),X(p | q),0,1,Xp W Xq,Xp | Xq
+binary,X(p W q),Xp W Fq,1,1,Xp W Xq,
+binary,X(p | q),Fp | Xq,1,1,Xp | Xq,
+binary,X(p | q),Xp | Fq,1,1,Xp | Xq,
+binary,Xp & q,Fp & q,1,1,,
+binary,Xp & q,Xp & Fq,0,1,,
+binary,Xp & q,Xp R q,0,1,,
+binary,Xp R q,Fp R q,1,1,,
+binary,Xp R q,X(p | q),0,0,,Xp | Xq
+binary,Xp R q,Xp R Fq,0,1,,
+binary,Xp U q,Fp U q,1,1,,
+binary,Xp U q,Xp W q,1,1,,
+binary,Xp W q,Fp W q,1,1,,
+binary,Xp W q,Xp W Fq,0,1,,
+binary,Xp W q,Xp | q,0,1,,
+binary,Xp | q,Fp | q,1,1,,
+binary,Xp | q,Xp | Fq,0,1,,
+binary,p & Fq,Fp & Fq,0,1,,
+binary,p & Fq,p R Fq,0,1,,
+binary,p & Fq,p | Gq,0,0,,
+binary,p & Gq,Fp & Gq,0,1,,
+binary,p & Gq,p & Xq,1,1,,
+binary,p & Gq,p & q,0,1,,
+binary,p & Xq,Fp & Xq,0,1,,
+binary,p & Xq,p & Fq,1,1,,
+binary,p & Xq,p R Xq,0,1,,
+binary,p & Xq,p U q,0,0,,
+binary,p R Fq,Fp R Fq,0,1,,
+binary,p R Xq,Fp R Xq,0,1,,
+binary,p R Xq,p R Fq,1,1,,
+binary,p U Gq,Fp U Gq,0,1,,
+binary,p U Gq,G(p U q),0,0,,
+binary,p U Gq,p U Xq,1,1,,
+binary,p U Gq,p W Gq,1,1,,
+binary,p U Xq,Fp U Xq,0,1,,
+binary,p U Xq,p W Xq,1,1,,
+binary,p W Fq,Xp W Fq,1,1,Gp W Fq = Gp | Fq,
+binary,p W Fq,p | Fq,0,1,Gp W Fq = Gp | Fq,
+binary,p W Gq,G(p W q),0,0,,G(p | q)
+binary,p W Gq,p W Xq,1,1,,
+binary,p W Gq,p | Gq,0,1,,
+binary,p W Xq,Fp W Xq,0,1,,
+binary,p W Xq,p W Fq,1,1,,Gp W Fq = Gp | Fq
+binary,p W Xq,p | Xq,0,1,,
+binary,p | Fq,F(p | q),0,1,,Fp | Fq
+binary,p | Gq,Fp | Gq,0,1,,
+binary,p | Gq,p | Xq,1,1,,
+binary,p | Gq,p | q,0,1,,
+binary,p | Xq,Fp | Xq,0,1,,
+binary,p | Xq,p | Fq,1,1,,
+binary,Fp & Fq,Fp,1,1,,
+binary,Fp & Fq,Fp R Fq,0,1,,
+binary,Fp & Gq,F(p & q),0,0,,
+binary,Fp & Gq,Fp & Xq,1,1,,
+binary,Fp & Gq,Fp & q,0,1,,
+binary,Fp & Gq,Gq,1,1,,p R Gq = Xp R Gq = Fp R Gq = Gp R Gq
+binary,Fp & Xq,Fp & Fq,1,1,,
+binary,Fp & Xq,Fp R Xq,0,1,,
+binary,Fp & Xq,Fp U q,0,0,,
+binary,Fp R Fq,Fq,1,1,,p U Fq = Xp U Fq = Fp U Fq = Gp U Fq
+binary,Fp R Xq,Fp R Fq,1,1,,
+binary,Fp R Xq,Xq,1,1,,
+binary,Fp U Gq,F(p R q),0,0,,
+binary,Fp U Gq,Fp U Xq,1,1,,
+binary,Fp U Gq,Fp U q,0,1,,
+binary,Fp U Gq,Fp W Gq,1,1,,
+binary,Fp U Gq,Gp R Fq,0,0,,
+binary,Fp U Xq,Fp W Xq,1,1,,
+binary,Fp U Xq,Fq,1,1,,p U Fq = Xp U Fq = Fp U Fq = Gp U Fq
+binary,Fp W Fq,F(p | q),0,1,,Fp | Fq
+binary,Fp W Gq,Fp W Xq,1,1,,
+binary,Fp W Gq,Fp W q,0,1,,
+binary,Fp W Gq,Fp | Gq,0,1,,
+binary,Fp W Xq,Fp W Fq,1,1,,
+binary,Fp W Xq,Fp | Xq,0,1,,
+binary,Fp | Gq,Fp | Xq,1,1,,
+binary,Fp | Gq,Fp | q,0,1,,
+binary,Fp | Xq,F(p | q),1,1,,Fp | Fq
+binary,Gp & Fq,F(p & q),0,0,,
+binary,Gp & Fq,Gp,1,1,,
+binary,Gp & Fq,Gp R Fq,0,1,,
+binary,Gp & Fq,Gp U q,0,0,,
+binary,Gp & Fq,Xp & Fq,1,1,,
+binary,Gp & Fq,p & Fq,0,1,,
+binary,Gp & Xq,Gp & Fq,1,1,,
+binary,Gp & Xq,Gp R Xq,0,1,,
+binary,Gp & Xq,X(p & q),1,1,,Xp & Xq
+binary,Gp & Xq,p & Xq,0,1,,
+binary,Gp R Fq,Xp R Fq,1,1,,
+binary,Gp R Fq,p R Fq,0,1,,
+binary,Gp R Xq,Gp R Fq,1,1,,
+binary,Gp R Xq,X(p R q),1,1,,Xp R Xq
+binary,Gp R Xq,p R Xq,0,1,,
+binary,Gp U Gq,Gp U Xq,1,1,,
+binary,Gp U Gq,Gp U q,0,1,,
+binary,Gp U Gq,Gp W Gq,1,1,,Gp | Gq
+binary,Gp U Gq,Xp U Gq,1,1,,
+binary,Gp U Gq,p U Gq,0,1,,
+binary,Gp U Xq,Gp W Xq,1,1,,Gp | Xq
+binary,Gp U Xq,X(p U q),1,1,,Xp U Xq
+binary,Gp U Xq,p U Xq,0,1,,
+binary,Gp W Gq,Gp W Xq,1,1,Gp | Gq,Gp | Xq
+binary,Gp W Gq,Gp W q,0,1,Gp | Gq,Gp | q
+binary,Gp W Gq,Xp W Gq,1,1,Gp | Gq,
+binary,Gp W Gq,p W Gq,0,1,Gp | Gq,
+binary,Gp W Xq,X(p W q),1,1,Gp | Xq,Xp W Xq
+binary,Gp W Xq,p W Xq,0,1,Gp | Xq,
+binary,Xp & Fq,Fp & Fq,1,1,,
+binary,Xp & Fq,Xp R Fq,0,1,,
+binary,Xp & Fq,Xp | Gq,0,0,,
+binary,Xp & Gq,Fp & Gq,1,1,,
+binary,Xp & Gq,X(p & q),1,1,,Xp & Xq
+binary,Xp & Gq,Xp & q,0,1,,
+binary,Xp R Fq,Fp R Fq,1,1,,
+binary,Xp U Gq,Fp U Gq,1,1,,
+binary,Xp U Gq,X(p U q),1,1,,Xp U Xq
+binary,Xp U Gq,Xp U q,0,1,,
+binary,Xp U Gq,Xp W Gq,1,1,,
+binary,Xp W Fq,F(p W q),0,0,,
+binary,Xp W Fq,Xp | Fq,0,1,,
+binary,Xp W Gq,Fp W Gq,1,1,,
+binary,Xp W Gq,X(p W q),1,1,,Xp W Xq
+binary,Xp W Gq,Xp W q,0,1,,
+binary,Xp W Gq,Xp | Gq,0,1,,
+binary,Xp | Fq,F(p | q),1,1,,Fp | Fq
+binary,Xp | Gq,Fp | Gq,1,1,,
+binary,Xp | Gq,X(p | q),1,1,,Xp | Xq
+binary,Xp | Gq,Xp | q,0,1,,
