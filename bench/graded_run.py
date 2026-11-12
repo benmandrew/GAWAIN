@@ -36,7 +36,8 @@ weakening filter, which is search_bench's default, and `mutation-weakening`,
 `tuned`, `mutation-tuned`, `monotone-1` and `weaken-walk` for the headline
 rerun with the filter on, and `tuned-ordered`, `tuned-gated`,
 `tuned-demotion`, `tuned-climb` and `tuned-order` (all four) for the order
-arms of docs/dev/order-search.md; see ARMS. The `random` and
+arms of docs/dev/order-search.md, and `mutation-climb`, the random-mutation
+baseline with the climb, to pair with `tuned-climb`; see ARMS. The `random` and
 `states` arms of the ablation ran from commit `ddd9648` (tag `archive/graded-arms`),
 whose code was removed; see "Graded status" in `docs/dev/search.md`.
 
@@ -131,6 +132,10 @@ ARMS = {
     'tuned-climb': TUNED + ['--climb', 'on'],
     'tuned-order': TUNED + ['--rules', 'ordered', '--monotone-direction', 'gated',
                             '--demotion', 'on', '--climb', 'on'],
+    # The climb runs in the gate, which the baseline shares, so the GA's lead
+    # over random mutation is measured with it on both sides too.
+    'mutation-climb': ['--status', 'binary', '--search', 'random', '--monotone-share', '0.75',
+                       '--weakening', 'demote', '--climb', 'on'],
 }
 
 
