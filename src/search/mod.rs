@@ -639,15 +639,22 @@ pub struct ClimbCounts {
 /// so this only bounds a climb through a long chain of equivalents that
 /// Spot could not decide.
 const MAX_CLIMB_STEPS: usize = 32;
+/// The holders of one climb step whose implications go to Spot in one
+/// exec. A step stops at its first pass, so a small batch checks few
+/// candidates past it, and two pairs a holder keep the exec well inside
+/// its limit.
+const CLIMB_BATCH: usize = 8;
 
 /// [`gate`] with PEREDUR's output climb (`climb_output`) between the two
 /// maximality steps. Each maximal repair r climbs: every strengthening
 /// [`monotone_outcomes`] lists under `rules`, with each literal over φ's
 /// atoms as the added operand, that passes [`filter`] and has not been
-/// seen is checked by `oracle`, and of those that hold, the ones Spot
-/// proves φ implies and does not prove r implies are the strict proved
-/// repairs one step up. The one most similar to φ (then the smaller in
-/// formula order) becomes r, until no step passes. A strengthening of a
+/// seen is a candidate. Of the candidates that `oracle` says hold, the
+/// ones Spot proves φ implies and does not prove r implies are the strict
+/// proved repairs one step up. The one most similar to φ (then the smaller
+/// in formula order) becomes r, until no step passes. The candidates are
+/// checked in that order and the step stops at the first to pass, so the
+/// ones after it are never checked. A strengthening of a
 /// repair is valid modulo `invariant` only if the repair is, so no
 /// validity check is needed. The tops are scored by `counter` and join the
 /// repairs, and the gate's maximality step runs again over both, before
@@ -693,31 +700,45 @@ pub fn gate_climbed<B: Backend>(
                 .flat_map(|l| monotone_outcomes(&current, Direction::Strengthen, rules, l))
                 .map(|c| c.simplify())
                 .collect();
-            let fresh: Vec<Formula> = filter(outcomes, phi)
+            let mut fresh: Vec<(f64, Formula)> = filter(outcomes, phi)
                 .into_iter()
                 .filter(|c| seen.insert(c.canonical()))
+                .map(|c| (c.syntactic_similarity(phi), c))
                 .collect();
-            counts.checked += fresh.len() as u64;
-            let holding: Vec<Formula> = fresh
-                .into_iter()
-                .filter(|c| matches!(oracle.check(c), Verdict::Holds))
-                .collect();
-            let pairs: Vec<(&Formula, &Formula)> = holding
-                .iter()
-                .flat_map(|c| [(phi, c), (&current, c)])
-                .collect();
-            counts.pairs += pairs.len() as u64;
-            let (proved, error) = implications_each(&pairs, semantics, limits);
-            gate.errors.extend(error);
-            let best = holding
-                .iter()
-                .zip(proved.chunks(2))
-                .filter(|(_, proved)| proved[0] && !proved[1])
-                .map(|(c, _)| (c.syntactic_similarity(phi), c))
-                .max_by(|(sa, a), (sb, b)| sa.total_cmp(sb).then_with(|| b.cmp(a)));
+            // Most similar first, then the smaller, so the first one to pass
+            // is the step. Spot sees the holders a few at a time, which
+            // keeps each exec small and stops at that first pass.
+            fresh.sort_by(|(sa, a), (sb, b)| sb.total_cmp(sa).then_with(|| a.cmp(b)));
+            let mut best = None;
+            let mut holding = Vec::new();
+            for (i, (_, c)) in fresh.iter().enumerate() {
+                counts.checked += 1;
+                if matches!(oracle.check(c), Verdict::Holds) {
+                    holding.push(c);
+                }
+                if holding.is_empty() || holding.len() < CLIMB_BATCH && i + 1 < fresh.len() {
+                    continue;
+                }
+                let pairs: Vec<(&Formula, &Formula)> = holding
+                    .iter()
+                    .flat_map(|&c| [(phi, c), (&current, c)])
+                    .collect();
+                counts.pairs += pairs.len() as u64;
+                let (proved, error) = implications_each(&pairs, semantics, limits);
+                gate.errors.extend(error);
+                best = holding
+                    .iter()
+                    .zip(proved.chunks(2))
+                    .find(|(_, proved)| proved[0] && !proved[1])
+                    .map(|(&c, _)| c.clone());
+                if best.is_some() {
+                    break;
+                }
+                holding.clear();
+            }
             match best {
-                Some((_, c)) => {
-                    current = c.clone();
+                Some(c) => {
+                    current = c;
                     counts.steps += 1;
                 }
                 None => break,
