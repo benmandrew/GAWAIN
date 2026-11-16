@@ -51,7 +51,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use crate::ltl::{BinaryOp, Formula, UnaryOp};
+use crate::ltl::{BinaryOp, CanonicalMemo, Formula, UnaryOp};
 use crate::oracle::hoa::{self, Guard, Marks, Raw};
 use crate::oracle::process::{self, Limits};
 use crate::oracle::Semantics;
@@ -150,6 +150,10 @@ pub struct Counter {
     phi_atoms: BTreeSet<Arc<str>>,
     side: Side,
     limits: Limits,
+    /// The canonical forms behind the keys of `logs` and `similarities`,
+    /// which live for the run, so that keys of related candidates share
+    /// subtrees rather than each being a full copy.
+    canonical: CanonicalMemo,
     /// log2 counts by canonical formula and universe size; `None` when the
     /// formula could not be counted.
     logs: HashMap<(Formula, usize), Option<f64>>,
@@ -166,12 +170,14 @@ impl Counter {
     /// [`Semantics::Finite`]. `limits` apply to each translation and Ganak
     /// exec.
     pub fn new(phi: &Formula, semantics: Semantics, limits: Limits) -> Self {
+        let mut canonical = CanonicalMemo::default();
         Counter {
-            phi: phi.canonical(),
+            phi: phi.canonical_shared(&mut canonical),
             semantics,
             phi_atoms: phi.atoms(),
             side: Side::Accepted,
             limits,
+            canonical,
             logs: HashMap::new(),
             similarities: HashMap::new(),
             ganak: HashMap::new(),
@@ -195,7 +201,7 @@ impl Counter {
     pub fn log_counts(&mut self, formulas: &[Formula]) -> Vec<Option<f64>> {
         let entries: Vec<(Formula, usize)> = formulas
             .iter()
-            .map(|f| (f.canonical(), self.universe(f)))
+            .map(|f| (f.canonical_shared(&mut self.canonical), self.universe(f)))
             .collect();
         let mut needed = Vec::new();
         for entry in &entries {
@@ -218,7 +224,10 @@ impl Counter {
     /// to the fixed φ.
     pub fn similarities(&mut self, candidates: &[Formula]) -> Vec<f64> {
         let start = Instant::now();
-        let keys: Vec<Formula> = candidates.iter().map(Formula::canonical).collect();
+        let keys: Vec<Formula> = candidates
+            .iter()
+            .map(|c| c.canonical_shared(&mut self.canonical))
+            .collect();
         // Each formula to count once, with its universe.
         let mut needed: Vec<(Formula, usize)> = Vec::new();
         for key in &keys {
@@ -268,12 +277,12 @@ impl Counter {
     /// the cache of [`Counter::similarities`].
     pub fn rejections(&mut self, candidates: &[Formula]) -> Vec<f64> {
         let start = Instant::now();
-        let not = |f: &Formula| Formula::unary(UnaryOp::Not, f.clone()).canonical();
+        let not_phi = self.not(&self.phi.clone());
         let entries: Vec<[(Formula, usize); 2]> = candidates
             .iter()
             .map(|candidate| {
                 let universe = self.universe(candidate);
-                [(not(&self.phi), universe), (not(candidate), universe)]
+                [(not_phi.clone(), universe), (self.not(candidate), universe)]
             })
             .collect();
         let mut needed = Vec::new();
@@ -304,15 +313,19 @@ impl Counter {
 
     /// The formulas whose counts give `candidate`'s similarity: φ, φ' and
     /// their conjunction, or under [`Side::Rejected`] their negations.
-    fn terms(&self, candidate: &Formula) -> [Formula; 3] {
+    fn terms(&mut self, candidate: &Formula) -> [Formula; 3] {
         let [phi, candidate] = match self.side {
             Side::Accepted => [self.phi.clone(), candidate.clone()],
-            Side::Rejected => {
-                [&self.phi, candidate].map(|f| Formula::unary(UnaryOp::Not, f.clone()).canonical())
-            }
+            Side::Rejected => [self.not(&self.phi.clone()), self.not(candidate)],
         };
-        let shared = Formula::binary(BinaryOp::And, phi.clone(), candidate.clone()).canonical();
+        let shared = Formula::binary(BinaryOp::And, phi.clone(), candidate.clone())
+            .canonical_shared(&mut self.canonical);
         [phi, candidate, shared]
+    }
+
+    /// The canonical form of `!formula`.
+    fn not(&mut self, formula: &Formula) -> Formula {
+        Formula::unary(UnaryOp::Not, formula.clone()).canonical_shared(&mut self.canonical)
     }
 
     /// Fills `logs` for every entry of `needed`: one translation exec for

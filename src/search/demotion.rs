@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use super::Scored;
-use crate::ltl::Formula;
+use crate::ltl::{CanonicalMemo, Formula};
 use crate::oracle::process::Limits;
 use crate::oracle::{implications_each, Fingerprint, Semantics, Words};
 
@@ -41,6 +41,9 @@ pub struct DemotionCounts {
 /// The fingerprints and Spot verdicts of one run.
 pub struct Demoter {
     words: Words,
+    /// The canonical forms behind the keys of `prints` and `proved`, which
+    /// live for the run, so that keys of related candidates share subtrees.
+    canonical: CanonicalMemo,
     prints: HashMap<Formula, Fingerprint>,
     proved: HashMap<(Formula, Formula), bool>,
     semantics: Semantics,
@@ -54,6 +57,7 @@ impl Demoter {
     pub fn new(atoms: &[Arc<str>], semantics: Semantics, limits: Limits) -> Self {
         Demoter {
             words: Words::sample(atoms.iter().cloned(), WORDS_SEED),
+            canonical: CanonicalMemo::default(),
             prints: HashMap::new(),
             proved: HashMap::new(),
             semantics,
@@ -74,7 +78,7 @@ impl Demoter {
         let holders: Vec<usize> = (0..pool.len()).filter(|&i| pool[i].holds()).collect();
         let keys: Vec<Formula> = holders
             .iter()
-            .map(|&i| pool[i].formula.canonical())
+            .map(|&i| pool[i].formula.canonical_shared(&mut self.canonical))
             .collect();
         for key in &keys {
             if !self.prints.contains_key(key) {

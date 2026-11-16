@@ -18,6 +18,7 @@ use std::fmt;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
 
+pub use canonical::CanonicalMemo;
 pub use parse::ParseError;
 
 /// A unary operator.

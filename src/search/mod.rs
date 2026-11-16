@@ -36,7 +36,7 @@ pub use operators::{crossover, monotone_outcomes, monotone_rewrite, mutate, Dire
 pub use rng::Rng;
 
 use crate::count::Counter;
-use crate::ltl::{BinaryOp, Formula, Node, UnaryOp};
+use crate::ltl::{BinaryOp, CanonicalMemo, Formula, Node, UnaryOp};
 use crate::oracle::process::Limits;
 use crate::oracle::{implications_each, simplifications, Backend, Oracle, Semantics, Verdict};
 
@@ -273,7 +273,13 @@ pub fn random_search<B: Backend>(
     let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
     let mut grader = Grader::new(phi);
     let mut archive = score(vec![phi.clone()], phi, oracle, counter);
-    let mut seen: HashSet<Formula> = archive.iter().map(|s| s.formula.canonical()).collect();
+    // `seen` keeps a key per archive member for the run; the memo lets a
+    // child's key share the canonical subtrees of its parents'.
+    let mut memo = CanonicalMemo::default();
+    let mut seen: HashSet<Formula> = archive
+        .iter()
+        .map(|s| s.formula.canonical_shared(&mut memo))
+        .collect();
     let mut budget = Budget {
         bred: 1,
         scored: 1,
@@ -295,7 +301,7 @@ pub fn random_search<B: Backend>(
         );
         archive.extend(
             kept.into_iter()
-                .filter(|s| seen.insert(s.formula.canonical())),
+                .filter(|s| seen.insert(s.formula.canonical_shared(&mut memo))),
         );
     }
     if params.status.graded() {
@@ -353,9 +359,12 @@ fn breed(
 pub fn filter(offspring: Vec<Formula>, phi: &Formula) -> Vec<Formula> {
     let cap = BLOAT_RATIO * phi.n_subformulae();
     let mut seen = HashSet::new();
+    // The climb passes in every outcome of one formula, which share all but
+    // a path of it; the memo keeps their keys from each being a full copy.
+    let mut memo = CanonicalMemo::default();
     offspring
         .into_iter()
-        .filter(|candidate| seen.insert(candidate.canonical()))
+        .filter(|candidate| seen.insert(candidate.canonical_shared(&mut memo)))
         .filter(|candidate| candidate.n_subformulae() <= cap)
         .filter(|candidate| !matches!(candidate.simplify().node(), Node::True))
         .collect()
@@ -689,7 +698,19 @@ pub fn gate_climbed<B: Backend>(
             [atom.clone(), Formula::unary(UnaryOp::Not, atom)]
         })
         .collect();
-    let mut seen: HashSet<Formula> = population.iter().map(|s| s.formula.canonical()).collect();
+    // `seen` lives for the whole climb and takes a key for every outcome of
+    // every step. The outcomes share all but a path with `current`, and
+    // each step's `current` with the last, so one memo for the whole climb
+    // lets every key share the canonical subtrees built before it. Most of
+    // what the memo holds is then referenced by `seen` anyway, and its own
+    // cost is a path of each outcome, where a fresh `canonical` per key
+    // would cost the whole tree. A memo per repair would share less and
+    // free little, as `seen` keeps its values alive.
+    let mut memo = CanonicalMemo::default();
+    let mut seen: HashSet<Formula> = population
+        .iter()
+        .map(|s| s.formula.canonical_shared(&mut memo))
+        .collect();
     let mut counts = ClimbCounts::default();
     let mut tops: Vec<Formula> = Vec::new();
     for repair in &repairs {
@@ -702,7 +723,7 @@ pub fn gate_climbed<B: Backend>(
                 .collect();
             let mut fresh: Vec<(f64, Formula)> = filter(outcomes, phi)
                 .into_iter()
-                .filter(|c| seen.insert(c.canonical()))
+                .filter(|c| seen.insert(c.canonical_shared(&mut memo)))
                 .map(|c| (c.syntactic_similarity(phi), c))
                 .collect();
             // Most similar first, then the smaller, so the first one to pass
