@@ -2,7 +2,8 @@
 //!
 //! [`Oracle::check`] tries, in order, and stops at the first answer:
 //!
-//! 0. a memo of earlier verdicts, keyed on [`Formula::canonical`];
+//! 0. a memo of earlier verdicts, keyed on [`Formula::canonical`] (built
+//!    with [`Formula::canonical_shared`]);
 //! 1. the stored runs of M ([`LassoCache::refutes`]), which can only refute;
 //! 2. the known truths of M: the fingerprint prefilter
 //!    ([`KnownTruths::may_imply`]), then Spot on the truths that survive it:
@@ -35,7 +36,7 @@ use std::time::Duration;
 use super::process::Limits;
 use super::spot::{implications, syntactic_implications};
 use super::{Backend, KnownTruths, Lasso, LassoCache, Semantics, Verdict, Words};
-use crate::ltl::Formula;
+use crate::ltl::{CanonicalMemo, Formula};
 
 /// How many queries each tier answered, and what the slow tiers cost.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -61,7 +62,19 @@ pub struct Counters {
 /// A model-checking oracle for one fixed model, with `B` as its last tier.
 pub struct Oracle<B> {
     backend: B,
+    /// Verdicts by canonical query. A `Fails` holds its own copy of the
+    /// lasso, a `Vec` of `BTreeSet`s: about 7 KB for a 32-step trace with
+    /// 8 of 16 atoms true at each step, so a few hundred MB if all of
+    /// 36,000 queries fail. The trace-set back end could hand out one
+    /// shared copy of each stored trace instead, but a lasso is several
+    /// times smaller than a full copy of a large formula, which the keys
+    /// no longer are.
     memo: HashMap<Formula, Verdict>,
+    /// The canonical forms behind `memo`'s keys. Queries share most of
+    /// their trees with earlier ones, and the keys live as long as the
+    /// oracle, so they share canonical subtrees rather than each being a
+    /// full copy.
+    canonical: CanonicalMemo,
     lassos: LassoCache,
     truths: KnownTruths,
     spot_limits: Limits,
@@ -77,6 +90,7 @@ impl<B: Backend> Oracle<B> {
         Oracle {
             backend,
             memo: HashMap::new(),
+            canonical: CanonicalMemo::default(),
             lassos: LassoCache::new(),
             truths: KnownTruths::new(words),
             spot_limits,
@@ -121,7 +135,7 @@ impl<B: Backend> Oracle<B> {
     /// Decides whether the model satisfies `formula`, cheapest tier first.
     pub fn check(&mut self, formula: &Formula) -> Verdict {
         self.counters.queries += 1;
-        let key = formula.canonical();
+        let key = formula.canonical_shared(&mut self.canonical);
         if let Some(verdict) = self.memo.get(&key) {
             self.counters.memo_hits += 1;
             return verdict.clone();
