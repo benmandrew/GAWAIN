@@ -71,6 +71,39 @@
         packages.ganak = ganak;
         packages.verifypn = verifypn;
 
+        # `nix build .#docs`: the rustdoc site, which benmandrew.com copies
+        # into /docs/gawain/ as it does PEREDUR's. The source holds only what
+        # rustdoc reads, so a commit that leaves the crate alone gives the
+        # same store path and the site's rebuild is a cache hit.
+        packages.docs = pkgs.rustPlatform.buildRustPackage {
+          pname = "gawain-docs";
+          version = "0.1.0";
+          src = pkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [ ./Cargo.toml ./Cargo.lock ./src ];
+          };
+          cargoLock.lockFile = ./Cargo.lock;
+          buildPhase = ''
+            runHook preBuild
+            RUSTDOCFLAGS="-D warnings" cargo doc --lib --no-deps --offline
+            runHook postBuild
+          '';
+          doCheck = false;
+          installPhase = ''
+            runHook preInstall
+            cp -r target/doc $out
+            # rustdoc writes no landing page at the root, so /docs/gawain/
+            # would 404 without this redirect to the library crate.
+            cat > $out/index.html <<'EOF'
+            <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+            <meta http-equiv="refresh" content="0; url=gawain/index.html">
+            <title>GAWAIN docs</title></head>
+            <body><p><a href="gawain/index.html">gawain</a></p></body></html>
+            EOF
+            runHook postInstall
+          '';
+        };
+
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             # Rust toolchain; CI's check job needs rustfmt and clippy.
