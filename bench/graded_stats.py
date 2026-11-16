@@ -91,7 +91,10 @@ def save_cache(path, every=0):
             return
         SAVED[0] = time.time()
         items = [[*k, v] for k, v in CACHE.items()]
-    path.write_text(json.dumps(items))
+    # Write then rename, so a run killed mid-save keeps the old cache.
+    tmp = path.with_suffix('.tmp')
+    tmp.write_text(json.dumps(items))
+    tmp.replace(path)
 
 
 def implications(pairs, finite=False):
