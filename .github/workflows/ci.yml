@@ -15,17 +15,25 @@ env:
   CARGO_TERM_COLOR: always
 
 # Every tool comes from flake.nix. The Nix store is cached between runs, so
-# Spot, which the flake builds from source, is compiled only when flake.lock
-# changes. bench/data is gitignored, so the RERS and LMCS data tests skip.
+# Spot, which the flake builds from source, is compiled only when flake.nix or
+# flake.lock changes. The installer is single-user so that the runner owns
+# /nix/store; under cachix/install-nix-action's multi-user store the cache
+# restore failed with "Permission denied". bench/data is gitignored, so the
+# RERS and LMCS data tests skip.
 jobs:
   check:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: cachix/install-nix-action@v31
-      - uses: nix-community/cache-nix-action@v6
+      - uses: nixbuild/nix-quick-install-action@v35
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          nix_conf: |
+            keep-env-derivations = true
+            keep-outputs = true
+      - uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
       - uses: Swatinem/rust-cache@v2
       - run: nix develop -c cargo fmt --check
       - run: nix develop -c cargo clippy --all-targets -- -D warnings
@@ -37,9 +45,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
-      - uses: cachix/install-nix-action@v31
-      - uses: nix-community/cache-nix-action@v6
+      - uses: nixbuild/nix-quick-install-action@v35
         with:
-          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}
+          nix_conf: |
+            keep-env-derivations = true
+            keep-outputs = true
+      - uses: nix-community/cache-nix-action@v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.nix', 'flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
       - uses: Swatinem/rust-cache@v2
       - run: nix develop -c cargo test -- --nocapture
