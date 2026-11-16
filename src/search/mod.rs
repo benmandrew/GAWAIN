@@ -27,8 +27,8 @@ mod operators;
 mod rng;
 
 use std::collections::HashSet;
-use std::sync::Arc;
-use std::time::Instant;
+use std::sync::{mpsc, Arc};
+use std::time::{Duration, Instant};
 
 pub use demotion::{Demoter, DemotionCounts};
 pub use grade::{GradeCounts, Grader, Status};
@@ -138,32 +138,89 @@ impl Scored {
     }
 }
 
+/// The counting thread of one search, which runs
+/// [`Counter::similarities`] for every [`score`] call in it.
+///
+/// One thread per search, not per call, so the counter's allocations stay
+/// in one malloc arena. With a thread per generation, glibc spread them
+/// over new arenas, each keeping the automata freed into it, and RSS on the
+/// Nim traces passed 3 GB in the search phase with about 590 MB live.
+struct Counting {
+    jobs: mpsc::Sender<Vec<Formula>>,
+    results: mpsc::Receiver<Vec<f64>>,
+    wait: Duration,
+}
+
+impl Counting {
+    /// Runs `body` with a counting thread over `counter`, then records in
+    /// `counter` how long `body` waited for it.
+    fn run<R>(counter: &mut Counter, body: impl FnOnce(&mut Counting) -> R) -> R {
+        let (jobs, inbox) = mpsc::channel::<Vec<Formula>>();
+        let (outbox, results) = mpsc::channel();
+        let worker_counter = &mut *counter;
+        let (result, wait) = std::thread::scope(|scope| {
+            let worker = scope.spawn(move || {
+                for candidates in inbox {
+                    if outbox
+                        .send(worker_counter.similarities(&candidates))
+                        .is_err()
+                    {
+                        break;
+                    }
+                }
+            });
+            let mut counting = Counting {
+                jobs,
+                results,
+                wait: Duration::ZERO,
+            };
+            let result = body(&mut counting);
+            let wait = counting.wait;
+            // Closing the channel ends the worker's loop.
+            drop(counting);
+            worker.join().expect("the counting thread");
+            (result, wait)
+        });
+        counter.record_wait(wait);
+        result
+    }
+
+    /// Hands `candidates` to the counting thread.
+    fn start(&self, candidates: &[Formula]) {
+        let sent = self.jobs.send(candidates.to_vec());
+        sent.expect("the counting thread");
+    }
+
+    /// The similarities of the last batch started, adding the time since
+    /// `since` to the wait.
+    fn finish(&mut self, since: Instant) -> Vec<f64> {
+        let semantic = self.results.recv().expect("the counting thread");
+        self.wait += since.elapsed();
+        semantic
+    }
+}
+
 /// Scores `candidates` against the input `phi`: the oracle's status,
-/// syntactic similarity and model-counting similarity. The counts run on a
-/// second thread while the oracle checks the candidates one by one, so
-/// their `ltl2tgba` exec overlaps the model checker's.
-pub fn score<B: Backend>(
+/// syntactic similarity and model-counting similarity. The counts run on
+/// the counting thread while the oracle checks the candidates one by one,
+/// so their `ltl2tgba` exec overlaps the model checker's.
+fn score<B: Backend>(
     candidates: Vec<Formula>,
     phi: &Formula,
     oracle: &mut Oracle<B>,
-    counter: &mut Counter,
+    counting: &mut Counting,
 ) -> Vec<Scored> {
-    let (semantic, statuses, wait) = std::thread::scope(|scope| {
-        let counting = scope.spawn(|| counter.similarities(&candidates));
-        let statuses: Vec<f64> = candidates
-            .iter()
-            .map(|candidate| match oracle.check(candidate) {
-                Verdict::Holds => 1.0,
-                // Unknown scores as a failure. The oracle memoises it, so
-                // a formula that comes back costs nothing again.
-                Verdict::Fails(_) | Verdict::Unknown(_) => 0.0,
-            })
-            .collect();
-        let checked = Instant::now();
-        let semantic = counting.join().expect("the counting thread");
-        (semantic, statuses, checked.elapsed())
-    });
-    counter.record_wait(wait);
+    counting.start(&candidates);
+    let statuses: Vec<f64> = candidates
+        .iter()
+        .map(|candidate| match oracle.check(candidate) {
+            Verdict::Holds => 1.0,
+            // Unknown scores as a failure. The oracle memoises it, so a
+            // formula that comes back costs nothing again.
+            Verdict::Fails(_) | Verdict::Unknown(_) => 0.0,
+        })
+        .collect();
+    let semantic = counting.finish(Instant::now());
     candidates
         .into_iter()
         .zip(statuses)
@@ -213,32 +270,13 @@ pub fn search<B: Backend>(
     };
     let mut demoter =
         (params.demotion).then(|| Demoter::new(&atoms, oracle.semantics(), spot_limits));
-    let mut population = score(vec![phi.clone()], phi, oracle, counter);
-    let mut budget = Budget {
-        bred: 1,
-        scored: 1,
-        ..Budget::default()
-    };
-    regrade(&mut population, oracle);
-    population = select_with(
-        population,
-        params.population,
-        params.status,
-        demoter.as_mut(),
-    );
-    for _ in 0..params.generations {
-        let parents: Vec<&Scored> = population.iter().collect();
-        let offspring = filter(breed(&parents, &population, &atoms, &params, rng), phi);
-        budget.bred += parents.len();
-        budget.scored += offspring.len();
-        let scored = score(offspring, phi, oracle, counter);
-        population.extend(drop_valid(
-            scored,
-            invariant,
-            params.weakening.then_some(phi),
-            oracle.semantics(),
-            spot_limits,
-        ));
+    let (population, mut budget) = Counting::run(counter, |counting| {
+        let mut population = score(vec![phi.clone()], phi, oracle, counting);
+        let mut budget = Budget {
+            bred: 1,
+            scored: 1,
+            ..Budget::default()
+        };
         regrade(&mut population, oracle);
         population = select_with(
             population,
@@ -246,7 +284,29 @@ pub fn search<B: Backend>(
             params.status,
             demoter.as_mut(),
         );
-    }
+        for _ in 0..params.generations {
+            let parents: Vec<&Scored> = population.iter().collect();
+            let offspring = filter(breed(&parents, &population, &atoms, &params, rng), phi);
+            budget.bred += parents.len();
+            budget.scored += offspring.len();
+            let scored = score(offspring, phi, oracle, counting);
+            population.extend(drop_valid(
+                scored,
+                invariant,
+                params.weakening.then_some(phi),
+                oracle.semantics(),
+                spot_limits,
+            ));
+            regrade(&mut population, oracle);
+            population = select_with(
+                population,
+                params.population,
+                params.status,
+                demoter.as_mut(),
+            );
+        }
+        (population, budget)
+    });
     if let Some(demoter) = demoter {
         budget.demotion = demoter.counts();
     }
@@ -272,38 +332,41 @@ pub fn random_search<B: Backend>(
     assert!(params.population >= 1, "the population needs a member");
     let atoms: Vec<Arc<str>> = phi.atoms().into_iter().collect();
     let mut grader = Grader::new(phi);
-    let mut archive = score(vec![phi.clone()], phi, oracle, counter);
-    // `seen` keeps a key per archive member for the run; the memo lets a
-    // child's key share the canonical subtrees of its parents'.
-    let mut memo = CanonicalMemo::default();
-    let mut seen: HashSet<Formula> = archive
-        .iter()
-        .map(|s| s.formula.canonical_shared(&mut memo))
-        .collect();
-    let mut budget = Budget {
-        bred: 1,
-        scored: 1,
-        ..Budget::default()
-    };
-    for _ in 0..params.generations {
-        let drawn = draw_parents(archive.len(), params.population, rng);
-        let parents: Vec<&Scored> = drawn.into_iter().map(|i| &archive[i]).collect();
-        let offspring = filter(breed(&parents, &archive, &atoms, &params, rng), phi);
-        budget.bred += parents.len();
-        budget.scored += offspring.len();
-        let scored = score(offspring, phi, oracle, counter);
-        let kept = drop_valid(
-            scored,
-            invariant,
-            params.weakening.then_some(phi),
-            oracle.semantics(),
-            spot_limits,
-        );
-        archive.extend(
-            kept.into_iter()
-                .filter(|s| seen.insert(s.formula.canonical_shared(&mut memo))),
-        );
-    }
+    let (mut archive, budget) = Counting::run(counter, |counting| {
+        let mut archive = score(vec![phi.clone()], phi, oracle, counting);
+        // `seen` keeps a key per archive member for the run; the memo lets
+        // a child's key share the canonical subtrees of its parents'.
+        let mut memo = CanonicalMemo::default();
+        let mut seen: HashSet<Formula> = archive
+            .iter()
+            .map(|s| s.formula.canonical_shared(&mut memo))
+            .collect();
+        let mut budget = Budget {
+            bred: 1,
+            scored: 1,
+            ..Budget::default()
+        };
+        for _ in 0..params.generations {
+            let drawn = draw_parents(archive.len(), params.population, rng);
+            let parents: Vec<&Scored> = drawn.into_iter().map(|i| &archive[i]).collect();
+            let offspring = filter(breed(&parents, &archive, &atoms, &params, rng), phi);
+            budget.bred += parents.len();
+            budget.scored += offspring.len();
+            let scored = score(offspring, phi, oracle, counting);
+            let kept = drop_valid(
+                scored,
+                invariant,
+                params.weakening.then_some(phi),
+                oracle.semantics(),
+                spot_limits,
+            );
+            archive.extend(
+                kept.into_iter()
+                    .filter(|s| seen.insert(s.formula.canonical_shared(&mut memo))),
+            );
+        }
+        (archive, budget)
+    });
     if params.status.graded() {
         grader.rescore(&mut archive, oracle.lassos());
     }
@@ -774,7 +837,9 @@ pub fn gate_climbed<B: Backend>(
             objectives: vec![1.0, r.similarity, r.semantic],
         })
         .collect();
-    pool.extend(score(tops, phi, oracle, counter));
+    pool.extend(Counting::run(counter, |counting| {
+        score(tops, phi, oracle, counting)
+    }));
     gate.repairs = maximal(
         phi,
         &pool,
