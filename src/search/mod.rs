@@ -698,24 +698,22 @@ pub fn gate_climbed<B: Backend>(
             [atom.clone(), Formula::unary(UnaryOp::Not, atom)]
         })
         .collect();
-    // `seen` lives for the whole climb and takes a key for every outcome of
-    // every step. The outcomes share all but a path with `current`, and
-    // each step's `current` with the last, so one memo for the whole climb
-    // lets every key share the canonical subtrees built before it. Most of
-    // what the memo holds is then referenced by `seen` anyway, and its own
-    // cost is a path of each outcome, where a fresh `canonical` per key
-    // would cost the whole tree. A memo per repair would share less and
-    // free little, as `seen` keeps its values alive.
-    let mut memo = CanonicalMemo::default();
-    let mut seen: HashSet<Formula> = population
+    // `seen` lives for the whole climb and takes every outcome of every
+    // step, checked or not, so it holds digests of the canonical forms and
+    // no trees. A digest collision only skips a candidate. The memo lasts
+    // one step: its keys hold the step's outcomes alive, and the outcomes
+    // of one step share all but a path with `current`, so that is where it
+    // saves. A memo for the whole climb grew past 8 GB on the Nim traces.
+    let mut seen: HashSet<(u64, usize)> = population
         .iter()
-        .map(|s| s.formula.canonical_shared(&mut memo))
+        .map(|s| s.formula.canonical().digest())
         .collect();
     let mut counts = ClimbCounts::default();
     let mut tops: Vec<Formula> = Vec::new();
     for repair in &repairs {
         let mut current = repair.formula.clone();
         for _ in 0..MAX_CLIMB_STEPS {
+            let mut memo = CanonicalMemo::default();
             let outcomes: Vec<Formula> = literals
                 .iter()
                 .flat_map(|l| monotone_outcomes(&current, Direction::Strengthen, rules, l))
@@ -723,7 +721,7 @@ pub fn gate_climbed<B: Backend>(
                 .collect();
             let mut fresh: Vec<(f64, Formula)> = filter(outcomes, phi)
                 .into_iter()
-                .filter(|c| seen.insert(c.canonical_shared(&mut memo)))
+                .filter(|c| seen.insert(c.canonical_shared(&mut memo).digest()))
                 .map(|c| (c.syntactic_similarity(phi), c))
                 .collect();
             // Most similar first, then the smaller, so the first one to pass
