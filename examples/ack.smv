@@ -1,0 +1,7 @@
+-- A request is acknowledged one step later, or two when `slow` holds,
+-- so G (req -> X ack) fails on some runs.
+MODULE main
+VAR req : boolean; slow : boolean; ack : boolean; late : boolean;
+ASSIGN
+  init(ack) := FALSE; next(ack) := (req & !slow) | late;
+  init(late) := FALSE; next(late) := req & slow;
