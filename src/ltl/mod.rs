@@ -214,6 +214,13 @@ impl Formula {
     fn ptr_eq(&self, other: &Formula) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
     }
+
+    /// The cached structural hash and node count: equal for equal formulas,
+    /// and for unequal ones only on a 64-bit hash collision. A set of these
+    /// costs 16 bytes per formula and keeps no tree alive.
+    pub fn digest(&self) -> (u64, usize) {
+        (self.0.hash, self.0.size)
+    }
 }
 
 impl PartialEq for Formula {
@@ -327,6 +334,13 @@ pub(crate) mod tests {
         use std::collections::HashSet;
         let set: HashSet<Formula> = [f("a U b"), f("a U b"), f("b U a")].into_iter().collect();
         assert_eq!(set.len(), 2);
+    }
+
+    #[test]
+    fn digest_agrees_with_equality() {
+        assert_eq!(f("G (a -> X b)").digest(), f("G (a -> X b)").digest());
+        assert_ne!(f("a U b").digest(), f("b U a").digest());
+        assert_ne!(f("a").digest(), f("!a").digest());
     }
 
     #[test]
