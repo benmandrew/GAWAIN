@@ -1,7 +1,7 @@
 //! The one place the crate spawns external tools.
 //!
-//! [`run`] starts a command in its own session, with an address-space and a
-//! CPU-time limit and a parent-death signal, feeds it stdin, and captures
+//! [`run`] starts a command in its own session, with a memory and a CPU-time
+//! limit and (on Linux) a parent-death signal, feeds it stdin, and captures
 //! stdout and stderr. On a timeout it kills the child's whole process group,
 //! since tools such as `pan` and `gcc` start children of their own. A
 //! timeout or a death by signal is a [`RunError`], which a back end reports
@@ -20,8 +20,12 @@ use std::time::{Duration, Instant};
 pub struct Limits {
     /// Wall-clock time before the process group is killed.
     pub timeout: Duration,
-    /// `RLIMIT_AS` in bytes. It caps virtual memory, not resident memory, so
-    /// leave headroom over the resident size the tool is expected to reach.
+    /// The memory cap in bytes. On Linux it is `RLIMIT_AS`, which caps
+    /// virtual memory, not resident memory, so leave headroom over the
+    /// resident size the tool is expected to reach. macOS rejects any
+    /// `RLIMIT_AS` below the address space a process maps at start, so there
+    /// [`run`] polls the physical footprint of the child's process group and
+    /// kills the group with `SIGKILL` once the sum exceeds this.
     pub memory_bytes: u64,
 }
 
@@ -68,16 +72,21 @@ pub fn run(command: &mut Command, stdin: &str, limits: Limits) -> Result<Output,
     // RLIMIT_CPU has whole-second resolution; the wall-clock timeout is the
     // real bound and the CPU limit only a backstop if this process dies.
     let cpu_secs = limits.timeout.as_secs() + 1;
+    #[cfg(target_os = "linux")]
     let memory = limits.memory_bytes;
     // SAFETY: the closure runs between fork and exec and calls only
     // async-signal-safe functions (setsid, setrlimit, prctl).
+    // PR_SET_PDEATHSIG exists only on Linux. On other targets a child can
+    // outlive this process if this process dies before it kills the group.
     unsafe {
         command.pre_exec(move || {
             if libc::setsid() < 0 {
                 return Err(io::Error::last_os_error());
             }
+            #[cfg(target_os = "linux")]
             set_limit(libc::RLIMIT_AS, memory)?;
             set_limit(libc::RLIMIT_CPU, cpu_secs)?;
+            #[cfg(target_os = "linux")]
             if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL) < 0 {
                 return Err(io::Error::last_os_error());
             }
@@ -101,7 +110,7 @@ pub fn run(command: &mut Command, stdin: &str, limits: Limits) -> Result<Output,
     let stdout = reader(child.stdout.take().expect("stdout is piped"));
     let stderr = reader(child.stderr.take().expect("stderr is piped"));
 
-    let status = wait(&mut child, limits.timeout);
+    let status = wait(&mut child, group, limits);
     // SAFETY: killpg has no memory-safety preconditions. ESRCH (no process
     // left in the group) is the common case and is ignored.
     unsafe {
@@ -125,7 +134,13 @@ pub fn run(command: &mut Command, stdin: &str, limits: Limits) -> Result<Output,
     })
 }
 
-fn set_limit(resource: libc::__rlimit_resource_t, value: u64) -> io::Result<()> {
+/// The type of `setrlimit`'s resource argument: glibc's enum, else `c_int`.
+#[cfg(all(target_os = "linux", target_env = "gnu"))]
+type Resource = libc::__rlimit_resource_t;
+#[cfg(not(all(target_os = "linux", target_env = "gnu")))]
+type Resource = libc::c_int;
+
+fn set_limit(resource: Resource, value: u64) -> io::Result<()> {
     let limit = libc::rlimit {
         rlim_cur: value,
         rlim_max: value,
@@ -137,6 +152,31 @@ fn set_limit(resource: libc::__rlimit_resource_t, value: u64) -> io::Result<()> 
     Ok(())
 }
 
+/// The summed physical footprint in bytes of the processes in `group`. A
+/// process that exits between the listing and its query counts as zero.
+#[cfg(target_os = "macos")]
+fn footprint(group: libc::pid_t) -> u64 {
+    let mut pids = [0 as libc::pid_t; 256];
+    let size = std::mem::size_of_val(&pids) as libc::c_int;
+    // SAFETY: `pids` is valid for `size` bytes; proc_listpgrppids writes at
+    // most that many and returns how many pids it wrote, or -1.
+    let count = unsafe { libc::proc_listpgrppids(group, pids.as_mut_ptr().cast(), size) };
+    let count = usize::try_from(count).unwrap_or(0).min(pids.len());
+    pids[..count]
+        .iter()
+        .map(|&pid| {
+            // SAFETY: rusage_info_v0 is plain data, so all-zero is valid,
+            // and RUSAGE_INFO_V0 makes the call write only that struct.
+            let mut info: libc::rusage_info_v0 = unsafe { std::mem::zeroed() };
+            let buffer = (&mut info as *mut libc::rusage_info_v0).cast();
+            match unsafe { libc::proc_pid_rusage(pid, libc::RUSAGE_INFO_V0, buffer) } {
+                0 => info.ri_phys_footprint,
+                _ => 0,
+            }
+        })
+        .sum()
+}
+
 fn reader(mut pipe: impl Read + Send + 'static) -> JoinHandle<String> {
     thread::spawn(move || {
         let mut bytes = Vec::new();
@@ -145,16 +185,27 @@ fn reader(mut pipe: impl Read + Send + 'static) -> JoinHandle<String> {
     })
 }
 
-/// Waits for the child until `timeout`, and returns `None` if it is still
-/// running then. The poll interval grows from 1 ms to 20 ms, so a 30 ms tool
-/// run is not rounded up much.
-fn wait(child: &mut Child, timeout: Duration) -> Option<ExitStatus> {
-    let deadline = Instant::now() + timeout;
+/// Waits for the child until `limits.timeout`, and returns `None` if it is
+/// still running then. The poll interval grows from 1 ms to 20 ms, so a 30 ms
+/// tool run is not rounded up much. On macOS each poll also enforces
+/// `limits.memory_bytes` on `group`.
+fn wait(child: &mut Child, group: libc::pid_t, limits: Limits) -> Option<ExitStatus> {
+    let deadline = Instant::now() + limits.timeout;
     let mut pause = Duration::from_millis(1);
     loop {
         if let Ok(Some(status)) = child.try_wait() {
             return Some(status);
         }
+        #[cfg(target_os = "macos")]
+        if footprint(group) > limits.memory_bytes {
+            // SAFETY: killpg has no memory-safety preconditions. The child
+            // then dies of SIGKILL, which the next poll reports.
+            unsafe {
+                libc::killpg(group, libc::SIGKILL);
+            }
+        }
+        #[cfg(not(target_os = "macos"))]
+        let _ = group;
         let now = Instant::now();
         if now >= deadline {
             return None;
@@ -230,21 +281,35 @@ mod tests {
         let script = format!("sleep 30 & echo $! > '{}'; wait", pid_file.display());
         let error = sh(&script, "", short(Duration::from_millis(300))).unwrap_err();
         assert!(matches!(error, RunError::TimedOut(_)), "{error}");
-        let pid = std::fs::read_to_string(&pid_file).unwrap();
-        let stat = format!("/proc/{}/stat", pid.trim());
+        let pid: libc::pid_t = std::fs::read_to_string(&pid_file)
+            .unwrap()
+            .trim()
+            .parse()
+            .unwrap();
         // The orphaned sleep is reaped by its new parent, not by us, so give
         // that a moment; a zombie counts as dead.
         let deadline = Instant::now() + Duration::from_secs(2);
-        loop {
-            match std::fs::read_to_string(&stat) {
-                Err(_) => break,
-                Ok(text) if text.contains(") Z ") => break,
-                Ok(text) => {
-                    assert!(Instant::now() < deadline, "grandchild alive: {text}");
-                    thread::sleep(Duration::from_millis(20));
-                }
-            }
+        while alive(pid) {
+            assert!(Instant::now() < deadline, "grandchild {pid} alive");
+            thread::sleep(Duration::from_millis(20));
         }
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Whether `pid` is a live process. Linux reads `/proc`, where a zombie
+    /// counts as dead; elsewhere `kill(pid, 0)` fails with ESRCH once the
+    /// process is gone or reaped.
+    #[cfg(target_os = "linux")]
+    fn alive(pid: libc::pid_t) -> bool {
+        match std::fs::read_to_string(format!("/proc/{pid}/stat")) {
+            Err(_) => false,
+            Ok(text) => !text.contains(") Z "),
+        }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    fn alive(pid: libc::pid_t) -> bool {
+        // SAFETY: signal 0 only checks that the process exists.
+        unsafe { libc::kill(pid, 0) == 0 }
     }
 }
